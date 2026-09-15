@@ -290,32 +290,33 @@ export class GameManager {
     let maxStackHeight = 5;
     let maxColorLayers = 1;
 
-    if (this.score >= 400) {
+    // Smoother, relaxed pacing for introducing new colors and split layers
+    if (this.score >= 1500) {
       this.level = 2;
       activeColorsCount = 4;
       maxColorLayers = 2;
     }
-    if (this.score >= 1200) {
+    if (this.score >= 4000) {
       this.level = 3;
       activeColorsCount = 5;
       minStackHeight = 4;
       maxStackHeight = 6;
       maxColorLayers = 2;
     }
-    if (this.score >= 2500) {
+    if (this.score >= 8000) {
       this.level = 4;
       activeColorsCount = 6;
       maxColorLayers = 3;
       maxStackHeight = 7;
     }
-    if (this.score >= 5000) {
+    if (this.score >= 14000) {
       this.level = 5;
       activeColorsCount = 7;
       minStackHeight = 5;
       maxStackHeight = 8;
       maxColorLayers = 3;
     }
-    if (this.score >= 8000) {
+    if (this.score >= 22000) {
       this.level = 6;
       activeColorsCount = 8;
       maxColorLayers = 4;
@@ -799,9 +800,20 @@ export class GameManager {
       this.vibrate([25, 40, 60]);
       this.totalClears++;
 
-      // Award points for every card cleared + clear bonus * combo
-      const clearBonus = (clearedCards.length * 25 + 500) * this.currentCombo;
+      // Award points: Base clear points + cumulative escalating bonus for every extra card above 10!
+      const extraCards = Math.max(0, clearedCards.length - STACK_CLEAR_THRESHOLD);
+      let cumulativeBonus = 0;
+      for (let k = 1; k <= extraCards; k++) {
+        cumulativeBonus += k * 200; // Escalating: +200 (11th), +400 (12th), +600 (13th), +800 (14th), etc.
+      }
+
+      const baseClearScore = clearedCards.length * 35 + 500;
+      const clearBonus = (baseClearScore + cumulativeBonus) * this.currentCombo;
       this.addScore(clearBonus);
+
+      if (extraCards > 0) {
+        this.showScorePopup(`+${clearBonus} (${clearedCards.length} CARTAS BÔNUS! 🔥)`);
+      }
 
       if (this.currentCombo > 1) {
         this.showComboBanner(this.currentCombo);
