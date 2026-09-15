@@ -1,7 +1,7 @@
 /**
  * GameManager.js
- * Core engine orchestrating 3D rendering, input handling, card merges,
- * score calculation, dynamic difficulty, timer, and game state.
+ * Core engine orchestrating 3D rendering, input handling, magnetic card merges,
+ * total color pop clears, real-time stack badges, score, and game state.
  */
 
 import * as THREE from 'three';
@@ -46,13 +46,16 @@ export class GameManager {
     this.isProcessingMerge = false;
 
     // Deck & Dragging
-    this.deckSlots = []; // Array of 3 deck slots: { index, pos, cards, group, pedestalMesh }
+    this.deckSlots = [];
     this.draggedDeckItem = null;
     this.draggedStackGroup = null;
-    this.selectedDeckSlot = null; // Tap-to-select support
+    this.selectedDeckSlot = null;
     this.dragStartPos = null;
     this.hasMovedDistance = false;
     this.hoveredSlot = null;
+
+    // Badges
+    this.slotBadges = new Map(); // slot.id -> Sprite
 
     // Clock
     this.clock = new THREE.Clock();
@@ -71,28 +74,31 @@ export class GameManager {
 
     // 1. Scene
     this.scene = new THREE.Scene();
-    this.scene.background = null; // Transparent to show CSS background
 
     // 2. Camera (Isometric-angled perspective)
-    this.camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
     this.adjustCameraForScreen(width, height);
 
     // 3. Renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: true,
+      powerPreference: 'high-performance'
+    });
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.2;
     this.container.appendChild(this.renderer.domElement);
 
     // 4. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     this.scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.3);
-    dirLight.position.set(12, 22, 12);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
+    dirLight.position.set(12, 24, 12);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
@@ -105,9 +111,13 @@ export class GameManager {
     dirLight.shadow.bias = -0.0005;
     this.scene.add(dirLight);
 
-    const accentLight = new THREE.DirectionalLight(0x8aadf4, 0.45);
-    accentLight.position.set(-10, 14, -10);
-    this.scene.add(accentLight);
+    const rimLight = new THREE.DirectionalLight(0x8aadf4, 0.6);
+    rimLight.position.set(-12, 16, -10);
+    this.scene.add(rimLight);
+
+    const floorLight = new THREE.PointLight(0xa855f7, 0.3, 15);
+    floorLight.position.set(0, 3, 0);
+    this.scene.add(floorLight);
 
     // 5. Animation System
     this.animation = new AnimationSystem(this.scene);
@@ -120,16 +130,13 @@ export class GameManager {
   adjustCameraForScreen(width, height) {
     const aspect = width / height;
     if (aspect < 0.75) {
-      // Mobile portrait
-      this.camera.position.set(0, 17.5, 13.5);
-      this.camera.lookAt(0, -0.3, 1.2);
+      this.camera.position.set(0, 18.0, 14.2);
+      this.camera.lookAt(0, -0.4, 1.2);
     } else if (aspect < 1.1) {
-      // Tablets / Squarish screens
-      this.camera.position.set(0, 15.0, 11.5);
+      this.camera.position.set(0, 15.5, 12.0);
       this.camera.lookAt(0, 0, 1.0);
     } else {
-      // Desktop / Landscape screens
-      this.camera.position.set(0, 13.5, 10.5);
+      this.camera.position.set(0, 14.0, 10.8);
       this.camera.lookAt(0, 0, 0.8);
     }
   }
@@ -143,6 +150,12 @@ export class GameManager {
       slot.mesh = pedestal;
       slot.highlightMesh = pedestal.userData.highlightMesh;
       this.boardGroup.add(pedestal);
+
+      // Stack count badge sprite
+      const badge = this.tileFactory.createStackCountSprite();
+      badge.position.set(slot.worldX, 0.8, slot.worldZ);
+      this.scene.add(badge);
+      this.slotBadges.set(slot.id, badge);
     }
   }
 
@@ -170,7 +183,6 @@ export class GameManager {
   }
 
   startNewGame() {
-    // Reset state
     this.score = 0;
     this.highScore = this.leaderboard.getHighScore();
     this.level = 1;
@@ -184,7 +196,6 @@ export class GameManager {
     this.selectedDeckSlot = null;
     this.hoveredSlot = null;
 
-    // Reset Timer
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => {
       if (!this.isGameOver) {
@@ -193,7 +204,7 @@ export class GameManager {
       }
     }, 1000);
 
-    // Clear board cards
+    // Clear board cards & badges
     for (const slot of this.hexGrid.getAllSlots()) {
       for (const card of slot.stack) {
         if (card.mesh) {
@@ -203,6 +214,7 @@ export class GameManager {
       }
       slot.stack = [];
       if (slot.highlightMesh) slot.highlightMesh.visible = false;
+      this.updateSlotBadge(slot);
     }
 
     // Clear deck stacks
@@ -214,14 +226,10 @@ export class GameManager {
       deckSlot.group = null;
     }
 
-    // Populate initial deck
     this.spawnDeckStacks();
     this.updateHUD();
   }
 
-  /**
-   * Determine available colors and stack complexity based on score
-   */
   getDifficultySettings() {
     let activeColorsCount = 3;
     let minStackHeight = 3;
@@ -263,9 +271,6 @@ export class GameManager {
     return { availableColors, minStackHeight, maxStackHeight, maxColorLayers };
   }
 
-  /**
-   * Spawn 3 new stacks in the deck
-   */
   spawnDeckStacks() {
     const { availableColors, minStackHeight, maxStackHeight, maxColorLayers } = this.getDifficultySettings();
 
@@ -326,7 +331,6 @@ export class GameManager {
   initEventListeners() {
     const dom = this.container;
 
-    // Resize
     window.addEventListener('resize', () => {
       const width = this.container.clientWidth || window.innerWidth;
       const height = this.container.clientHeight || window.innerHeight;
@@ -336,7 +340,6 @@ export class GameManager {
       this.renderer.setSize(width, height);
     });
 
-    // Pointer Events (Unified Mouse & Touch)
     dom.addEventListener('pointerdown', (e) => this.onPointerDown(e));
     window.addEventListener('pointermove', (e) => this.onPointerMove(e));
     window.addEventListener('pointerup', (e) => this.onPointerUp(e));
@@ -364,13 +367,12 @@ export class GameManager {
     this.dragStartPos = hitPoint.clone();
     this.hasMovedDistance = false;
 
-    // 1. Check if clicking on one of the deck stacks
+    // 1. Check if clicking a deck stack
     for (const deckSlot of this.deckSlots) {
       if (deckSlot.cards.length === 0 || !deckSlot.group) continue;
 
       const dist = hitPoint.distanceTo(deckSlot.pos);
       if (dist < HEX_RADIUS * 1.5) {
-        // If we already had another stack selected, restore its height
         if (this.selectedDeckSlot && this.selectedDeckSlot !== deckSlot && this.selectedDeckSlot.group) {
           this.selectedDeckSlot.group.position.y = 0;
         }
@@ -383,7 +385,7 @@ export class GameManager {
       }
     }
 
-    // 2. If a deck stack was previously selected (Tap-to-select mode) and user clicked an empty board slot
+    // 2. Tap-to-select support
     if (this.selectedDeckSlot && this.selectedDeckSlot.group) {
       const nearestSlot = this.findNearestSlot(hitPoint);
       if (nearestSlot && nearestSlot.stack.length === 0) {
@@ -392,7 +394,6 @@ export class GameManager {
         this.placeStackOnSlot(deckSlot, nearestSlot);
         return;
       } else {
-        // Deselect
         this.selectedDeckSlot.group.position.y = 0;
         this.selectedDeckSlot = null;
       }
@@ -409,14 +410,11 @@ export class GameManager {
       this.hasMovedDistance = true;
     }
 
-    // Follow pointer along X/Z
     this.draggedStackGroup.position.x = hitPoint.x;
     this.draggedStackGroup.position.z = hitPoint.z;
 
-    // Find nearest board slot
     const nearestSlot = this.findNearestSlot(hitPoint);
 
-    // Update highlight visual
     if (this.hoveredSlot && this.hoveredSlot !== nearestSlot) {
       if (this.hoveredSlot.highlightMesh) this.hoveredSlot.highlightMesh.visible = false;
     }
@@ -436,7 +434,6 @@ export class GameManager {
     const stackGroup = this.draggedStackGroup;
     const targetSlot = this.hoveredSlot;
 
-    // Clear highlights
     if (this.hoveredSlot && this.hoveredSlot.highlightMesh) {
       this.hoveredSlot.highlightMesh.visible = false;
     }
@@ -445,16 +442,13 @@ export class GameManager {
     this.draggedStackGroup = null;
 
     if (targetSlot && targetSlot.stack.length === 0) {
-      // Placed via Drag & Drop!
       this.selectedDeckSlot = null;
       this.placeStackOnSlot(deckSlot, targetSlot);
     } else if (!this.hasMovedDistance) {
-      // Tap Selection Mode: Keep elevated and select
       this.selectedDeckSlot = deckSlot;
       stackGroup.position.copy(deckSlot.pos);
       stackGroup.position.y = 0.8;
     } else {
-      // Dragged and dropped in invalid space: return to base
       this.selectedDeckSlot = null;
       this.animation.animateReturn(stackGroup, deckSlot.pos);
     }
@@ -476,14 +470,14 @@ export class GameManager {
   }
 
   /* =========================================================================
-   * CORE MERGING & CASCADE ENGINE
+   * CORE MERGING, MAGNET ATTRACTION & FULL COLOR POP
    * ========================================================================= */
 
   async placeStackOnSlot(deckSlot, targetSlot) {
     this.isProcessingMerge = true;
     this.sound.playSnap();
 
-    // 1. Move cards from deck stack group to board slot
+    // 1. Transfer cards from deck to target slot
     const cards = [...deckSlot.cards];
     deckSlot.cards = [];
     this.scene.remove(deckSlot.group);
@@ -501,10 +495,12 @@ export class GameManager {
       currentY += CARD_THICKNESS;
     }
 
-    // 2. Run recursive cascade merge loop
+    this.updateSlotBadge(targetSlot);
+
+    // 2. Run recursive cascade merge with targetSlot as the primary magnet!
     await this.processCascadingMerges(targetSlot);
 
-    // 3. Replenish deck if all slots are empty
+    // 3. Replenish deck if all slots empty
     const remainingDeck = this.deckSlots.filter(s => s.cards.length > 0);
     if (remainingDeck.length === 0) {
       this.spawnDeckStacks();
@@ -517,58 +513,83 @@ export class GameManager {
   }
 
   /**
-   * Main Cascade loop: keeps checking for adjacent color matches, jumping cards,
-   * popping 10-card stacks, and cascading until the board reaches equilibrium.
+   * Cascade loop:
+   * 1. The placed slot acts as a MAGNET, attracting all matching top colors from surrounding neighbors.
+   * 2. If it reaches >= 10 cards, it POPS ALL cards of that color!
+   * 3. Revealing a new layer below causes it to pull matching colors of the new layer from neighbors.
+   * 4. Once the placed slot is done, any remaining neighbor-to-neighbor matches on the board merge.
    */
-  async processCascadingMerges(placedSlot) {
+  async processCascadingMerges(primaryMagnetSlot) {
     let cascadeStep = 0;
-    let continueLoop = true;
+    let keepCascading = true;
     this.currentCombo = 1;
 
-    while (continueLoop) {
-      continueLoop = false;
-      const occupiedSlots = this.hexGrid.getOccupiedSlots();
+    while (keepCascading) {
+      keepCascading = false;
 
-      // Scan all occupied slots
+      // Phase 1: Magnetic pull towards primaryMagnetSlot (the newly placed/active slot)
+      if (primaryMagnetSlot && primaryMagnetSlot.stack.length > 0) {
+        const topCard = primaryMagnetSlot.stack[primaryMagnetSlot.stack.length - 1];
+        const magnetColorId = topCard.color.id;
+
+        const neighbors = this.hexGrid.getNeighbors(primaryMagnetSlot);
+        for (const neighbor of neighbors) {
+          if (neighbor.stack.length === 0) continue;
+
+          const neighborTopCard = neighbor.stack[neighbor.stack.length - 1];
+          if (neighborTopCard.color.id === magnetColorId) {
+            // Neighbor jumps INTO the magnet slot!
+            await this.transferMatchingCards(neighbor, primaryMagnetSlot, magnetColorId, cascadeStep);
+            cascadeStep++;
+
+            // Check if magnet slot reached >= 10 and pops all of that color
+            await this.checkAndClearFullStack(primaryMagnetSlot);
+
+            keepCascading = true;
+            break;
+          }
+        }
+
+        if (keepCascading) continue;
+      }
+
+      // Phase 2: Secondary merges between any matching neighbors across the board
+      const occupiedSlots = this.hexGrid.getOccupiedSlots();
       for (const slot of occupiedSlots) {
         if (slot.stack.length === 0) continue;
 
         const topCard = slot.stack[slot.stack.length - 1];
         const topColorId = topCard.color.id;
 
-        // Check all adjacent neighbors
         const neighbors = this.hexGrid.getNeighbors(slot);
         for (const neighbor of neighbors) {
           if (neighbor.stack.length === 0) continue;
 
           const neighborTopCard = neighbor.stack[neighbor.stack.length - 1];
           if (neighborTopCard.color.id === topColorId) {
-            // Match found! Decide merge direction:
-            // Prefer merging into whichever slot has more matching cards, or into placedSlot
+            // Merge towards the slot with more cards of that color
             let source = neighbor;
             let target = slot;
 
             const sourceMatches = this.countTopContiguousCards(source, topColorId);
             const targetMatches = this.countTopContiguousCards(target, topColorId);
 
-            if (sourceMatches > targetMatches || (source === placedSlot && sourceMatches >= targetMatches)) {
+            if (sourceMatches > targetMatches) {
               source = slot;
               target = neighbor;
             }
 
-            // Perform transfer animation
             await this.transferMatchingCards(source, target, topColorId, cascadeStep);
             cascadeStep++;
 
-            // Check if target reached 10 cards to pop
             await this.checkAndClearFullStack(target);
 
-            continueLoop = true;
-            break; // Restart board scan after topology change
+            keepCascading = true;
+            break;
           }
         }
 
-        if (continueLoop) break;
+        if (keepCascading) break;
       }
     }
   }
@@ -586,7 +607,7 @@ export class GameManager {
   }
 
   /**
-   * Transfer contiguous top cards of matching color from source to target
+   * Transfer contiguous top cards of matching color from source into target
    */
   async transferMatchingCards(source, target, colorId, cascadeStep) {
     const cardsToMove = [];
@@ -602,10 +623,9 @@ export class GameManager {
 
     if (cardsToMove.length === 0) return;
 
-    // Sound effect with ascending pitch
+    this.updateSlotBadge(source);
     this.sound.playCardSlide(cascadeStep);
 
-    // Sequential jump animations
     const jumpPromises = [];
     let currentTargetHeight = target.stack.length * CARD_THICKNESS;
 
@@ -623,26 +643,32 @@ export class GameManager {
 
       const jumpPromise = new Promise(resolve => {
         setTimeout(async () => {
-          await this.animation.animateCardJump(card.mesh, startPos, endPos, 220, 1.4);
+          await this.animation.animateCardJump(card.mesh, startPos, endPos, 200, 1.5);
+          this.animation.animateSquash(card.mesh);
           resolve();
-        }, i * 45);
+        }, i * 40);
       });
 
       jumpPromises.push(jumpPromise);
     }
 
     await Promise.all(jumpPromises);
+    this.updateSlotBadge(target);
 
-    // Award score for moved cards
+    // Score for moved cards
     const pointsGained = cardsToMove.length * 15 * this.currentCombo;
     this.addScore(pointsGained);
   }
 
   /**
-   * Checks if a stack has reached STACK_CLEAR_THRESHOLD (10 cards) of the same color
+   * Checks if a stack has reached STACK_CLEAR_THRESHOLD (10 cards).
+   * IMPORTANT: Clears ALL contiguous cards of that matching color in the stack!
    */
   async checkAndClearFullStack(slot) {
-    if (slot.stack.length < STACK_CLEAR_THRESHOLD) return;
+    if (slot.stack.length < STACK_CLEAR_THRESHOLD) {
+      this.updateSlotBadge(slot);
+      return;
+    }
 
     const topColorId = slot.stack[slot.stack.length - 1].color.id;
     let contiguousCount = 0;
@@ -656,41 +682,65 @@ export class GameManager {
     }
 
     if (contiguousCount >= STACK_CLEAR_THRESHOLD) {
-      // Pop the 10 matching cards
+      // POP ALL contiguous cards of that matching color!
       const clearedCards = [];
-      for (let i = 0; i < STACK_CLEAR_THRESHOLD; i++) {
+      for (let i = 0; i < contiguousCount; i++) {
         clearedCards.push(slot.stack.pop());
       }
+
+      this.updateSlotBadge(slot);
 
       const colorDef = clearedCards[0].color;
       const centerPos = new THREE.Vector3(
         slot.worldX,
-        slot.stack.length * CARD_THICKNESS + 0.5,
+        slot.stack.length * CARD_THICKNESS + 0.4,
         slot.worldZ
       );
 
-      // Play chime & clear sound
       this.sound.playStackClear(this.currentCombo);
       this.totalClears++;
 
-      // Award combo bonus
-      const clearBonus = 500 * this.currentCombo;
+      // Award points for every card cleared + clear bonus * combo
+      const clearBonus = (clearedCards.length * 25 + 500) * this.currentCombo;
       this.addScore(clearBonus);
 
-      // Show combo banner if combo > 1
       if (this.currentCombo > 1) {
         this.showComboBanner(this.currentCombo);
         this.maxCombo = Math.max(this.maxCombo, this.currentCombo);
       }
       this.currentCombo++;
 
-      // 3D particle and pop animation
       await this.animation.animateStackClear(
         clearedCards.map(c => c.mesh),
         centerPos,
         colorDef
       );
+
+      this.updateSlotBadge(slot);
     }
+  }
+
+  /**
+   * Updates the 3D count badge hovering above a board slot
+   */
+  updateSlotBadge(slot) {
+    const badge = this.slotBadges.get(slot.id);
+    if (!badge) return;
+
+    if (slot.stack.length === 0) {
+      badge.userData.updateCount(0);
+      badge.visible = false;
+      return;
+    }
+
+    const topCard = slot.stack[slot.stack.length - 1];
+    const contiguousCount = this.countTopContiguousCards(slot, topCard.color.id);
+
+    // Update position based on stack height
+    const heightY = slot.stack.length * CARD_THICKNESS + 0.75;
+    badge.position.set(slot.worldX, heightY, slot.worldZ);
+
+    badge.userData.updateCount(contiguousCount, STACK_CLEAR_THRESHOLD, topCard.color.css);
   }
 
   /* =========================================================================
@@ -703,7 +753,6 @@ export class GameManager {
       this.highScore = this.score;
     }
 
-    // Trigger score popup and bump effect
     this.showScorePopup(`+${points}`);
     this.updateHUD();
 
@@ -807,7 +856,6 @@ export class GameManager {
       this.animation.update(delta);
     }
 
-    // Subtle idle floating on unselected deck stacks
     const time = this.clock.getElapsedTime();
     for (const deckSlot of this.deckSlots) {
       if (deckSlot.group && deckSlot !== this.draggedDeckItem && deckSlot !== this.selectedDeckSlot) {
