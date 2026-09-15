@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Hexa Sort 3D - Modo Infinito</title>
     <meta name="description" content="Jogo de quebra-cabeça 3D Hexa Sort infinito com fusão em cascata, pontuação em tempo real, timer e placar online de recordes." />
-    <meta name="theme-color" content="#181926" />
+    <meta name="theme-color" content="#d8dce4" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./src/style.css" />
   </head>
   <body>
@@ -27,50 +27,57 @@
       <!-- Top HUD Header -->
       <header id="game-header">
         <div class="hud-group left">
-          <div class="stat-card" id="highscore-card">
+          <!-- Coins / Score Pill (Matching Left Pill in Reference) -->
+          <div class="stat-pill coin-pill" id="score-card">
+            <div class="coin-icon-badge">🪙</div>
+            <div class="stat-info">
+              <span class="score-value" id="score-val">0</span>
+            </div>
+            <div class="pill-plus-btn">+</div>
+            <div id="score-popup-container"></div>
+          </div>
+
+          <!-- Timer & Highscore Pills -->
+          <div class="stat-pill timer-pill" id="timer-card">
+            <span class="stat-icon">⏱️</span>
+            <span class="stat-value" id="timer-val">00:00</span>
+          </div>
+          <div class="stat-pill highscore-pill" id="highscore-card">
             <span class="stat-icon">👑</span>
             <div class="stat-info">
-              <span class="stat-label">RECORDE</span>
+              <span class="stat-label">REC</span>
               <span class="stat-value" id="highscore-val">0</span>
             </div>
           </div>
-          <div class="stat-card" id="timer-card">
-            <span class="stat-icon">⏱️</span>
-            <div class="stat-info">
-              <span class="stat-label">TEMPO</span>
-              <span class="stat-value" id="timer-val">00:00</span>
-            </div>
-          </div>
         </div>
 
+        <!-- Center Level & Progress Capsule (Matching Center Capsule in Reference) -->
         <div class="hud-group center">
-          <div class="score-card" id="score-card">
-            <span class="score-label">PONTOS</span>
-            <span class="score-value" id="score-val">0</span>
-            <div id="score-popup-container"></div>
+          <div class="level-capsule" id="level-card">
+            <div class="capsule-rainbow-badge">🌈</div>
+            <div class="capsule-content">
+              <div class="capsule-target">
+                <span class="capsule-sparkle">✨</span>
+                <span class="capsule-label">NÍVEL <strong id="level-val">1</strong></span>
+              </div>
+            </div>
           </div>
         </div>
 
+        <!-- Right Action Buttons -->
         <div class="hud-group right">
-          <div class="stat-card" id="level-card">
-            <span class="stat-icon">⭐</span>
-            <div class="stat-info">
-              <span class="stat-label">NÍVEL</span>
-              <span class="stat-value" id="level-val">1</span>
-            </div>
-          </div>
           <div class="btn-group">
-            <button id="btn-sound" class="icon-btn" title="Ativar/Desativar Som" aria-label="Som">🔊</button>
-            <button id="btn-leaderboard" class="icon-btn" title="Placar de Recordes" aria-label="Placar">🏆</button>
-            <button id="btn-restart" class="icon-btn" title="Reiniciar Partida" aria-label="Reiniciar">🔄</button>
-            <button id="btn-info" class="icon-btn" title="Como Jogar" aria-label="Ajuda">ℹ️</button>
+            <button id="btn-sound" class="icon-btn bubble-btn" title="Ativar/Desativar Som" aria-label="Som">🔊</button>
+            <button id="btn-leaderboard" class="icon-btn bubble-btn" title="Placar de Recordes" aria-label="Placar">🏆</button>
+            <button id="btn-restart" class="icon-btn bubble-btn" title="Reiniciar Partida" aria-label="Reiniciar">🔄</button>
+            <button id="btn-info" class="icon-btn bubble-btn" title="Como Jogar" aria-label="Ajuda">⚙️</button>
           </div>
         </div>
       </header>
 
       <!-- Bottom Drag Shelf / Deck Indicator -->
       <div id="deck-hint">
-        <span>Arraste ou clique nas cartas abaixo para posicionar no tabuleiro</span>
+        <span>Arraste ou clique nas pilhas para posicionar no tabuleiro</span>
       </div>
 
       <!-- Instructions Modal -->

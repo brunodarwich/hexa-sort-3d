@@ -94,31 +94,41 @@ export class GameManager {
     this.renderer.toneMappingExposure = 1.2;
     this.container.appendChild(this.renderer.domElement);
 
-    // 4. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    // 4. Studio Lighting & Shadows
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.15);
     this.scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
-    dirLight.position.set(12, 24, 12);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.55);
+    dirLight.position.set(12, 28, 14);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 50;
-    dirLight.shadow.camera.left = -10;
-    dirLight.shadow.camera.right = 10;
-    dirLight.shadow.camera.top = 10;
-    dirLight.shadow.camera.bottom = -10;
-    dirLight.shadow.bias = -0.0005;
+    dirLight.shadow.camera.far = 60;
+    dirLight.shadow.camera.left = -12;
+    dirLight.shadow.camera.right = 12;
+    dirLight.shadow.camera.top = 12;
+    dirLight.shadow.camera.bottom = -12;
+    dirLight.shadow.bias = -0.0003;
+    dirLight.shadow.radius = 2.0;
     this.scene.add(dirLight);
 
-    const rimLight = new THREE.DirectionalLight(0x8aadf4, 0.6);
-    rimLight.position.set(-12, 16, -10);
-    this.scene.add(rimLight);
+    const fillLight = new THREE.DirectionalLight(0xe2e8f0, 0.65);
+    fillLight.position.set(-12, 20, -10);
+    this.scene.add(fillLight);
 
-    const floorLight = new THREE.PointLight(0xa855f7, 0.3, 15);
-    floorLight.position.set(0, 3, 0);
-    this.scene.add(floorLight);
+    const bounceLight = new THREE.PointLight(0xfff7ed, 0.35, 25);
+    bounceLight.position.set(0, 8, 10);
+    this.scene.add(bounceLight);
+
+    // Soft Tabletop Shadow Receiver Floor
+    const floorShadowGeom = new THREE.PlaneGeometry(80, 80);
+    const floorShadowMat = new THREE.ShadowMaterial({ opacity: 0.20 });
+    const floorShadowMesh = new THREE.Mesh(floorShadowGeom, floorShadowMat);
+    floorShadowMesh.rotation.x = -Math.PI / 2;
+    floorShadowMesh.position.y = -PEDESTAL_HEIGHT;
+    floorShadowMesh.receiveShadow = true;
+    this.scene.add(floorShadowMesh);
 
     // 5. Animation System
     this.animation = new AnimationSystem(this.scene);
@@ -132,19 +142,19 @@ export class GameManager {
     const aspect = width / height;
     if (aspect < 0.55) {
       // Ultra tall phone screens (20:9, 19.5:9, iPhone 14/15/16)
-      this.camera.position.set(0, 22.5, 12.5);
+      this.camera.position.set(0, 22.0, 13.0);
       this.camera.lookAt(0, 0.4, 0.5);
     } else if (aspect < 0.8) {
       // Standard mobile portrait (16:9, 18:9)
-      this.camera.position.set(0, 20.0, 11.5);
+      this.camera.position.set(0, 19.5, 11.8);
       this.camera.lookAt(0, 0.3, 0.4);
     } else if (aspect < 1.1) {
       // Tablets / iPads / Foldables
-      this.camera.position.set(0, 17.5, 10.2);
+      this.camera.position.set(0, 17.0, 10.5);
       this.camera.lookAt(0, 0.2, 0.3);
     } else {
       // Desktop / Landscape
-      this.camera.position.set(0, 16.0, 9.2);
+      this.camera.position.set(0, 16.0, 9.6);
       this.camera.lookAt(0, 0.1, 0.2);
     }
   }
