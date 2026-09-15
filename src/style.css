@@ -60,13 +60,15 @@ body, html {
 }
 
 /* =========================================================================
- * TOP HEADER HUD - CASUAL MOBILE GAME STYLE
+ * TOP HEADER HUD - CASUAL MOBILE & DESKTOP GAME STYLE
  * ========================================================================= */
 #game-header {
   position: absolute;
   top: max(14px, env(safe-area-inset-top));
-  left: max(14px, env(safe-area-inset-left));
-  right: max(14px, env(safe-area-inset-right));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 28px);
+  max-width: 860px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -890,8 +892,10 @@ body, html {
 @media (max-width: 640px) {
   #game-header {
     top: max(8px, env(safe-area-inset-top));
-    left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 16px);
+    max-width: 100%;
     gap: 6px;
   }
 

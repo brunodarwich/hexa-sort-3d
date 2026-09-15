@@ -121,8 +121,8 @@ export class GameManager {
     bounceLight.position.set(0, 8, 10);
     this.scene.add(bounceLight);
 
-    // Soft Tabletop Shadow Receiver Floor
-    const floorShadowGeom = new THREE.PlaneGeometry(80, 80);
+    // Soft Tabletop Shadow Receiver Floor (large enough for ultrawide desktop)
+    const floorShadowGeom = new THREE.PlaneGeometry(120, 120);
     const floorShadowMat = new THREE.ShadowMaterial({ opacity: 0.20 });
     const floorShadowMesh = new THREE.Mesh(floorShadowGeom, floorShadowMat);
     floorShadowMesh.rotation.x = -Math.PI / 2;
@@ -142,21 +142,28 @@ export class GameManager {
     const aspect = width / height;
     if (aspect < 0.55) {
       // Ultra tall phone screens (20:9, 19.5:9, iPhone 14/15/16)
-      this.camera.position.set(0, 22.0, 13.0);
-      this.camera.lookAt(0, 0.4, 0.5);
+      this.camera.position.set(0, 23.0, 14.0);
+      this.camera.lookAt(0, 0.3, 1.2);
     } else if (aspect < 0.8) {
       // Standard mobile portrait (16:9, 18:9)
-      this.camera.position.set(0, 19.5, 11.8);
-      this.camera.lookAt(0, 0.3, 0.4);
-    } else if (aspect < 1.1) {
+      this.camera.position.set(0, 21.0, 13.0);
+      this.camera.lookAt(0, 0.2, 1.1);
+    } else if (aspect < 1.15) {
       // Tablets / iPads / Foldables
-      this.camera.position.set(0, 17.0, 10.5);
-      this.camera.lookAt(0, 0.2, 0.3);
+      this.camera.position.set(0, 19.0, 11.8);
+      this.camera.lookAt(0, 0.0, 1.0);
     } else {
-      // Desktop / Landscape
-      this.camera.position.set(0, 16.0, 9.6);
-      this.camera.lookAt(0, 0.1, 0.2);
+      // Desktop / Laptop / Landscape (16:9, 16:10, ultrawide)
+      this.camera.position.set(0, 17.5, 10.8);
+      this.camera.lookAt(0, -0.1, 0.9);
     }
+  }
+
+  getDeckLayout(width, height) {
+    const aspect = width / height;
+    const spacing = aspect < 0.65 ? 2.6 : aspect < 0.9 ? 2.9 : 3.2;
+    const z = aspect >= 1.15 ? 4.9 : aspect >= 0.8 ? 5.1 : 5.3;
+    return { spacing, z };
   }
 
   initBoardVisuals() {
@@ -181,12 +188,12 @@ export class GameManager {
     this.deckGroup = new THREE.Group();
     this.scene.add(this.deckGroup);
 
-    const aspect = (this.container.clientWidth || window.innerWidth) / (this.container.clientHeight || window.innerHeight);
-    const spacing = aspect < 0.65 ? 2.6 : aspect < 0.9 ? 2.9 : 3.3;
+    const width = this.container.clientWidth || window.innerWidth;
+    const height = this.container.clientHeight || window.innerHeight;
+    const { spacing, z } = this.getDeckLayout(width, height);
 
     for (let i = 0; i < DECK_SLOT_COUNT; i++) {
       const x = (i - 1) * spacing;
-      const z = 5.8;
       const y = 0;
 
       const pedestal = this.tileFactory.createDeckPedestal(x, y, z, i);
@@ -199,6 +206,25 @@ export class GameManager {
         group: null,
         pedestalMesh: pedestal
       });
+    }
+  }
+
+  updateDeckPositions() {
+    const width = this.container.clientWidth || window.innerWidth;
+    const height = this.container.clientHeight || window.innerHeight;
+    const { spacing, z } = this.getDeckLayout(width, height);
+
+    for (let i = 0; i < this.deckSlots.length; i++) {
+      const slot = this.deckSlots[i];
+      const x = (i - 1) * spacing;
+      slot.pos.set(x, 0, z);
+      if (slot.pedestalMesh) {
+        slot.pedestalMesh.position.set(x, -PEDESTAL_HEIGHT / 2, z);
+      }
+      if (slot.group && slot !== this.draggedDeckItem && slot !== this.selectedDeckSlot) {
+        slot.group.position.x = x;
+        slot.group.position.z = z;
+      }
     }
   }
 
@@ -365,6 +391,7 @@ export class GameManager {
       this.camera.aspect = width / height;
       this.camera.updateProjectionMatrix();
       this.adjustCameraForScreen(width, height);
+      this.updateDeckPositions();
       this.renderer.setSize(width, height);
     });
 
@@ -408,6 +435,7 @@ export class GameManager {
         this.draggedDeckItem = deckSlot;
         this.draggedStackGroup = deckSlot.group;
         this.draggedStackGroup.position.y = 1.6;
+        this.container.style.cursor = 'grabbing';
         this.sound.playPick();
         return;
       }
@@ -429,10 +457,21 @@ export class GameManager {
   }
 
   onPointerMove(e) {
-    if (!this.draggedDeckItem || !this.draggedStackGroup) return;
-
     const hitPoint = this.getPointerIntersection(e);
     if (!hitPoint) return;
+
+    if (!this.draggedDeckItem || !this.draggedStackGroup) {
+      // Hover cursor state for desktop
+      let isOverPickable = false;
+      for (const deckSlot of this.deckSlots) {
+        if (deckSlot.cards.length > 0 && hitPoint.distanceTo(deckSlot.pos) < HEX_RADIUS * 1.3) {
+          isOverPickable = true;
+          break;
+        }
+      }
+      this.container.style.cursor = isOverPickable ? 'grab' : 'default';
+      return;
+    }
 
     if (this.dragStartPos && hitPoint.distanceTo(this.dragStartPos) > 0.3) {
       this.hasMovedDistance = true;
