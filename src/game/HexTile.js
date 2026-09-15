@@ -10,16 +10,16 @@ export const CARD_THICKNESS = 0.16;
 export const CARD_RADIUS = 0.94;
 export const PEDESTAL_HEIGHT = 0.20;
 
-// Vivid, juicy candy casual game palette matching high-end 3D casual games
+// Strong, vivid saturated candy palette from previous version
 export const PALETTE = [
-  { id: 'yellow', name: 'Amarelo', hex: 0xffcb11, css: '#ffcb11', emissive: 0x3d2c00 },
+  { id: 'yellow', name: 'Amarelo', hex: 0xffcc00, css: '#ffcc00', emissive: 0x332800 },
   { id: 'green',  name: 'Verde',   hex: 0x22c55e, css: '#22c55e', emissive: 0x053313 },
-  { id: 'blue',   name: 'Azul',    hex: 0x3b82f6, css: '#3b82f6', emissive: 0x0b2866 },
-  { id: 'red',    name: 'Vermelho',hex: 0xf43f5e, css: '#f43f5e', emissive: 0x4c0a15 },
-  { id: 'cyan',   name: 'Ciano',   hex: 0x06b6d4, css: '#06b6d4', emissive: 0x013745 },
-  { id: 'purple', name: 'Roxo',    hex: 0xa855f7, css: '#a855f7', emissive: 0x2d0852 },
-  { id: 'orange', name: 'Laranja', hex: 0xf97316, css: '#f97316', emissive: 0x481b00 },
-  { id: 'white',  name: 'Branco',  hex: 0xf8fafc, css: '#f8fafc', emissive: 0x1e293b }
+  { id: 'blue',   name: 'Azul',    hex: 0x2563eb, css: '#2563eb', emissive: 0x0a2266 },
+  { id: 'red',    name: 'Vermelho',hex: 0xff334b, css: '#ff334b', emissive: 0x550a14 },
+  { id: 'cyan',   name: 'Ciano',   hex: 0x00d5f8, css: '#00d5f8', emissive: 0x003344 },
+  { id: 'purple', name: 'Roxo',    hex: 0xa855f7, css: '#a855f7', emissive: 0x2e0854 },
+  { id: 'orange', name: 'Laranja', hex: 0xff7a00, css: '#ff7a00', emissive: 0x441b00 },
+  { id: 'white',  name: 'Branco',  hex: 0xf8fafc, css: '#f8fafc', emissive: 0x222222 }
 ];
 
 let sharedShadowTexture = null;
@@ -134,21 +134,16 @@ export class TileFactory {
   }
 
   /**
-   * Glossy acrylic/candy MeshPhysicalMaterial with clearcoat sheen
+   * Strong, saturated glossy candy material for cards
    */
   getCardMaterial(colorDef) {
     if (!this.materialsCache.has(colorDef.id)) {
-      const mat = new THREE.MeshPhysicalMaterial({
+      const mat = new THREE.MeshStandardMaterial({
         color: colorDef.hex,
-        roughness: 0.12,
-        metalness: 0.03,
-        clearcoat: 0.95,
-        clearcoatRoughness: 0.07,
-        reflectivity: 0.92,
+        roughness: 0.18,
+        metalness: 0.05,
         emissive: colorDef.emissive,
-        emissiveIntensity: 0.09,
-        specularColor: 0xffffff,
-        specularIntensity: 1.0
+        emissiveIntensity: 0.16
       });
       this.materialsCache.set(colorDef.id, mat);
     }
@@ -164,41 +159,28 @@ export class TileFactory {
     cardMesh.castShadow = true;
     cardMesh.receiveShadow = true;
 
-    // Top inset glossy border ring
-    const borderGeom = new THREE.RingGeometry(CARD_RADIUS * 0.70, CARD_RADIUS * 0.86, 6);
+    // Subtle top glossy border ring
+    const borderGeom = new THREE.RingGeometry(CARD_RADIUS * 0.72, CARD_RADIUS * 0.88, 6);
     borderGeom.rotateX(-Math.PI / 2);
     borderGeom.rotateY(Math.PI / 6);
     const borderMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.32,
+      opacity: 0.22,
       depthWrite: false
     });
     const innerBorder = new THREE.Mesh(borderGeom, borderMat);
     innerBorder.position.y = CARD_THICKNESS / 2 + 0.002;
     cardMesh.add(innerBorder);
 
-    // Center subtle glossy emblem ring
-    const centerGeom = new THREE.RingGeometry(0, CARD_RADIUS * 0.26, 24);
-    centerGeom.rotateX(-Math.PI / 2);
-    const centerMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.18,
-      depthWrite: false
-    });
-    const centerEmblem = new THREE.Mesh(centerGeom, centerMat);
-    centerEmblem.position.y = CARD_THICKNESS / 2 + 0.002;
-    cardMesh.add(centerEmblem);
-
     // Subtle dark underside rim to make chip layers distinctly readable in stacks (ambient occlusion effect)
-    const underGeom = new THREE.RingGeometry(CARD_RADIUS * 0.78, CARD_RADIUS * 0.98, 6);
+    const underGeom = new THREE.RingGeometry(CARD_RADIUS * 0.80, CARD_RADIUS * 0.98, 6);
     underGeom.rotateX(Math.PI / 2);
     underGeom.rotateY(Math.PI / 6);
     const underMat = new THREE.MeshBasicMaterial({
-      color: 0x0a0f1d,
+      color: 0x000000,
       transparent: true,
-      opacity: 0.20,
+      opacity: 0.16,
       depthWrite: false
     });
     const underRim = new THREE.Mesh(underGeom, underMat);

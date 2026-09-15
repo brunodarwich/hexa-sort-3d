@@ -14,63 +14,6 @@ import { LeaderboardManager } from './Leaderboard.js';
 export const DECK_SLOT_COUNT = 3;
 export const STACK_CLEAR_THRESHOLD = 10;
 
-/**
- * Generates an HDR-like procedural studio environment map with softbox highlights
- * so physically-based materials exhibit rich clearcoat reflections and sheen.
- */
-function createStudioEnvironment(renderer) {
-  const pmremGenerator = new THREE.PMREMGenerator(renderer);
-  pmremGenerator.compileEquirectangularShader();
-
-  const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-
-  // Neutral studio gradient fill
-  const bgGrad = ctx.createLinearGradient(0, 0, 0, 256);
-  bgGrad.addColorStop(0, '#f8fafc');
-  bgGrad.addColorStop(0.5, '#e2e8f0');
-  bgGrad.addColorStop(1, '#94a3b8');
-  ctx.fillStyle = bgGrad;
-  ctx.fillRect(0, 0, 512, 256);
-
-  // Top overhead softbox (creates smooth glossy highlights across the top surface)
-  const topGrad = ctx.createRadialGradient(256, 40, 5, 256, 40, 140);
-  topGrad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
-  topGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.75)');
-  topGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-  ctx.fillStyle = topGrad;
-  ctx.fillRect(0, 0, 512, 140);
-
-  // Key light side softbox
-  const keyGrad = ctx.createRadialGradient(120, 85, 4, 120, 85, 80);
-  keyGrad.addColorStop(0, 'rgba(255, 250, 240, 0.95)');
-  keyGrad.addColorStop(0.5, 'rgba(255, 250, 240, 0.45)');
-  keyGrad.addColorStop(1, 'rgba(255, 250, 240, 0)');
-  ctx.fillStyle = keyGrad;
-  ctx.beginPath();
-  ctx.arc(120, 85, 80, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Cool rim softbox
-  const rimGrad = ctx.createRadialGradient(390, 100, 4, 390, 100, 75);
-  rimGrad.addColorStop(0, 'rgba(224, 242, 254, 0.85)');
-  rimGrad.addColorStop(0.5, 'rgba(224, 242, 254, 0.35)');
-  rimGrad.addColorStop(1, 'rgba(224, 242, 254, 0)');
-  ctx.fillStyle = rimGrad;
-  ctx.beginPath();
-  ctx.arc(390, 100, 75, 0, Math.PI * 2);
-  ctx.fill();
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.mapping = THREE.EquirectangularReflectionMapping;
-  const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-  pmremGenerator.dispose();
-  texture.dispose();
-  return envMap;
-}
-
 export class GameManager {
   constructor(canvasContainer) {
     this.container = canvasContainer;
@@ -154,38 +97,32 @@ export class GameManager {
     this.renderer.toneMappingExposure = 1.15;
     this.container.appendChild(this.renderer.domElement);
 
-    // Studio Environment Reflections
-    this.scene.environment = createStudioEnvironment(this.renderer);
+    // 4. High-Contrast Studio Lighting Rig (Vibrant colors, no milky wash)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.05);
+    this.scene.add(ambientLight);
 
-    // 4. Studio Lighting Rig
-    // Balanced Hemisphere ambient fill (warm sky, cool ground bounce)
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xb0b8c6, 0.95);
-    this.scene.add(hemiLight);
-
-    // Key Light: Warm directional studio key casting soft shadows
-    const dirLight = new THREE.DirectionalLight(0xfffdf5, 1.45);
-    dirLight.position.set(12, 26, 14);
+    // Key Light: Clean directional studio key casting soft shadows
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.55);
+    dirLight.position.set(12, 28, 14);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 0.5;
     dirLight.shadow.camera.far = 60;
-    dirLight.shadow.camera.left = -14;
-    dirLight.shadow.camera.right = 14;
-    dirLight.shadow.camera.top = 14;
-    dirLight.shadow.camera.bottom = -14;
-    dirLight.shadow.bias = -0.0002;
-    dirLight.shadow.radius = 2.8;
+    dirLight.shadow.camera.left = -12;
+    dirLight.shadow.camera.right = 12;
+    dirLight.shadow.camera.top = 12;
+    dirLight.shadow.camera.bottom = -12;
+    dirLight.shadow.bias = -0.0003;
+    dirLight.shadow.radius = 2.0;
     this.scene.add(dirLight);
 
-    // Cool Rim Backlight (giving pieces that crisp sculpted silhouette)
-    const rimLight = new THREE.DirectionalLight(0xdbeafe, 0.75);
-    rimLight.position.set(-14, 20, -12);
-    this.scene.add(rimLight);
+    const fillLight = new THREE.DirectionalLight(0xe2e8f0, 0.60);
+    fillLight.position.set(-12, 20, -10);
+    this.scene.add(fillLight);
 
-    // Soft warm under-bounce fill
-    const bounceLight = new THREE.PointLight(0xffedd5, 0.40, 28);
-    bounceLight.position.set(0, 7, 8);
+    const bounceLight = new THREE.PointLight(0xfff7ed, 0.35, 25);
+    bounceLight.position.set(0, 8, 10);
     this.scene.add(bounceLight);
 
     // Dynamic clearance flash light
