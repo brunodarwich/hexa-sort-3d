@@ -208,25 +208,29 @@ export class AnimationSystem {
       // 3. Spawn 3D sparkle particles
       this.spawn3DParticles(centerPos, colorDef, Math.min(35, cards.length * 3));
 
-      // 4. Animate each card scaling up and dispersing with white flash
+      // 4. Animate each card scaling up, spinning, and dispersing with white flash
       let finished = 0;
       cards.forEach((cardMesh, idx) => {
         const initialScale = cardMesh.scale.clone();
         const initialY = cardMesh.position.y;
         const delay = idx * 12;
+        const randomRotX = (Math.random() - 0.5) * 1.5;
+        const randomRotY = (Math.random() - 0.5) * 2.2;
 
         this.addAnimation({
           duration: 220,
           delay: delay,
           easing: AnimationSystem.easeOutQuad,
           onUpdate: (t) => {
-            const scaleFactor = 1 + t * 0.5;
+            const scaleFactor = 1 + t * 0.45;
             cardMesh.scale.set(
               initialScale.x * scaleFactor,
               initialScale.y * (1 - t * 0.8),
               initialScale.z * scaleFactor
             );
-            cardMesh.position.y = initialY + t * 1.0;
+            cardMesh.position.y = initialY + t * 1.2;
+            cardMesh.rotation.x = t * randomRotX;
+            cardMesh.rotation.y = t * randomRotY;
             if (cardMesh.material) {
               cardMesh.material.transparent = true;
               cardMesh.material.opacity = 1 - t;
@@ -246,21 +250,23 @@ export class AnimationSystem {
   }
 
   /**
-   * Spawns an expanding glowing shockwave ring on the floor
+   * Spawns an energetic expanding glowing shockwave ring on the floor
    */
   spawnShockwaveRing(pos, colorDef) {
-    const ringGeom = new THREE.RingGeometry(0.6, 0.95, 32);
+    const ringGeom = new THREE.RingGeometry(0.5, 1.05, 36);
     ringGeom.rotateX(-Math.PI / 2);
 
     const ringMat = new THREE.MeshBasicMaterial({
       color: colorDef.hex,
       transparent: true,
-      opacity: 0.9,
-      side: THREE.DoubleSide
+      opacity: 0.95,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
     });
 
     const mesh = new THREE.Mesh(ringGeom, ringMat);
-    mesh.position.set(pos.x, 0.05, pos.z);
+    mesh.position.set(pos.x, 0.04, pos.z);
     this.scene.add(mesh);
 
     this.shockwaves.push({
@@ -271,29 +277,48 @@ export class AnimationSystem {
   }
 
   /**
-   * Spawns 3D particle fragments in Three.js world space
+   * Spawns sparkling faceted 3D jewel gem fragments in Three.js world space
    */
-  spawn3DParticles(pos, colorDef, count = 24) {
-    const particleGeom = new THREE.BoxGeometry(0.14, 0.14, 0.14);
-    const particleMat = new THREE.MeshBasicMaterial({
+  spawn3DParticles(pos, colorDef, count = 28) {
+    // Sparkling octahedron jewel geometry catches faceted highlights
+    const gemGeom = new THREE.OctahedronGeometry(0.13, 0);
+
+    const mainMat = new THREE.MeshPhysicalMaterial({
       color: colorDef.hex,
+      roughness: 0.1,
+      metalness: 0.1,
+      clearcoat: 1.0,
+      emissive: colorDef.emissive,
+      emissiveIntensity: 0.4,
+      transparent: true,
+      opacity: 1
+    });
+
+    const goldMat = new THREE.MeshPhysicalMaterial({
+      color: 0xfef08a,
+      roughness: 0.1,
+      metalness: 0.3,
+      clearcoat: 1.0,
+      emissive: 0xca8a04,
+      emissiveIntensity: 0.5,
       transparent: true,
       opacity: 1
     });
 
     for (let i = 0; i < count; i++) {
-      const mesh = new THREE.Mesh(particleGeom, particleMat.clone());
+      const mat = (i % 3 === 0) ? goldMat.clone() : mainMat.clone();
+      const mesh = new THREE.Mesh(gemGeom, mat);
       mesh.position.set(
-        pos.x + (Math.random() - 0.5) * 0.6,
-        pos.y + Math.random() * 0.4,
-        pos.z + (Math.random() - 0.5) * 0.6
+        pos.x + (Math.random() - 0.5) * 0.7,
+        pos.y + Math.random() * 0.5,
+        pos.z + (Math.random() - 0.5) * 0.7
       );
 
       const angle = Math.random() * Math.PI * 2;
-      const speed = 3.0 + Math.random() * 4.5;
+      const speed = 3.2 + Math.random() * 5.0;
       const vx = Math.cos(angle) * speed;
       const vz = Math.sin(angle) * speed;
-      const vy = 3.5 + Math.random() * 5.0;
+      const vy = 3.8 + Math.random() * 5.2;
 
       this.scene.add(mesh);
 
@@ -302,10 +327,10 @@ export class AnimationSystem {
         vx,
         vy,
         vz,
-        rx: (Math.random() - 0.5) * 12,
-        ry: (Math.random() - 0.5) * 12,
+        rx: (Math.random() - 0.5) * 16,
+        ry: (Math.random() - 0.5) * 16,
         life: 1.0,
-        baseScale: 1.0
+        baseScale: Math.random() * 0.4 + 0.8
       });
     }
   }

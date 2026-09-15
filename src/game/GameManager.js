@@ -14,6 +14,63 @@ import { LeaderboardManager } from './Leaderboard.js';
 export const DECK_SLOT_COUNT = 3;
 export const STACK_CLEAR_THRESHOLD = 10;
 
+/**
+ * Generates an HDR-like procedural studio environment map with softbox highlights
+ * so physically-based materials exhibit rich clearcoat reflections and sheen.
+ */
+function createStudioEnvironment(renderer) {
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  pmremGenerator.compileEquirectangularShader();
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  // Neutral studio gradient fill
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, 256);
+  bgGrad.addColorStop(0, '#f8fafc');
+  bgGrad.addColorStop(0.5, '#e2e8f0');
+  bgGrad.addColorStop(1, '#94a3b8');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, 512, 256);
+
+  // Top overhead softbox (creates smooth glossy highlights across the top surface)
+  const topGrad = ctx.createRadialGradient(256, 40, 5, 256, 40, 140);
+  topGrad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+  topGrad.addColorStop(0.4, 'rgba(255, 255, 255, 0.75)');
+  topGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  ctx.fillStyle = topGrad;
+  ctx.fillRect(0, 0, 512, 140);
+
+  // Key light side softbox
+  const keyGrad = ctx.createRadialGradient(120, 85, 4, 120, 85, 80);
+  keyGrad.addColorStop(0, 'rgba(255, 250, 240, 0.95)');
+  keyGrad.addColorStop(0.5, 'rgba(255, 250, 240, 0.45)');
+  keyGrad.addColorStop(1, 'rgba(255, 250, 240, 0)');
+  ctx.fillStyle = keyGrad;
+  ctx.beginPath();
+  ctx.arc(120, 85, 80, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cool rim softbox
+  const rimGrad = ctx.createRadialGradient(390, 100, 4, 390, 100, 75);
+  rimGrad.addColorStop(0, 'rgba(224, 242, 254, 0.85)');
+  rimGrad.addColorStop(0.5, 'rgba(224, 242, 254, 0.35)');
+  rimGrad.addColorStop(1, 'rgba(224, 242, 254, 0)');
+  ctx.fillStyle = rimGrad;
+  ctx.beginPath();
+  ctx.arc(390, 100, 75, 0, Math.PI * 2);
+  ctx.fill();
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+  const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+  pmremGenerator.dispose();
+  texture.dispose();
+  return envMap;
+}
+
 export class GameManager {
   constructor(canvasContainer) {
     this.container = canvasContainer;
@@ -32,6 +89,9 @@ export class GameManager {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
     this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    this.dynamicFlashLight = null;
+    this.ambientMotes = null;
+    this.ambientMotesSpeeds = [];
 
     // Game State
     this.score = 0;
@@ -79,56 +139,71 @@ export class GameManager {
     this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
     this.adjustCameraForScreen(width, height);
 
-    // 3. Renderer with mobile battery & performance clamp
+    // 3. High-fidelity WebGL Renderer
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
       powerPreference: 'high-performance',
-      precision: 'mediump'
+      precision: 'highp'
     });
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.0));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.2;
+    this.renderer.toneMappingExposure = 1.15;
     this.container.appendChild(this.renderer.domElement);
 
-    // 4. Studio Lighting & Shadows
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.15);
-    this.scene.add(ambientLight);
+    // Studio Environment Reflections
+    this.scene.environment = createStudioEnvironment(this.renderer);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.55);
-    dirLight.position.set(12, 28, 14);
+    // 4. Studio Lighting Rig
+    // Balanced Hemisphere ambient fill (warm sky, cool ground bounce)
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xb0b8c6, 0.95);
+    this.scene.add(hemiLight);
+
+    // Key Light: Warm directional studio key casting soft shadows
+    const dirLight = new THREE.DirectionalLight(0xfffdf5, 1.45);
+    dirLight.position.set(12, 26, 14);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 0.5;
     dirLight.shadow.camera.far = 60;
-    dirLight.shadow.camera.left = -12;
-    dirLight.shadow.camera.right = 12;
-    dirLight.shadow.camera.top = 12;
-    dirLight.shadow.camera.bottom = -12;
-    dirLight.shadow.bias = -0.0003;
-    dirLight.shadow.radius = 2.0;
+    dirLight.shadow.camera.left = -14;
+    dirLight.shadow.camera.right = 14;
+    dirLight.shadow.camera.top = 14;
+    dirLight.shadow.camera.bottom = -14;
+    dirLight.shadow.bias = -0.0002;
+    dirLight.shadow.radius = 2.8;
     this.scene.add(dirLight);
 
-    const fillLight = new THREE.DirectionalLight(0xe2e8f0, 0.65);
-    fillLight.position.set(-12, 20, -10);
-    this.scene.add(fillLight);
+    // Cool Rim Backlight (giving pieces that crisp sculpted silhouette)
+    const rimLight = new THREE.DirectionalLight(0xdbeafe, 0.75);
+    rimLight.position.set(-14, 20, -12);
+    this.scene.add(rimLight);
 
-    const bounceLight = new THREE.PointLight(0xfff7ed, 0.35, 25);
-    bounceLight.position.set(0, 8, 10);
+    // Soft warm under-bounce fill
+    const bounceLight = new THREE.PointLight(0xffedd5, 0.40, 28);
+    bounceLight.position.set(0, 7, 8);
     this.scene.add(bounceLight);
 
+    // Dynamic clearance flash light
+    this.dynamicFlashLight = new THREE.PointLight(0xffffff, 0, 18);
+    this.dynamicFlashLight.position.set(0, 3.5, 0);
+    this.scene.add(this.dynamicFlashLight);
+
     // Soft Tabletop Shadow Receiver Floor (large enough for ultrawide desktop)
-    const floorShadowGeom = new THREE.PlaneGeometry(120, 120);
-    const floorShadowMat = new THREE.ShadowMaterial({ opacity: 0.20 });
+    const floorShadowGeom = new THREE.PlaneGeometry(140, 140);
+    const floorShadowMat = new THREE.ShadowMaterial({ opacity: 0.18 });
     const floorShadowMesh = new THREE.Mesh(floorShadowGeom, floorShadowMat);
     floorShadowMesh.rotation.x = -Math.PI / 2;
-    floorShadowMesh.position.y = -PEDESTAL_HEIGHT;
+    floorShadowMesh.position.y = -PEDESTAL_HEIGHT / 2 - 0.001;
     floorShadowMesh.receiveShadow = true;
     this.scene.add(floorShadowMesh);
+
+    // Ambient floating bokeh motes in 3D background
+    this.initAmbientMotes();
 
     // 5. Animation System
     this.animation = new AnimationSystem(this.scene);
@@ -226,6 +301,73 @@ export class GameManager {
         slot.group.position.z = z;
       }
     }
+  }
+
+  initAmbientMotes() {
+    const count = 38;
+    const geom = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const speeds = [];
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 28;
+      positions[i * 3 + 1] = Math.random() * 12 + 1;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 24 - 2;
+      speeds.push({
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: Math.random() * 0.16 + 0.08,
+        vz: (Math.random() - 0.5) * 0.2,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(32, 32, 2, 32, 32, 30);
+    grad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+    grad.addColorStop(0.35, 'rgba(255, 255, 255, 0.45)');
+    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(canvas);
+
+    const mat = new THREE.PointsMaterial({
+      size: 0.45,
+      map: tex,
+      transparent: true,
+      opacity: 0.40,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    this.ambientMotes = new THREE.Points(geom, mat);
+    this.ambientMotesSpeeds = speeds;
+    this.scene.add(this.ambientMotes);
+  }
+
+  triggerDynamicClearFlash(pos, colorDef) {
+    if (!this.dynamicFlashLight) return;
+    this.dynamicFlashLight.color.setHex(colorDef.hex);
+    this.dynamicFlashLight.position.set(pos.x, 3.2, pos.z);
+    this.dynamicFlashLight.intensity = 2.8;
+
+    const startTime = performance.now();
+    const duration = 260;
+    const animateFlash = () => {
+      const elapsed = performance.now() - startTime;
+      const t = elapsed / duration;
+      if (t < 1) {
+        this.dynamicFlashLight.intensity = (1 - t) * 2.8;
+        requestAnimationFrame(animateFlash);
+      } else {
+        this.dynamicFlashLight.intensity = 0;
+      }
+    };
+    requestAnimationFrame(animateFlash);
   }
 
   vibrate(pattern = 15) {
@@ -809,6 +951,7 @@ export class GameManager {
       }
       this.currentCombo++;
 
+      this.triggerDynamicClearFlash(centerPos, colorDef);
       await this.animation.animateStackClear(
         clearedCards.map(c => c.mesh),
         centerPos,
@@ -960,6 +1103,21 @@ export class GameManager {
       if (deckSlot.group && deckSlot !== this.draggedDeckItem && deckSlot !== this.selectedDeckSlot) {
         deckSlot.group.position.y = Math.sin(time * 2.2 + deckSlot.index * 1.5) * 0.05;
       }
+    }
+
+    if (this.ambientMotes && this.ambientMotesSpeeds) {
+      const pos = this.ambientMotes.geometry.attributes.position.array;
+      for (let i = 0; i < this.ambientMotesSpeeds.length; i++) {
+        const sp = this.ambientMotesSpeeds[i];
+        pos[i * 3 + 1] += sp.vy * delta;
+        pos[i * 3] += Math.sin(time * 1.5 + sp.phase) * 0.006;
+        if (pos[i * 3 + 1] > 14) {
+          pos[i * 3 + 1] = 0.5;
+          pos[i * 3] = (Math.random() - 0.5) * 28;
+          pos[i * 3 + 2] = (Math.random() - 0.5) * 24 - 2;
+        }
+      }
+      this.ambientMotes.geometry.attributes.position.needsUpdate = true;
     }
 
     if (this.renderer && this.scene && this.camera) {
