@@ -5,23 +5,12 @@
 
 import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 
-const LOCAL_STORAGE_KEY = 'hexa_sort_local_scores_v1';
+const LOCAL_STORAGE_KEY = 'hexa_sort_local_scores_v2';
 const NICKNAME_KEY = 'hexa_sort_player_nickname';
-const GLOBAL_STORAGE_KEY = 'hexa_sort_global_cache_v1';
+const GLOBAL_STORAGE_KEY = 'hexa_sort_global_cache_v2';
 
-// Seeded global benchmark players
-const DEFAULT_GLOBAL_LEADERBOARD = [
-  { name: 'HexaMaster', score: 12450, time: 480, clears: 38, combo: 7, date: '14/09/2026' },
-  { name: 'PuzzleKing', score: 9820, time: 395, clears: 29, combo: 6, date: '14/09/2026' },
-  { name: 'CyberStacker', score: 8150, time: 330, clears: 24, combo: 5, date: '15/09/2026' },
-  { name: 'NeonGamer', score: 6700, time: 275, clears: 20, combo: 5, date: '15/09/2026' },
-  { name: 'SortWizard', score: 5420, time: 240, clears: 17, combo: 4, date: '15/09/2026' },
-  { name: 'AeroHex', score: 4300, time: 190, clears: 13, combo: 4, date: '15/09/2026' },
-  { name: 'PixelPro', score: 3250, time: 160, clears: 10, combo: 3, date: '15/09/2026' },
-  { name: 'Zenith', score: 2400, time: 125, clears: 7, combo: 3, date: '15/09/2026' },
-  { name: 'Nova', score: 1850, time: 95, clears: 5, combo: 2, date: '15/09/2026' },
-  { name: 'PlayerOne', score: 1200, time: 70, clears: 3, combo: 2, date: '15/09/2026' }
-];
+// Placar inicial zerado (sem jogadores fictícios/mockados)
+const DEFAULT_GLOBAL_LEADERBOARD = [];
 
 export class LeaderboardManager {
   constructor() {
