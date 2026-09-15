@@ -32,6 +32,12 @@ export class GameManager {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
     this.groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    this.currentTheme = 'light';
+    this.ambientLight = null;
+    this.dirLight = null;
+    this.fillLight = null;
+    this.bounceLight = null;
+    this.floorShadowMat = null;
     this.dynamicFlashLight = null;
     this.ambientMotes = null;
     this.ambientMotesSpeeds = [];
@@ -98,32 +104,32 @@ export class GameManager {
     this.container.appendChild(this.renderer.domElement);
 
     // 4. High-Contrast Studio Lighting Rig (Vibrant colors, no milky wash)
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.05);
-    this.scene.add(ambientLight);
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 1.05);
+    this.scene.add(this.ambientLight);
 
     // Key Light: Clean directional studio key casting soft shadows
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.55);
-    dirLight.position.set(12, 28, 14);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 60;
-    dirLight.shadow.camera.left = -12;
-    dirLight.shadow.camera.right = 12;
-    dirLight.shadow.camera.top = 12;
-    dirLight.shadow.camera.bottom = -12;
-    dirLight.shadow.bias = -0.0003;
-    dirLight.shadow.radius = 2.0;
-    this.scene.add(dirLight);
+    this.dirLight = new THREE.DirectionalLight(0xffffff, 1.55);
+    this.dirLight.position.set(12, 28, 14);
+    this.dirLight.castShadow = true;
+    this.dirLight.shadow.mapSize.width = 2048;
+    this.dirLight.shadow.mapSize.height = 2048;
+    this.dirLight.shadow.camera.near = 0.5;
+    this.dirLight.shadow.camera.far = 60;
+    this.dirLight.shadow.camera.left = -12;
+    this.dirLight.shadow.camera.right = 12;
+    this.dirLight.shadow.camera.top = 12;
+    this.dirLight.shadow.camera.bottom = -12;
+    this.dirLight.shadow.bias = -0.0003;
+    this.dirLight.shadow.radius = 2.0;
+    this.scene.add(this.dirLight);
 
-    const fillLight = new THREE.DirectionalLight(0xe2e8f0, 0.60);
-    fillLight.position.set(-12, 20, -10);
-    this.scene.add(fillLight);
+    this.fillLight = new THREE.DirectionalLight(0xe2e8f0, 0.60);
+    this.fillLight.position.set(-12, 20, -10);
+    this.scene.add(this.fillLight);
 
-    const bounceLight = new THREE.PointLight(0xfff7ed, 0.35, 25);
-    bounceLight.position.set(0, 8, 10);
-    this.scene.add(bounceLight);
+    this.bounceLight = new THREE.PointLight(0xfff7ed, 0.35, 25);
+    this.bounceLight.position.set(0, 8, 10);
+    this.scene.add(this.bounceLight);
 
     // Dynamic clearance flash light
     this.dynamicFlashLight = new THREE.PointLight(0xffffff, 0, 18);
@@ -132,8 +138,8 @@ export class GameManager {
 
     // Soft Tabletop Shadow Receiver Floor (large enough for ultrawide desktop)
     const floorShadowGeom = new THREE.PlaneGeometry(140, 140);
-    const floorShadowMat = new THREE.ShadowMaterial({ opacity: 0.18 });
-    const floorShadowMesh = new THREE.Mesh(floorShadowGeom, floorShadowMat);
+    this.floorShadowMat = new THREE.ShadowMaterial({ opacity: 0.18 });
+    const floorShadowMesh = new THREE.Mesh(floorShadowGeom, this.floorShadowMat);
     floorShadowMesh.rotation.x = -Math.PI / 2;
     floorShadowMesh.position.y = -PEDESTAL_HEIGHT / 2 - 0.001;
     floorShadowMesh.receiveShadow = true;
@@ -942,8 +948,10 @@ export class GameManager {
     const badge = this.slotBadges.get(slot.id);
     if (!badge) return;
 
+    const isDark = this.currentTheme === 'dark';
+
     if (slot.stack.length === 0) {
-      badge.userData.updateCount(0);
+      badge.userData.updateCount(0, STACK_CLEAR_THRESHOLD, '#ffffff', isDark);
       badge.visible = false;
       return;
     }
@@ -955,7 +963,54 @@ export class GameManager {
     const heightY = slot.stack.length * CARD_THICKNESS + 0.75;
     badge.position.set(slot.worldX, heightY, slot.worldZ);
 
-    badge.userData.updateCount(contiguousCount, STACK_CLEAR_THRESHOLD, topCard.color.css);
+    badge.userData.updateCount(contiguousCount, STACK_CLEAR_THRESHOLD, topCard.color.css, isDark);
+  }
+
+  /**
+   * Switches the 3D scene between Light mode and Dark Neon mode
+   */
+  setTheme(theme) {
+    this.currentTheme = theme;
+    const isDark = theme === 'dark';
+
+    // 1. Sync TileFactory materials & palettes
+    if (this.tileFactory) {
+      this.tileFactory.setTheme(theme);
+    }
+
+    // 2. Adjust Studio Lighting Rig for dark/neon atmosphere
+    if (this.ambientLight) {
+      this.ambientLight.color.setHex(isDark ? 0x99aaff : 0xffffff);
+      this.ambientLight.intensity = isDark ? 0.70 : 1.05;
+    }
+    if (this.dirLight) {
+      this.dirLight.color.setHex(0xffffff);
+      this.dirLight.intensity = isDark ? 1.85 : 1.55;
+    }
+    if (this.fillLight) {
+      this.fillLight.color.setHex(isDark ? 0x00f0ff : 0xe2e8f0);
+      this.fillLight.intensity = isDark ? 0.50 : 0.60;
+    }
+    if (this.bounceLight) {
+      this.bounceLight.color.setHex(isDark ? 0xb026ff : 0xfff7ed);
+      this.bounceLight.intensity = isDark ? 0.65 : 0.35;
+    }
+    if (this.floorShadowMat) {
+      this.floorShadowMat.opacity = isDark ? 0.38 : 0.18;
+    }
+    if (this.ambientMotes && this.ambientMotes.material) {
+      this.ambientMotes.material.color.setHex(isDark ? 0x00f0ff : 0xffffff);
+      this.ambientMotes.material.opacity = isDark ? 0.65 : 0.40;
+    }
+
+    // 3. Re-render all slot stack badges with new theme styling
+    if (this.hexGrid) {
+      for (const slot of this.hexGrid.getAllSlots()) {
+        if (slot.stack.length > 0) {
+          this.updateSlotBadge(slot);
+        }
+      }
+    }
   }
 
   /* =========================================================================

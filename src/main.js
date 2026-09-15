@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const leaderboard = game.leaderboard;
 
   // UI Elements
+  const btnTheme = document.getElementById('btn-theme');
   const btnSound = document.getElementById('btn-sound');
   const btnLeaderboard = document.getElementById('btn-leaderboard');
   const btnRestart = document.getElementById('btn-restart');
@@ -43,6 +44,65 @@ document.addEventListener('DOMContentLoaded', () => {
   const leaderboardLoading = document.getElementById('leaderboard-loading');
 
   let currentLeaderboardTab = 'global'; // 'global' | 'local'
+
+  // --- THEME MANAGEMENT (LIGHT / DARK NEON) ---
+  const THEME_KEY = 'hexa_sort_theme';
+  function getInitialTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === 'dark' || saved === 'light') return saved;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      return 'dark';
+    }
+    return 'light';
+  }
+
+  let activeTheme = getInitialTheme();
+
+  function applyTheme(theme, showFeedback = false) {
+    activeTheme = theme;
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch (e) {}
+
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
+
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#090d18' : '#d8dce4');
+    }
+
+    if (btnTheme) {
+      if (theme === 'dark') {
+        btnTheme.textContent = '☀️';
+        btnTheme.setAttribute('title', 'Mudar para Modo Claro');
+        btnTheme.setAttribute('aria-label', 'Mudar para Modo Claro');
+      } else {
+        btnTheme.textContent = '🌙';
+        btnTheme.setAttribute('title', 'Mudar para Modo Escuro (Neon)');
+        btnTheme.setAttribute('aria-label', 'Mudar para Modo Escuro (Neon)');
+      }
+    }
+
+    if (game && typeof game.setTheme === 'function') {
+      game.setTheme(theme);
+    }
+
+    if (showFeedback) {
+      showToast(theme === 'dark' ? 'Modo Escuro Neon ativado! 🌌⚡' : 'Modo Claro ativado! ☀️');
+    }
+  }
+
+  // Apply initial theme
+  applyTheme(activeTheme, false);
+
+  if (btnTheme) {
+    btnTheme.addEventListener('click', () => {
+      game.sound.playClick();
+      const nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme, true);
+    });
+  }
 
   // Helper para atualizar visualmente o apelido no HUD e modais
   function updatePlayerNicknameUI(name) {

@@ -10,8 +10,8 @@ export const CARD_THICKNESS = 0.16;
 export const CARD_RADIUS = 0.94;
 export const PEDESTAL_HEIGHT = 0.20;
 
-// Strong, vivid saturated candy palette from previous version
-export const PALETTE = [
+// Classic candy saturated palette (Light Mode)
+export const LIGHT_PALETTE = [
   { id: 'yellow', name: 'Amarelo', hex: 0xffcc00, css: '#ffcc00', emissive: 0x332800 },
   { id: 'green',  name: 'Verde',   hex: 0x22c55e, css: '#22c55e', emissive: 0x053313 },
   { id: 'blue',   name: 'Azul',    hex: 0x2563eb, css: '#2563eb', emissive: 0x0a2266 },
@@ -21,6 +21,21 @@ export const PALETTE = [
   { id: 'orange', name: 'Laranja', hex: 0xff7a00, css: '#ff7a00', emissive: 0x441b00 },
   { id: 'white',  name: 'Branco',  hex: 0xf8fafc, css: '#f8fafc', emissive: 0x222222 }
 ];
+
+// Ultra-vibrant electric neon cyberpunk palette (Dark Mode)
+export const NEON_PALETTE = [
+  { id: 'yellow', name: 'Amarelo Neon', hex: 0xfff000, css: '#fff000', emissive: 0x665500 },
+  { id: 'green',  name: 'Verde Neon',   hex: 0x00ff66, css: '#00ff66', emissive: 0x006622 },
+  { id: 'blue',   name: 'Azul Elétrico',hex: 0x0099ff, css: '#0099ff', emissive: 0x003388 },
+  { id: 'red',    name: 'Rosa Neon',    hex: 0xff0055, css: '#ff0055', emissive: 0x88002a },
+  { id: 'cyan',   name: 'Ciano Cyber',  hex: 0x00f7ff, css: '#00f7ff', emissive: 0x006677 },
+  { id: 'purple', name: 'Roxo Neon',    hex: 0xbf36ff, css: '#bf36ff', emissive: 0x550888 },
+  { id: 'orange', name: 'Laranja Neon', hex: 0xff6600, css: '#ff6600', emissive: 0x772600 },
+  { id: 'white',  name: 'Branco Neon',  hex: 0xf0fdfa, css: '#f0fdfa', emissive: 0x445566 }
+];
+
+// Exported PALETTE that always reflects current theme
+export const PALETTE = LIGHT_PALETTE.map(item => ({ ...item }));
 
 let sharedShadowTexture = null;
 function getContactShadowTexture() {
@@ -81,6 +96,7 @@ export function createBeveledHexGeometry(radius, height, bevelSize = 0.035, beve
 
 export class TileFactory {
   constructor() {
+    this.currentTheme = 'light';
     this.materialsCache = new Map();
     this.sharedCardGeom = createBeveledHexGeometry(CARD_RADIUS, CARD_THICKNESS, 0.035, 0.03);
     this.pedestalGeom = createBeveledHexGeometry(HEX_RADIUS, PEDESTAL_HEIGHT, 0.045, 0.035);
@@ -129,6 +145,74 @@ export class TileFactory {
     });
   }
 
+  setTheme(theme) {
+    this.currentTheme = theme;
+    const isDark = theme === 'dark';
+    const sourcePalette = isDark ? NEON_PALETTE : LIGHT_PALETTE;
+
+    // Update global PALETTE array entries in-place so all references stay valid
+    for (let i = 0; i < sourcePalette.length; i++) {
+      Object.assign(PALETTE[i], sourcePalette[i]);
+    }
+
+    // Update existing cached card materials dynamically
+    for (const colorDef of sourcePalette) {
+      if (this.materialsCache.has(colorDef.id)) {
+        const mat = this.materialsCache.get(colorDef.id);
+        mat.color.setHex(colorDef.hex);
+        mat.emissive.setHex(colorDef.emissive);
+        mat.emissiveIntensity = isDark ? 0.38 : 0.16;
+        mat.roughness = isDark ? 0.12 : 0.18;
+        mat.metalness = isDark ? 0.12 : 0.05;
+        mat.needsUpdate = true;
+      }
+    }
+
+    // Update pedestal materials
+    if (isDark) {
+      this.pedestalMat.color.setHex(0x111728);
+      this.pedestalMat.roughness = 0.22;
+      this.pedestalMat.metalness = 0.45;
+      this.pedestalMat.clearcoat = 0.8;
+
+      this.pedestalRimMat.color.setHex(0x00f0ff);
+      this.pedestalRimMat.emissive.setHex(0x003344);
+      this.pedestalRimMat.roughness = 0.20;
+      this.pedestalRimMat.metalness = 0.60;
+
+      this.pedestalInnerMat.color.setHex(0x080b14);
+      this.pedestalInnerMat.roughness = 0.30;
+
+      this.highlightMat.color.setHex(0x00f0ff);
+      this.highlightMat.opacity = 0.85;
+
+      this.shadowMat.opacity = 0.85;
+    } else {
+      this.pedestalMat.color.setHex(0xc8ced8);
+      this.pedestalMat.roughness = 0.32;
+      this.pedestalMat.metalness = 0.08;
+      this.pedestalMat.clearcoat = 0.5;
+
+      this.pedestalRimMat.color.setHex(0xa4acbb);
+      this.pedestalRimMat.emissive.setHex(0x000000);
+      this.pedestalRimMat.roughness = 0.28;
+      this.pedestalRimMat.metalness = 0.14;
+
+      this.pedestalInnerMat.color.setHex(0xdfe4ec);
+      this.pedestalInnerMat.roughness = 0.38;
+
+      this.highlightMat.color.setHex(0x38bdf8);
+      this.highlightMat.opacity = 0.65;
+
+      this.shadowMat.opacity = 0.65;
+    }
+
+    this.pedestalMat.needsUpdate = true;
+    this.pedestalRimMat.needsUpdate = true;
+    this.pedestalInnerMat.needsUpdate = true;
+    this.highlightMat.needsUpdate = true;
+  }
+
   createHexCardGeometry(radius, height) {
     return createBeveledHexGeometry(radius, height);
   }
@@ -138,12 +222,13 @@ export class TileFactory {
    */
   getCardMaterial(colorDef) {
     if (!this.materialsCache.has(colorDef.id)) {
+      const isDark = this.currentTheme === 'dark';
       const mat = new THREE.MeshStandardMaterial({
         color: colorDef.hex,
-        roughness: 0.18,
-        metalness: 0.05,
+        roughness: isDark ? 0.12 : 0.18,
+        metalness: isDark ? 0.12 : 0.05,
         emissive: colorDef.emissive,
-        emissiveIntensity: 0.16
+        emissiveIntensity: isDark ? 0.38 : 0.16
       });
       this.materialsCache.set(colorDef.id, mat);
     }
@@ -298,7 +383,7 @@ export class TileFactory {
     sprite.userData = {
       canvas,
       texture,
-      updateCount: (count, target = 10, colorCss = '#ffffff') => {
+      updateCount: (count, target = 10, colorCss = '#ffffff', isDark = false) => {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, 256, 256);
 
@@ -309,39 +394,82 @@ export class TileFactory {
 
         sprite.visible = true;
 
-        // Soft drop shadow
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.30)';
-        ctx.shadowBlur = 14;
-        ctx.shadowOffsetY = 6;
+        if (isDark) {
+          // Dark Neon Cyber Badge
+          ctx.save();
+          // Glowing drop shadow matching tile neon color
+          ctx.shadowColor = colorCss;
+          ctx.shadowBlur = 18;
+          ctx.shadowOffsetY = 0;
 
-        // White circular pill base
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(128, 128, 86, 0, Math.PI * 2);
-        ctx.fill();
+          // Deep dark circular pill base
+          ctx.fillStyle = '#0a0e1a';
+          ctx.beginPath();
+          ctx.arc(128, 128, 86, 0, Math.PI * 2);
+          ctx.fill();
 
-        // Border colored by card top color
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetY = 0;
-        ctx.strokeStyle = colorCss;
-        ctx.lineWidth = 11;
-        ctx.stroke();
+          // Glowing Neon Border
+          ctx.shadowBlur = 12;
+          ctx.strokeStyle = colorCss;
+          ctx.lineWidth = 12;
+          ctx.stroke();
 
-        // Glossy highlight arc inside badge
-        const grad = ctx.createLinearGradient(128, 44, 128, 128);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
-        grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(128, 128, 80, Math.PI, 0, false);
-        ctx.fill();
+          // Subtle inner neon gloss arc
+          const grad = ctx.createLinearGradient(128, 44, 128, 128);
+          grad.addColorStop(0, 'rgba(255, 255, 255, 0.40)');
+          grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(128, 128, 80, Math.PI, 0, false);
+          ctx.fill();
 
-        // Count Text
-        ctx.fillStyle = '#0f172a';
-        ctx.font = '900 92px Fredoka, Outfit, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(`${count}`, 128, 131);
+          // High Contrast White Text with dark outline shadow
+          ctx.shadowColor = '#000000';
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetY = 2;
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 94px Fredoka, Outfit, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${count}`, 128, 131);
+          ctx.restore();
+        } else {
+          // Classic Light Mode Soft Drop Shadow
+          ctx.save();
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.30)';
+          ctx.shadowBlur = 14;
+          ctx.shadowOffsetY = 6;
+
+          // White circular pill base
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(128, 128, 86, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Border colored by card top color
+          ctx.shadowBlur = 0;
+          ctx.shadowOffsetY = 0;
+          ctx.strokeStyle = colorCss;
+          ctx.lineWidth = 11;
+          ctx.stroke();
+
+          // Glossy highlight arc inside badge
+          const grad = ctx.createLinearGradient(128, 44, 128, 128);
+          grad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+          grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(128, 128, 80, Math.PI, 0, false);
+          ctx.fill();
+
+          // Count Text
+          ctx.fillStyle = '#0f172a';
+          ctx.font = '900 92px Fredoka, Outfit, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${count}`, 128, 131);
+          ctx.restore();
+        }
 
         texture.needsUpdate = true;
       }
