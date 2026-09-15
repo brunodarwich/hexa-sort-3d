@@ -604,24 +604,44 @@ export class GameManager {
     // Card count score: more matching top cards = higher priority
     const countScore = topMatches * 50;
 
-    // Tie-breaker
+    // Tie-breaker: total stack height & strong primary placement bonus
     const totalCardsScore = slot.stack.length * 2;
-    const placementBonus = isPrimaryPlaced ? 1 : 0;
+    const placementBonus = isPrimaryPlaced ? 50000 : 0;
 
     return purityScore + countScore + totalCardsScore + placementBonus;
   }
 
   /**
-   * Cascade merge loop applying the exact attraction priority hierarchy:
-   * - Pure / fewer-colored stacks pull from multi-colored stacks
-   * - Larger numbers pull from smaller numbers
-   * - Pops ALL cards of that matching color when >= 10
+   * Cascade merge loop:
+   * - Placed middle slot pulls from ALL bordering matching neighbors (both extremities and all adjacent borders).
+   * - Pure / fewer-colored stacks pull from multi-colored stacks.
+   * - Pops ALL cards of matching color when >= 10.
    */
   async processCascadingMerges(primaryMagnetSlot) {
     let cascadeStep = 0;
     let keepCascading = true;
     this.currentCombo = 1;
 
+    // 1. Initial Direct Merge: If a tile was just placed (primaryMagnetSlot),
+    // it attracts matching cards from ALL bordering adjacent neighbors!
+    if (primaryMagnetSlot && primaryMagnetSlot.stack.length > 0) {
+      const topColorId = primaryMagnetSlot.stack[primaryMagnetSlot.stack.length - 1].color.id;
+      const matchingNeighbors = this.hexGrid.getNeighbors(primaryMagnetSlot).filter(n => {
+        return n.stack.length > 0 && n.stack[n.stack.length - 1].color.id === topColorId;
+      });
+
+      if (matchingNeighbors.length > 0) {
+        for (const sourceNeighbor of matchingNeighbors) {
+          if (sourceNeighbor.stack.length > 0 && sourceNeighbor.stack[sourceNeighbor.stack.length - 1].color.id === topColorId) {
+            await this.transferMatchingCards(sourceNeighbor, primaryMagnetSlot, topColorId, cascadeStep);
+            cascadeStep++;
+          }
+        }
+        await this.checkAndClearFullStack(primaryMagnetSlot);
+      }
+    }
+
+    // 2. Cascade Loop: Continue merging all adjacent clusters until settled
     while (keepCascading) {
       keepCascading = false;
       const occupiedSlots = this.hexGrid.getOccupiedSlots();
@@ -633,44 +653,41 @@ export class GameManager {
         const topColorId = topCard.color.id;
 
         const neighbors = this.hexGrid.getNeighbors(slot);
-        for (const neighbor of neighbors) {
-          if (neighbor.stack.length === 0) continue;
+        const matchingNeighbors = neighbors.filter(n => {
+          return n.stack.length > 0 && n.stack[n.stack.length - 1].color.id === topColorId;
+        });
 
-          const neighborTopCard = neighbor.stack[neighbor.stack.length - 1];
-          if (neighborTopCard.color.id === topColorId) {
-            // Match found! Determine target (magnet puller) vs source (pulled)
-            const slotPriority = this.calculateAttractionPriority(
-              slot,
-              topColorId,
-              slot === primaryMagnetSlot
-            );
-            const neighborPriority = this.calculateAttractionPriority(
-              neighbor,
-              topColorId,
-              neighbor === primaryMagnetSlot
-            );
+        if (matchingNeighbors.length > 0) {
+          // Determine best target in cluster
+          let bestTarget = slot;
+          let bestPriority = this.calculateAttractionPriority(slot, topColorId, slot === primaryMagnetSlot);
 
-            let target = slot;
-            let source = neighbor;
+          for (const neighbor of matchingNeighbors) {
+            const p = this.calculateAttractionPriority(neighbor, topColorId, neighbor === primaryMagnetSlot);
+            if (p > bestPriority) {
+              bestPriority = p;
+              bestTarget = neighbor;
+            }
+          }
 
-            if (neighborPriority > slotPriority) {
-              target = neighbor;
-              source = slot;
+          // Gather ALL matching neighbors surrounding the bestTarget
+          const sourcesToPull = this.hexGrid.getNeighbors(bestTarget).filter(n => {
+            return n.stack.length > 0 && n.stack[n.stack.length - 1].color.id === topColorId;
+          });
+
+          if (sourcesToPull.length > 0) {
+            for (const source of sourcesToPull) {
+              if (source.stack.length > 0 && source.stack[source.stack.length - 1].color.id === topColorId) {
+                await this.transferMatchingCards(source, bestTarget, topColorId, cascadeStep);
+                cascadeStep++;
+              }
             }
 
-            // Transfer matching cards from source to target
-            await this.transferMatchingCards(source, target, topColorId, cascadeStep);
-            cascadeStep++;
-
-            // Pop all matching cards if >= 10
-            await this.checkAndClearFullStack(target);
-
+            await this.checkAndClearFullStack(bestTarget);
             keepCascading = true;
             break;
           }
         }
-
-        if (keepCascading) break;
       }
     }
   }
