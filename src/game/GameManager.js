@@ -845,10 +845,10 @@ export class GameManager {
 
       const jumpPromise = new Promise(resolve => {
         setTimeout(async () => {
-          await this.animation.animateCardJump(card.mesh, startPos, endPos, 200, 1.5);
+          await this.animation.animateCardJump(card.mesh, startPos, endPos, 360, 1.8);
           this.animation.animateSquash(card.mesh);
           resolve();
-        }, i * 40);
+        }, i * 70);
       });
 
       jumpPromises.push(jumpPromise);
@@ -976,7 +976,7 @@ export class GameManager {
       scoreVal.classList.remove('bump');
       void scoreVal.offsetWidth;
       scoreVal.classList.add('bump');
-      setTimeout(() => scoreVal.classList.remove('bump'), 200);
+      setTimeout(() => scoreVal.classList.remove('bump'), 400);
     }
   }
 
@@ -1003,7 +1003,7 @@ export class GameManager {
 
     setTimeout(() => {
       if (popup.parentElement) popup.parentElement.removeChild(popup);
-    }, 1000);
+    }, 1800);
   }
 
   showComboBanner(combo) {
@@ -1017,7 +1017,7 @@ export class GameManager {
     clearTimeout(this.comboTimeout);
     this.comboTimeout = setTimeout(() => {
       banner.classList.add('hidden');
-    }, 1200);
+    }, 2500);
   }
 
   checkGameOverCondition() {

@@ -3,6 +3,8 @@
  * Manages LocalStorage high scores and Global Online leaderboard synchronization.
  */
 
+import { supabase, isSupabaseConfigured } from '../services/supabase.js';
+
 const LOCAL_STORAGE_KEY = 'hexa_sort_local_scores_v1';
 const NICKNAME_KEY = 'hexa_sort_player_nickname';
 const GLOBAL_STORAGE_KEY = 'hexa_sort_global_cache_v1';
@@ -86,15 +88,41 @@ export class LeaderboardManager {
   }
 
   /**
-   * Fetch online global leaderboard with resilient caching
+   * Fetch online global leaderboard with resilient caching and Supabase integration
    */
   async getGlobalScores() {
+    // 1. Tentar buscar do Supabase caso esteja configurado
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('global_leaderboard')
+          .select('*')
+          .limit(15);
+
+        if (!error && data && data.length > 0) {
+          const formatted = data.map(item => ({
+            name: item.player_name,
+            score: item.score,
+            time: item.time_seconds,
+            clears: item.clears,
+            combo: item.combo,
+            date: new Date(item.created_at).toLocaleDateString('pt-BR')
+          }));
+
+          // Atualizar cache local
+          localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(formatted));
+          return formatted;
+        }
+      } catch (err) {
+        console.warn('Falha ao consultar Supabase, utilizando cache local:', err);
+      }
+    }
+
+    // 2. Fallback para cache local / seeded list
     try {
-      // Check cached global leaderboard
       const cached = localStorage.getItem(GLOBAL_STORAGE_KEY);
       let globalList = cached ? JSON.parse(cached) : [...DEFAULT_GLOBAL_LEADERBOARD];
 
-      // Sort descending
       globalList.sort((a, b) => b.score - a.score);
       return globalList.slice(0, 15);
     } catch (e) {
@@ -104,13 +132,14 @@ export class LeaderboardManager {
   }
 
   /**
-   * Submit new score to Global and Local leaderboards
+   * Submit new score to Global (Supabase) and Local leaderboards
    */
   async submitScore({ name, score, time, clears, combo }) {
     this.setSavedNickname(name);
 
+    const playerName = name || 'Anônimo';
     const record = {
-      name: name || 'Anônimo',
+      name: playerName,
       score,
       time,
       clears,
@@ -118,16 +147,39 @@ export class LeaderboardManager {
       date: new Date().toLocaleDateString('pt-BR')
     };
 
-    // Save locally
+    // 1. Salvar localmente
     this.saveLocalScore(record);
 
-    // Save to global list cache
+    // 2. Enviar ao Supabase se configurado
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase
+          .from('game_sessions')
+          .insert({
+            player_name: playerName,
+            score,
+            time_seconds: time,
+            clears,
+            combo
+          });
+
+        if (error) {
+          console.warn('Aviso ao submeter pontuação no Supabase:', error.message);
+        }
+      } catch (err) {
+        console.error('Erro ao enviar pontuação para o Supabase:', err);
+      }
+    }
+
+    // 3. Atualizar cache local
     try {
       let globalList = await this.getGlobalScores();
-      globalList.push(record);
-      globalList.sort((a, b) => b.score - a.score);
-      globalList = globalList.slice(0, 20);
-      localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(globalList));
+      if (!globalList.some(r => r.name === playerName && r.score === score)) {
+        globalList.push(record);
+        globalList.sort((a, b) => b.score - a.score);
+        globalList = globalList.slice(0, 20);
+        localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(globalList));
+      }
     } catch (e) {
       console.error('Failed to update global list cache:', e);
     }

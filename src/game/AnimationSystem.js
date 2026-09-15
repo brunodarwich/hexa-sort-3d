@@ -40,7 +40,7 @@ export class AnimationSystem {
     // 2. Update 3D visual particles
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
-      p.life -= deltaTime * 2.8;
+      p.life -= deltaTime * 1.3; // Prolonged life (~0.75s) so jewel sparkles are clearly visible
 
       if (p.life <= 0) {
         this.scene.remove(p.mesh);
@@ -51,7 +51,7 @@ export class AnimationSystem {
         p.mesh.position.x += p.vx * deltaTime;
         p.mesh.position.y += p.vy * deltaTime;
         p.mesh.position.z += p.vz * deltaTime;
-        p.vy -= 11.0 * deltaTime; // Gravity
+        p.vy -= 9.0 * deltaTime; // Gravity
 
         p.mesh.rotation.x += p.rx * deltaTime;
         p.mesh.rotation.y += p.ry * deltaTime;
@@ -65,7 +65,7 @@ export class AnimationSystem {
     // 3. Update Shockwave Rings
     for (let i = this.shockwaves.length - 1; i >= 0; i--) {
       const sw = this.shockwaves[i];
-      sw.life -= deltaTime * 3.0;
+      sw.life -= deltaTime * 1.4; // Prolonged ripple (~0.7s)
 
       if (sw.life <= 0) {
         this.scene.remove(sw.mesh);
@@ -130,7 +130,7 @@ export class AnimationSystem {
   /**
    * Animate a single card jumping along a 3D parabolic trajectory from startPos to endPos
    */
-  animateCardJump(cardMesh, startPos, endPos, duration = 210, arcHeight = 1.6) {
+  animateCardJump(cardMesh, startPos, endPos, duration = 360, arcHeight = 1.8) {
     return new Promise((resolve) => {
       const startTime = performance.now();
       const midX = (startPos.x + endPos.x) / 2;
@@ -174,9 +174,8 @@ export class AnimationSystem {
    * Elastic squash & stretch animation when cards land
    */
   animateSquash(cardMesh) {
-    const startY = cardMesh.position.y;
     this.addAnimation({
-      duration: 140,
+      duration: 220,
       easing: AnimationSystem.easeOutBack,
       onUpdate: (t) => {
         // Squish down slightly then rebound
@@ -196,8 +195,8 @@ export class AnimationSystem {
     return new Promise((resolve) => {
       // 1. Trigger Canvas Confetti burst
       confetti({
-        particleCount: Math.min(60, cards.length * 5),
-        spread: 80,
+        particleCount: Math.min(70, cards.length * 6),
+        spread: 85,
         origin: { y: 0.6 },
         colors: [colorDef.css, '#ffffff', '#eed49f', '#fbbf24']
       });
@@ -206,34 +205,34 @@ export class AnimationSystem {
       this.spawnShockwaveRing(centerPos, colorDef);
 
       // 3. Spawn 3D sparkle particles
-      this.spawn3DParticles(centerPos, colorDef, Math.min(35, cards.length * 3));
+      this.spawn3DParticles(centerPos, colorDef, Math.min(40, cards.length * 3));
 
       // 4. Animate each card scaling up, spinning, and dispersing with white flash
       let finished = 0;
       cards.forEach((cardMesh, idx) => {
         const initialScale = cardMesh.scale.clone();
         const initialY = cardMesh.position.y;
-        const delay = idx * 12;
+        const delay = idx * 26; // Staggered clear explosion
         const randomRotX = (Math.random() - 0.5) * 1.5;
         const randomRotY = (Math.random() - 0.5) * 2.2;
 
         this.addAnimation({
-          duration: 220,
+          duration: 520, // Prolonged animation so clears can be appreciated
           delay: delay,
           easing: AnimationSystem.easeOutQuad,
           onUpdate: (t) => {
-            const scaleFactor = 1 + t * 0.45;
+            const scaleFactor = 1 + t * 0.5;
             cardMesh.scale.set(
               initialScale.x * scaleFactor,
-              initialScale.y * (1 - t * 0.8),
+              initialScale.y * (1 - t * 0.7),
               initialScale.z * scaleFactor
             );
-            cardMesh.position.y = initialY + t * 1.2;
+            cardMesh.position.y = initialY + t * 1.5;
             cardMesh.rotation.x = t * randomRotX;
             cardMesh.rotation.y = t * randomRotY;
             if (cardMesh.material) {
               cardMesh.material.transparent = true;
-              cardMesh.material.opacity = 1 - t;
+              cardMesh.material.opacity = Math.max(0, 1 - t * 1.1);
             }
           },
           onComplete: () => {
