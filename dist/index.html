@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Hexa Sort 3D - Modo Infinito</title>
+    <meta name="description" content="Jogo de quebra-cabeça 3D Hexa Sort infinito com fusão em cascata, pontuação em tempo real, timer e placar online de recordes." />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="./assets/index-BLplgyBa.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-D7GFoeDk.css">
+  </head>
+  <body>
+    <div id="app">
+      <!-- 3D WebGL Canvas Container -->
+      <div id="canvas-container"></div>
+
+      <!-- Floating Combo & Feedback Banner -->
+      <div id="combo-banner" class="hidden">
+        <span id="combo-text">COMBO x2!</span>
+      </div>
+
+      <!-- Top HUD Header -->
+      <header id="game-header">
+        <div class="hud-group left">
+          <div class="stat-card" id="highscore-card">
+            <span class="stat-icon">👑</span>
+            <div class="stat-info">
+              <span class="stat-label">RECORDE</span>
+              <span class="stat-value" id="highscore-val">0</span>
+            </div>
+          </div>
+          <div class="stat-card" id="timer-card">
+            <span class="stat-icon">⏱️</span>
+            <div class="stat-info">
+              <span class="stat-label">TEMPO</span>
+              <span class="stat-value" id="timer-val">00:00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-group center">
+          <div class="score-card" id="score-card">
+            <span class="score-label">PONTOS</span>
+            <span class="score-value" id="score-val">0</span>
+            <div id="score-popup-container"></div>
+          </div>
+        </div>
+
+        <div class="hud-group right">
+          <div class="stat-card" id="level-card">
+            <span class="stat-icon">⭐</span>
+            <div class="stat-info">
+              <span class="stat-label">NÍVEL</span>
+              <span class="stat-value" id="level-val">1</span>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button id="btn-sound" class="icon-btn" title="Ativar/Desativar Som" aria-label="Som">🔊</button>
+            <button id="btn-leaderboard" class="icon-btn" title="Placar de Recordes" aria-label="Placar">🏆</button>
+            <button id="btn-restart" class="icon-btn" title="Reiniciar Partida" aria-label="Reiniciar">🔄</button>
+            <button id="btn-info" class="icon-btn" title="Como Jogar" aria-label="Ajuda">ℹ️</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Bottom Drag Shelf / Deck Indicator -->
+      <div id="deck-hint">
+        <span>Arraste ou clique nas cartas abaixo para posicionar no tabuleiro</span>
+      </div>
+
+      <!-- Instructions Modal -->
+      <div id="modal-info" class="modal-overlay hidden">
+        <div class="modal-card">
+          <button class="modal-close" data-close="modal-info">✕</button>
+          <div class="modal-header">
+            <h2>Como Jogar Hexa Sort</h2>
+          </div>
+          <div class="modal-body tutorial-content">
+            <div class="tut-step">
+              <div class="tut-icon">1️⃣</div>
+              <div class="tut-desc">
+                <strong>Posicione as Pilhas:</strong> Arraste as pilhas de cartas do deque inferior para qualquer espaço vazio no tabuleiro hexagonal.
+              </div>
+            </div>
+            <div class="tut-step">
+              <div class="tut-icon">2️⃣</div>
+              <div class="tut-desc">
+                <strong>Fusão por Adjacência:</strong> Se duas pilhas vizinhas tiverem a <em>mesma cor no topo</em>, as cartas pulam automaticamente para se agrupar!
+              </div>
+            </div>
+            <div class="tut-step">
+              <div class="tut-icon">3️⃣</div>
+              <div class="tut-desc">
+                <strong>Complete 10 Cartas:</strong> Quando uma pilha atinge <strong>10 cartas da mesma cor</strong>, ela estoura, libera espaço e pontua alto!
+              </div>
+            </div>
+            <div class="tut-step">
+              <div class="tut-icon">4️⃣</div>
+              <div class="tut-desc">
+                <strong>Reações em Cadeia:</strong> Revelar novas cores embaixo pode disparar combos automáticos com multiplicadores!
+              </div>
+            </div>
+            <div class="tut-step">
+              <div class="tut-icon">5️⃣</div>
+              <div class="tut-desc">
+                <strong>Modo Infinito:</strong> O jogo termina apenas quando você não tiver mais espaço para posicionar as pilhas restantes. Sobreviva o máximo possível!
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-primary" data-close="modal-info">Entendi, Vamos Jogar!</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leaderboard Modal -->
+      <div id="modal-leaderboard" class="modal-overlay hidden">
+        <div class="modal-card">
+          <button class="modal-close" data-close="modal-leaderboard">✕</button>
+          <div class="modal-header">
+            <h2>🏆 Placar de Recordes</h2>
+            <div class="tab-container">
+              <button class="tab-btn active" id="tab-global">Global Online</button>
+              <button class="tab-btn" id="tab-local">Seus Recordes</button>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div id="leaderboard-loading" class="loading-spinner hidden">Carregando placar...</div>
+            <div id="leaderboard-list" class="leaderboard-table">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" data-close="modal-leaderboard">Fechar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Modal -->
+      <div id="modal-gameover" class="modal-overlay hidden">
+        <div class="modal-card gameover-card">
+          <div class="gameover-badge">GAME OVER</div>
+          <h2 class="gameover-title">Fim de Partida!</h2>
+          <p class="gameover-sub">O tabuleiro ficou sem espaços livres válidos.</p>
+
+          <div class="gameover-stats-grid">
+            <div class="go-stat">
+              <span class="go-stat-label">Pontuação Final</span>
+              <span class="go-stat-value highlight" id="go-final-score">0</span>
+            </div>
+            <div class="go-stat">
+              <span class="go-stat-label">Tempo de Sobrevivência</span>
+              <span class="go-stat-value" id="go-final-time">00:00</span>
+            </div>
+            <div class="go-stat">
+              <span class="go-stat-label">Pilhas Eliminadas</span>
+              <span class="go-stat-value" id="go-final-clears">0</span>
+            </div>
+            <div class="go-stat">
+              <span class="go-stat-label">Maior Combo</span>
+              <span class="go-stat-value" id="go-final-combo">x1</span>
+            </div>
+          </div>
+
+          <div id="record-notice" class="new-record-banner hidden">
+            🎉 NOVO RECORDE PESSOAL! 🎉
+          </div>
+
+          <!-- Submit score to global leaderboard -->
+          <div class="submit-score-section">
+            <label for="player-nickname">Registre seu nome no Ranking Global:</label>
+            <div class="input-row">
+              <input type="text" id="player-nickname" maxlength="15" placeholder="Seu apelido..." autocomplete="off" />
+              <button id="btn-submit-score" class="btn-accent">Salvar</button>
+            </div>
+            <div id="submit-status" class="submit-status"></div>
+          </div>
+
+          <div class="modal-footer go-footer">
+            <button id="btn-play-again" class="btn-primary btn-large">Jogar Novamente 🔄</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toast Notification -->
+      <div id="toast" class="toast hidden"></div>
+    </div>
+
+  </body>
+</html>
