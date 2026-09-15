@@ -136,10 +136,10 @@ export class TileFactory {
     innerFloor.receiveShadow = true;
     group.add(innerFloor);
 
-    // Highlight mesh
-    const highlightGeom = this.createHexCardGeometry(HEX_RADIUS * 0.96, PEDESTAL_HEIGHT + 0.1);
+    // Highlight beacon mesh (shown clearly when aiming at a slot)
+    const highlightGeom = this.createHexCardGeometry(HEX_RADIUS * 0.98, PEDESTAL_HEIGHT + 0.35);
     const highlightMesh = new THREE.Mesh(highlightGeom, this.highlightMat);
-    highlightMesh.position.y = 0.05;
+    highlightMesh.position.y = 0.15;
     highlightMesh.visible = false;
     group.add(highlightMesh);
 

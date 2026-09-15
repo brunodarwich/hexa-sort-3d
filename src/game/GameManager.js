@@ -130,14 +130,17 @@ export class GameManager {
   adjustCameraForScreen(width, height) {
     const aspect = width / height;
     if (aspect < 0.75) {
-      this.camera.position.set(0, 18.0, 14.2);
-      this.camera.lookAt(0, -0.4, 1.2);
+      // Mobile portrait: steeper top-down angle so back slots are perfectly visible
+      this.camera.position.set(0, 20.0, 11.8);
+      this.camera.lookAt(0, 0.2, 0.4);
     } else if (aspect < 1.1) {
-      this.camera.position.set(0, 15.5, 12.0);
-      this.camera.lookAt(0, 0, 1.0);
+      // Tablets / Squarish screens
+      this.camera.position.set(0, 17.5, 10.2);
+      this.camera.lookAt(0, 0.2, 0.3);
     } else {
-      this.camera.position.set(0, 14.0, 10.8);
-      this.camera.lookAt(0, 0, 0.8);
+      // Desktop / Landscape screens
+      this.camera.position.set(0, 16.0, 9.2);
+      this.camera.lookAt(0, 0.1, 0.2);
     }
   }
 
@@ -163,10 +166,10 @@ export class GameManager {
     this.deckGroup = new THREE.Group();
     this.scene.add(this.deckGroup);
 
-    const spacing = 2.7;
+    const spacing = 3.3; // Generous breathing room between deck blocks
     for (let i = 0; i < DECK_SLOT_COUNT; i++) {
       const x = (i - 1) * spacing;
-      const z = 4.8;
+      const z = 5.8; // Cleanly placed below the board
       const y = 0;
 
       const pedestal = this.tileFactory.createDeckPedestal(x, y, z, i);
@@ -410,8 +413,10 @@ export class GameManager {
       this.hasMovedDistance = true;
     }
 
+    // Follow pointer along X/Z with a slight forward offset for finger/cursor visibility
     this.draggedStackGroup.position.x = hitPoint.x;
-    this.draggedStackGroup.position.z = hitPoint.z;
+    this.draggedStackGroup.position.y = 2.0; // Higher lift for clear view
+    this.draggedStackGroup.position.z = hitPoint.z - 0.25;
 
     const nearestSlot = this.findNearestSlot(hitPoint);
 
@@ -456,7 +461,8 @@ export class GameManager {
 
   findNearestSlot(worldPos) {
     let closest = null;
-    let minDist = HEX_RADIUS * 1.45;
+    // Generous snapping radius so back slots snap easily
+    let minDist = HEX_RADIUS * 1.65;
 
     for (const slot of this.hexGrid.getAllSlots()) {
       const slotPos = new THREE.Vector3(slot.worldX, 0, slot.worldZ);
