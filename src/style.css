@@ -191,6 +191,42 @@ body, html {
   color: #b45309;
 }
 
+.player-pill {
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  border: 2px solid #cbd5e1;
+  border-bottom: 3.5px solid #94a3b8;
+  color: #1e293b;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.92rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.15s ease;
+}
+
+.player-pill:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+  color: #2563eb;
+}
+
+.player-name-text {
+  max-width: 95px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-edit-icon {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
 /* 2. CENTER LEVEL CAPSULE */
 .level-capsule {
   position: relative;
@@ -820,6 +856,119 @@ body, html {
   flex-direction: column;
   gap: 8px;
   text-align: left;
+}
+
+.auto-submit-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  padding: 10px 14px;
+  border-radius: 14px;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: #166534;
+  font-weight: 600;
+}
+
+.auto-submit-pill strong {
+  color: #15803d;
+  font-weight: 900;
+}
+
+.btn-text-edit {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.btn-text-edit:hover {
+  color: #1d4ed8;
+}
+
+/* NICKNAME MODAL */
+.nickname-card {
+  text-align: center;
+  max-width: 440px;
+}
+
+.modal-header.text-center {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-badge-icon {
+  font-size: 2.6rem;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.modal-subtitle {
+  font-size: 0.92rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.nickname-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.nickname-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nickname-input-group .input-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 1.25rem;
+  pointer-events: none;
+}
+
+.nickname-input-group input {
+  width: 100%;
+  padding: 14px 16px 14px 44px;
+  background: #f8fafc;
+  border: 2.5px solid #cbd5e1;
+  border-radius: 16px;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nickname-input-group input:focus {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.nickname-hint {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.btn-large {
+  font-size: 1.15rem;
+  padding: 16px 24px;
 }
 
 .submit-score-section label {

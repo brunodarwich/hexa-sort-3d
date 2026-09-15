@@ -61,6 +61,13 @@ FOR INSERT
 TO anon, authenticated
 WITH CHECK (true);
 
+CREATE POLICY "Permitir atualização de jogadores"
+ON public.players
+FOR UPDATE
+TO anon, authenticated
+USING (true)
+WITH CHECK (true);
+
 -- Políticas para sessões de jogo (leitura pública e envio de pontuação)
 CREATE POLICY "Permitir leitura pública das pontuações"
 ON public.game_sessions

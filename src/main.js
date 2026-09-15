@@ -21,6 +21,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const playerNicknameInput = document.getElementById('player-nickname');
   const submitStatus = document.getElementById('submit-status');
 
+  // Nickname & Player Identity Elements
+  const btnPlayerProfile = document.getElementById('btn-player-profile');
+  const headerPlayerName = document.getElementById('header-player-name');
+  const modalNickname = document.getElementById('modal-nickname');
+  const formNickname = document.getElementById('form-nickname');
+  const inputWelcomeNickname = document.getElementById('input-welcome-nickname');
+  const btnEditNicknameGo = document.getElementById('btn-edit-nickname-go');
+  const autoSubmitBadge = document.getElementById('auto-submit-badge');
+  const manualNicknameRow = document.getElementById('manual-nickname-row');
+  const goNicknameDisplay = document.getElementById('go-nickname-display');
+
   const modalInfo = document.getElementById('modal-info');
   const modalLeaderboard = document.getElementById('modal-leaderboard');
   const modalGameOver = document.getElementById('modal-gameover');
@@ -31,6 +42,72 @@ document.addEventListener('DOMContentLoaded', () => {
   const leaderboardLoading = document.getElementById('leaderboard-loading');
 
   let currentLeaderboardTab = 'global'; // 'global' | 'local'
+
+  // Helper para atualizar visualmente o apelido no HUD e modais
+  function updatePlayerNicknameUI(name) {
+    const displayName = name || 'Definir Apelido';
+    if (headerPlayerName) headerPlayerName.textContent = displayName;
+    if (goNicknameDisplay) goNicknameDisplay.textContent = name || 'Jogador';
+    if (playerNicknameInput) playerNicknameInput.value = name || '';
+  }
+
+  // Inicialização do apelido salvo (persistência de cache)
+  const savedNick = leaderboard.getSavedNickname();
+  if (savedNick) {
+    updatePlayerNicknameUI(savedNick);
+  } else {
+    // Primeiro acesso nesta máquina: abre o modal de boas-vindas para definir apelido
+    setTimeout(() => {
+      if (modalNickname) {
+        modalNickname.classList.remove('hidden');
+        if (inputWelcomeNickname) inputWelcomeNickname.focus();
+      }
+    }, 450);
+  }
+
+  // Abrir modal de edição de apelido pelo cabeçalho
+  if (btnPlayerProfile) {
+    btnPlayerProfile.addEventListener('click', () => {
+      game.sound.playClick();
+      if (inputWelcomeNickname) {
+        inputWelcomeNickname.value = leaderboard.getSavedNickname();
+      }
+      if (modalNickname) {
+        modalNickname.classList.remove('hidden');
+        if (inputWelcomeNickname) inputWelcomeNickname.focus();
+      }
+    });
+  }
+
+  // Submissão do formulário de apelido (boas-vindas ou edição)
+  if (formNickname) {
+    formNickname.addEventListener('submit', (e) => {
+      e.preventDefault();
+      game.sound.playClick();
+      const newNick = (inputWelcomeNickname.value || '').trim();
+      if (newNick) {
+        leaderboard.setSavedNickname(newNick);
+        updatePlayerNicknameUI(newNick);
+        if (modalNickname) modalNickname.classList.add('hidden');
+        showToast(`Apelido salvo: ${newNick} 🎉`);
+      }
+    });
+  }
+
+  // Botão "Trocar" na tela de Game Over
+  if (btnEditNicknameGo) {
+    btnEditNicknameGo.addEventListener('click', () => {
+      game.sound.playClick();
+      if (autoSubmitBadge) autoSubmitBadge.classList.add('hidden');
+      if (manualNicknameRow) {
+        manualNicknameRow.classList.remove('hidden');
+        if (playerNicknameInput) {
+          playerNicknameInput.focus();
+          playerNicknameInput.select();
+        }
+      }
+    });
+  }
 
   // Sound Toggle
   btnSound.addEventListener('click', () => {
@@ -160,10 +237,12 @@ document.addEventListener('DOMContentLoaded', () => {
     leaderboardList.innerHTML = html;
   }
 
-  // Submit Score in Game Over Modal
+  // Submit Score in Game Over Modal (manual override)
   btnSubmitScore.addEventListener('click', async () => {
     game.sound.playClick();
     const nickname = playerNicknameInput.value.trim() || 'Jogador';
+    leaderboard.setSavedNickname(nickname);
+    updatePlayerNicknameUI(nickname);
 
     btnSubmitScore.disabled = true;
     submitStatus.textContent = 'Enviando pontuação...';
@@ -180,6 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       submitStatus.textContent = '✓ Pontuação registrada com sucesso!';
       submitStatus.className = 'submit-status success';
+      if (manualNicknameRow) manualNicknameRow.classList.add('hidden');
+      if (autoSubmitBadge) autoSubmitBadge.classList.remove('hidden');
       showToast('Recorde registrado no Ranking!');
     } catch (e) {
       submitStatus.textContent = 'Erro ao salvar. Salvo localmente.';

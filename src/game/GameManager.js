@@ -1029,12 +1029,28 @@ export class GameManager {
     }
   }
 
-  triggerGameOver() {
+  async triggerGameOver() {
     this.isGameOver = true;
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.sound.playGameOver();
 
     const isNewRecord = this.score >= this.highScore && this.score > 0;
+    const currentNickname = this.leaderboard.getSavedNickname() || 'Jogador';
+
+    // Salvar pontuação automaticamente para o jogador atual
+    if (this.score > 0) {
+      try {
+        await this.leaderboard.submitScore({
+          name: currentNickname,
+          score: this.score,
+          time: this.gameTimeSeconds,
+          clears: this.totalClears,
+          combo: this.maxCombo
+        });
+      } catch (e) {
+        console.error('Erro ao auto-submeter pontuação:', e);
+      }
+    }
 
     const modal = document.getElementById('modal-gameover');
     if (modal) {
@@ -1049,9 +1065,26 @@ export class GameManager {
         else recordNotice.classList.add('hidden');
       }
 
+      const nicknameDisplay = document.getElementById('go-nickname-display');
+      if (nicknameDisplay) {
+        nicknameDisplay.textContent = currentNickname;
+      }
+
       const nameInput = document.getElementById('player-nickname');
       if (nameInput) {
-        nameInput.value = this.leaderboard.getSavedNickname();
+        nameInput.value = currentNickname;
+      }
+
+      const autoBadge = document.getElementById('auto-submit-badge');
+      if (autoBadge) autoBadge.classList.remove('hidden');
+
+      const manualRow = document.getElementById('manual-nickname-row');
+      if (manualRow) manualRow.classList.add('hidden');
+
+      const statusEl = document.getElementById('submit-status');
+      if (statusEl) {
+        statusEl.textContent = this.score > 0 ? 'Pontuação sincronizada no Ranking Global!' : '';
+        statusEl.className = 'submit-status success';
       }
 
       modal.classList.remove('hidden');

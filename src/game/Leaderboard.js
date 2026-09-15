@@ -7,6 +7,7 @@ import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 
 const LOCAL_STORAGE_KEY = 'hexa_sort_local_scores_v2';
 const NICKNAME_KEY = 'hexa_sort_player_nickname';
+const PLAYER_ID_KEY = 'hexa_sort_player_id_v2';
 const GLOBAL_STORAGE_KEY = 'hexa_sort_global_cache_v2';
 
 // Placar inicial zerado (sem jogadores fictícios/mockados)
@@ -14,7 +15,19 @@ const DEFAULT_GLOBAL_LEADERBOARD = [];
 
 export class LeaderboardManager {
   constructor() {
+    let playerId = localStorage.getItem(PLAYER_ID_KEY);
+    if (!playerId) {
+      playerId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : 'p_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      localStorage.setItem(PLAYER_ID_KEY, playerId);
+    }
+    this.playerId = playerId;
     this.savedNickname = localStorage.getItem(NICKNAME_KEY) || '';
+  }
+
+  getPlayerId() {
+    return this.playerId;
   }
 
   getSavedNickname() {
@@ -22,9 +35,21 @@ export class LeaderboardManager {
   }
 
   setSavedNickname(name) {
-    this.savedNickname = name.trim();
-    if (this.savedNickname) {
+    const trimmed = (name || '').trim().slice(0, 15);
+    if (trimmed) {
+      this.savedNickname = trimmed;
       localStorage.setItem(NICKNAME_KEY, this.savedNickname);
+
+      // Sincronizar perfil do jogador no Supabase em background
+      if (isSupabaseConfigured && supabase) {
+        supabase.from('players').upsert({
+          id: this.playerId,
+          username: this.savedNickname,
+          last_active_at: new Date().toISOString()
+        }, { onConflict: 'id' }).then(({ error }) => {
+          if (error) console.warn('Aviso ao sincronizar perfil do jogador:', error.message);
+        });
+      }
     }
   }
 
@@ -145,6 +170,7 @@ export class LeaderboardManager {
         const { error } = await supabase
           .from('game_sessions')
           .insert({
+            player_id: this.playerId,
             player_name: playerName,
             score,
             time_seconds: time,

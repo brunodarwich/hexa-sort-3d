@@ -66,6 +66,11 @@
 
         <!-- Right Action Buttons -->
         <div class="hud-group right">
+          <button id="btn-player-profile" class="stat-pill player-pill" title="Clique para alterar seu apelido" aria-label="Perfil do Jogador">
+            <span class="player-icon">👤</span>
+            <span class="player-name-text" id="header-player-name">Jogador</span>
+            <span class="player-edit-icon">✏️</span>
+          </button>
           <div class="btn-group">
             <button id="btn-sound" class="icon-btn bubble-btn" title="Ativar/Desativar Som" aria-label="Som">🔊</button>
             <button id="btn-leaderboard" class="icon-btn bubble-btn" title="Placar de Recordes" aria-label="Placar">🏆</button>
@@ -78,6 +83,26 @@
       <!-- Bottom Drag Shelf / Deck Indicator -->
       <div id="deck-hint">
         <span>Arraste ou clique nas pilhas para posicionar no tabuleiro</span>
+      </div>
+
+      <!-- Welcome / Nickname Setup Modal -->
+      <div id="modal-nickname" class="modal-overlay hidden">
+        <div class="modal-card nickname-card">
+          <button class="modal-close" data-close="modal-nickname">✕</button>
+          <div class="modal-header text-center">
+            <div class="modal-badge-icon">🎮</div>
+            <h2>Defina seu Apelido</h2>
+            <p class="modal-subtitle">Escolha seu nome para o Ranking Global. Todas as suas partidas neste navegador serão computadas automaticamente para você!</p>
+          </div>
+          <form id="form-nickname" class="nickname-form">
+            <div class="nickname-input-group">
+              <span class="input-icon">👤</span>
+              <input type="text" id="input-welcome-nickname" maxlength="15" placeholder="Ex: Bruno, MestreHexa..." autocomplete="off" required />
+            </div>
+            <p class="nickname-hint">💡 Salvo automaticamente em cache para seus próximos acessos neste dispositivo.</p>
+            <button type="submit" id="btn-save-nickname" class="btn-primary btn-large">Salvar e Jogar 🚀</button>
+          </form>
+        </div>
       </div>
 
       <!-- Instructions Modal -->
@@ -182,8 +207,12 @@
 
           <!-- Submit score to global leaderboard -->
           <div class="submit-score-section">
-            <label for="player-nickname">Registre seu nome no Ranking Global:</label>
-            <div class="input-row">
+            <div class="auto-submit-pill" id="auto-submit-badge">
+              <span class="auto-submit-icon">✅</span>
+              <span class="auto-submit-text">Registrado no Ranking como: <strong id="go-nickname-display">Jogador</strong></span>
+              <button id="btn-edit-nickname-go" class="btn-text-edit" type="button" title="Alterar apelido">Trocar</button>
+            </div>
+            <div class="input-row hidden" id="manual-nickname-row">
               <input type="text" id="player-nickname" maxlength="15" placeholder="Seu apelido..." autocomplete="off" />
               <button id="btn-submit-score" class="btn-accent">Salvar</button>
             </div>
