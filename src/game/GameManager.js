@@ -519,11 +519,38 @@ export class GameManager {
   }
 
   /**
-   * Cascade loop:
-   * 1. The placed slot acts as a MAGNET, attracting all matching top colors from surrounding neighbors.
-   * 2. If it reaches >= 10 cards, it POPS ALL cards of that color!
-   * 3. Revealing a new layer below causes it to pull matching colors of the new layer from neighbors.
-   * 4. Once the placed slot is done, any remaining neighbor-to-neighbor matches on the board merge.
+   * Calculates attraction priority score based on user rules:
+   * 1. Stacks with FEWER distinct colors have higher attraction priority (pure 1-color has highest preference).
+   * 2. Stacks with GREATER number of matching top cards pull from stacks with fewer cards.
+   * 3. Tie-breaker: total stack height & newly placed active slot.
+   */
+  calculateAttractionPriority(slot, colorId, isPrimaryPlaced = false) {
+    if (!slot || slot.stack.length === 0) return -1;
+
+    const topMatches = this.countTopContiguousCards(slot, colorId);
+    if (topMatches === 0) return -1;
+
+    // Distinct unique colors count in the whole stack
+    const uniqueColorsCount = new Set(slot.stack.map(c => c.color.id)).size;
+
+    // Purity score: 1 color = 4000, 2 colors = 3000, 3 colors = 2000, 4 colors = 1000
+    const purityScore = Math.max(1, 5 - uniqueColorsCount) * 1000;
+
+    // Card count score: more matching top cards = higher priority
+    const countScore = topMatches * 50;
+
+    // Tie-breaker
+    const totalCardsScore = slot.stack.length * 2;
+    const placementBonus = isPrimaryPlaced ? 1 : 0;
+
+    return purityScore + countScore + totalCardsScore + placementBonus;
+  }
+
+  /**
+   * Cascade merge loop applying the exact attraction priority hierarchy:
+   * - Pure / fewer-colored stacks pull from multi-colored stacks
+   * - Larger numbers pull from smaller numbers
+   * - Pops ALL cards of that matching color when >= 10
    */
   async processCascadingMerges(primaryMagnetSlot) {
     let cascadeStep = 0;
@@ -532,35 +559,8 @@ export class GameManager {
 
     while (keepCascading) {
       keepCascading = false;
-
-      // Phase 1: Magnetic pull towards primaryMagnetSlot (the newly placed/active slot)
-      if (primaryMagnetSlot && primaryMagnetSlot.stack.length > 0) {
-        const topCard = primaryMagnetSlot.stack[primaryMagnetSlot.stack.length - 1];
-        const magnetColorId = topCard.color.id;
-
-        const neighbors = this.hexGrid.getNeighbors(primaryMagnetSlot);
-        for (const neighbor of neighbors) {
-          if (neighbor.stack.length === 0) continue;
-
-          const neighborTopCard = neighbor.stack[neighbor.stack.length - 1];
-          if (neighborTopCard.color.id === magnetColorId) {
-            // Neighbor jumps INTO the magnet slot!
-            await this.transferMatchingCards(neighbor, primaryMagnetSlot, magnetColorId, cascadeStep);
-            cascadeStep++;
-
-            // Check if magnet slot reached >= 10 and pops all of that color
-            await this.checkAndClearFullStack(primaryMagnetSlot);
-
-            keepCascading = true;
-            break;
-          }
-        }
-
-        if (keepCascading) continue;
-      }
-
-      // Phase 2: Secondary merges between any matching neighbors across the board
       const occupiedSlots = this.hexGrid.getOccupiedSlots();
+
       for (const slot of occupiedSlots) {
         if (slot.stack.length === 0) continue;
 
@@ -573,21 +573,31 @@ export class GameManager {
 
           const neighborTopCard = neighbor.stack[neighbor.stack.length - 1];
           if (neighborTopCard.color.id === topColorId) {
-            // Merge towards the slot with more cards of that color
-            let source = neighbor;
+            // Match found! Determine target (magnet puller) vs source (pulled)
+            const slotPriority = this.calculateAttractionPriority(
+              slot,
+              topColorId,
+              slot === primaryMagnetSlot
+            );
+            const neighborPriority = this.calculateAttractionPriority(
+              neighbor,
+              topColorId,
+              neighbor === primaryMagnetSlot
+            );
+
             let target = slot;
+            let source = neighbor;
 
-            const sourceMatches = this.countTopContiguousCards(source, topColorId);
-            const targetMatches = this.countTopContiguousCards(target, topColorId);
-
-            if (sourceMatches > targetMatches) {
-              source = slot;
+            if (neighborPriority > slotPriority) {
               target = neighbor;
+              source = slot;
             }
 
+            // Transfer matching cards from source to target
             await this.transferMatchingCards(source, target, topColorId, cascadeStep);
             cascadeStep++;
 
+            // Pop all matching cards if >= 10
             await this.checkAndClearFullStack(target);
 
             keepCascading = true;
