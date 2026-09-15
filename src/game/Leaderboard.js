@@ -131,7 +131,7 @@ export class LeaderboardManager {
     // Sort descending by score
     scores.sort((a, b) => b.score - a.score);
     const uniqueScores = LeaderboardManager.deduplicateScores(scores);
-    const topScores = uniqueScores.slice(0, 15);
+    const topScores = uniqueScores.slice(0, 100);
 
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(topScores));
@@ -151,7 +151,7 @@ export class LeaderboardManager {
         const { data, error } = await supabase
           .from('global_leaderboard')
           .select('*')
-          .limit(50); // Buscar mais registros para que a desduplicação forneça um Top 15 completo
+          .limit(200); // Buscar até 200 registros para garantir 100 pontuações únicas
 
         if (!error && data && data.length > 0) {
           const formatted = data.map(item => ({
@@ -163,7 +163,7 @@ export class LeaderboardManager {
             date: new Date(item.created_at).toLocaleDateString('pt-BR')
           }));
 
-          const unique = LeaderboardManager.deduplicateScores(formatted).slice(0, 15);
+          const unique = LeaderboardManager.deduplicateScores(formatted).slice(0, 100);
 
           // Atualizar cache local
           localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(unique));
@@ -181,7 +181,7 @@ export class LeaderboardManager {
 
       globalList.sort((a, b) => b.score - a.score);
       const unique = LeaderboardManager.deduplicateScores(globalList);
-      return unique.slice(0, 15);
+      return unique.slice(0, 100);
     } catch (e) {
       console.warn('Could not fetch remote leaderboard, using cached fallback:', e);
       return DEFAULT_GLOBAL_LEADERBOARD;
@@ -251,7 +251,7 @@ export class LeaderboardManager {
         globalList.push(record);
         globalList.sort((a, b) => b.score - a.score);
         const unique = LeaderboardManager.deduplicateScores(globalList);
-        localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(unique.slice(0, 20)));
+        localStorage.setItem(GLOBAL_STORAGE_KEY, JSON.stringify(unique.slice(0, 100)));
       }
     } catch (e) {
       console.error('Failed to update global list cache:', e);

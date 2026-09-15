@@ -695,9 +695,28 @@ body, html {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 320px;
+  max-height: min(420px, 58vh);
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 6px;
+  scroll-behavior: smooth;
+}
+
+.leaderboard-table::-webkit-scrollbar {
+  width: 6px;
+}
+
+.leaderboard-table::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 999px;
+}
+
+.leaderboard-table::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.leaderboard-table::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .leaderboard-row {
@@ -738,10 +757,11 @@ body, html {
 
 .lb-rank {
   font-weight: 900;
-  font-size: 1.1rem;
-  min-width: 26px;
+  font-size: 1.05rem;
+  min-width: 38px;
   text-align: center;
   color: #64748b;
+  font-variant-numeric: tabular-nums;
 }
 
 .rank-1 .lb-rank { color: #d97706; }
