@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const formNickname = document.getElementById('form-nickname');
   const inputWelcomeNickname = document.getElementById('input-welcome-nickname');
   const btnEditNicknameGo = document.getElementById('btn-edit-nickname-go');
+  const btnCancelEditGo = document.getElementById('btn-cancel-edit-go');
   const autoSubmitBadge = document.getElementById('auto-submit-badge');
   const manualNicknameRow = document.getElementById('manual-nickname-row');
   const goNicknameDisplay = document.getElementById('go-nickname-display');
@@ -101,11 +102,23 @@ document.addEventListener('DOMContentLoaded', () => {
       if (autoSubmitBadge) autoSubmitBadge.classList.add('hidden');
       if (manualNicknameRow) {
         manualNicknameRow.classList.remove('hidden');
+        if (btnCancelEditGo) btnCancelEditGo.classList.remove('hidden');
         if (playerNicknameInput) {
           playerNicknameInput.focus();
           playerNicknameInput.select();
         }
       }
+    });
+  }
+
+  // Botão "Cancelar" na tela de Game Over
+  if (btnCancelEditGo) {
+    btnCancelEditGo.addEventListener('click', () => {
+      game.sound.playClick();
+      const currentNick = leaderboard.getSavedNickname();
+      if (playerNicknameInput) playerNicknameInput.value = currentNick || '';
+      if (manualNicknameRow) manualNicknameRow.classList.add('hidden');
+      if (autoSubmitBadge) autoSubmitBadge.classList.remove('hidden');
     });
   }
 
@@ -237,38 +250,58 @@ document.addEventListener('DOMContentLoaded', () => {
     leaderboardList.innerHTML = html;
   }
 
-  // Submit Score in Game Over Modal (manual override)
+  // Submit Score in Game Over Modal (manual override ou primeiro salvamento)
+  if (playerNicknameInput) {
+    playerNicknameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnSubmitScore.click();
+      }
+    });
+  }
+
   btnSubmitScore.addEventListener('click', async () => {
     game.sound.playClick();
-    const nickname = playerNicknameInput.value.trim() || 'Jogador';
+    const nickname = (playerNicknameInput.value || '').trim();
+    if (!nickname) {
+      submitStatus.textContent = 'Por favor, digite um apelido válido.';
+      submitStatus.className = 'submit-status error';
+      if (playerNicknameInput) playerNicknameInput.focus();
+      return;
+    }
+
     leaderboard.setSavedNickname(nickname);
     updatePlayerNicknameUI(nickname);
 
     btnSubmitScore.disabled = true;
-    submitStatus.textContent = 'Enviando pontuação...';
+    submitStatus.textContent = 'Salvando e sincronizando...';
     submitStatus.className = 'submit-status';
 
     try {
-      await leaderboard.submitScore({
-        name: nickname,
-        score: game.score,
-        time: game.gameTimeSeconds,
-        clears: game.totalClears,
-        combo: game.maxCombo
-      });
+      if (game.score > 0) {
+        await leaderboard.submitScore({
+          name: nickname,
+          score: game.score,
+          time: game.gameTimeSeconds,
+          clears: game.totalClears,
+          combo: game.maxCombo
+        });
+      }
 
-      submitStatus.textContent = '✓ Pontuação registrada com sucesso!';
+      submitStatus.textContent = 'Pontuação sincronizada no Ranking Global!';
       submitStatus.className = 'submit-status success';
       if (manualNicknameRow) manualNicknameRow.classList.add('hidden');
       if (autoSubmitBadge) autoSubmitBadge.classList.remove('hidden');
-      showToast('Recorde registrado no Ranking!');
+      showToast(`Recorde registrado como ${nickname}! 🎉`);
     } catch (e) {
-      submitStatus.textContent = 'Erro ao salvar. Salvo localmente.';
-      submitStatus.className = 'submit-status error';
+      submitStatus.textContent = 'Salvo localmente.';
+      submitStatus.className = 'submit-status';
+      if (manualNicknameRow) manualNicknameRow.classList.add('hidden');
+      if (autoSubmitBadge) autoSubmitBadge.classList.remove('hidden');
     } finally {
       setTimeout(() => {
         btnSubmitScore.disabled = false;
-      }, 2000);
+      }, 1500);
     }
   });
 

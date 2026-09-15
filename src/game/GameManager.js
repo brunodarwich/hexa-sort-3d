@@ -1035,13 +1035,14 @@ export class GameManager {
     this.sound.playGameOver();
 
     const isNewRecord = this.score >= this.highScore && this.score > 0;
-    const currentNickname = this.leaderboard.getSavedNickname() || 'Jogador';
+    const savedNickname = (this.leaderboard.getSavedNickname() || '').trim();
+    const hasNickname = Boolean(savedNickname);
 
-    // Salvar pontuação automaticamente para o jogador atual
-    if (this.score > 0) {
+    // Salvar pontuação automaticamente APENAS se o jogador já tiver um apelido salvo
+    if (hasNickname && this.score > 0) {
       try {
         await this.leaderboard.submitScore({
-          name: currentNickname,
+          name: savedNickname,
           score: this.score,
           time: this.gameTimeSeconds,
           clears: this.totalClears,
@@ -1067,24 +1068,37 @@ export class GameManager {
 
       const nicknameDisplay = document.getElementById('go-nickname-display');
       if (nicknameDisplay) {
-        nicknameDisplay.textContent = currentNickname;
+        nicknameDisplay.textContent = savedNickname || 'Jogador';
       }
 
       const nameInput = document.getElementById('player-nickname');
       if (nameInput) {
-        nameInput.value = currentNickname;
+        nameInput.value = savedNickname;
       }
 
       const autoBadge = document.getElementById('auto-submit-badge');
-      if (autoBadge) autoBadge.classList.remove('hidden');
-
       const manualRow = document.getElementById('manual-nickname-row');
-      if (manualRow) manualRow.classList.add('hidden');
-
+      const cancelBtn = document.getElementById('btn-cancel-edit-go');
       const statusEl = document.getElementById('submit-status');
-      if (statusEl) {
-        statusEl.textContent = this.score > 0 ? 'Pontuação sincronizada no Ranking Global!' : '';
-        statusEl.className = 'submit-status success';
+
+      if (hasNickname) {
+        // Já possui apelido: exibe confirmação e oculta o campo manual de salvar
+        if (autoBadge) autoBadge.classList.remove('hidden');
+        if (manualRow) manualRow.classList.add('hidden');
+        if (cancelBtn) cancelBtn.classList.remove('hidden');
+        if (statusEl) {
+          statusEl.textContent = this.score > 0 ? 'Pontuação sincronizada no Ranking Global!' : '';
+          statusEl.className = 'submit-status success';
+        }
+      } else {
+        // NÃO possui apelido: oculta o selo e exibe o campo para digitar e salvar
+        if (autoBadge) autoBadge.classList.add('hidden');
+        if (manualRow) manualRow.classList.remove('hidden');
+        if (cancelBtn) cancelBtn.classList.add('hidden');
+        if (statusEl) {
+          statusEl.textContent = 'Digite seu apelido para registrar no Ranking!';
+          statusEl.className = 'submit-status';
+        }
       }
 
       modal.classList.remove('hidden');

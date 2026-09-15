@@ -26,46 +26,8 @@
 
       <!-- Top HUD Header -->
       <header id="game-header">
-        <div class="hud-group left">
-          <!-- Coins / Score Pill (Matching Left Pill in Reference) -->
-          <div class="stat-pill coin-pill" id="score-card">
-            <div class="coin-icon-badge">🪙</div>
-            <div class="stat-info">
-              <span class="score-value" id="score-val">0</span>
-            </div>
-            <div class="pill-plus-btn">+</div>
-            <div id="score-popup-container"></div>
-          </div>
-
-          <!-- Timer & Highscore Pills -->
-          <div class="stat-pill timer-pill" id="timer-card">
-            <span class="stat-icon">⏱️</span>
-            <span class="stat-value" id="timer-val">00:00</span>
-          </div>
-          <div class="stat-pill highscore-pill" id="highscore-card">
-            <span class="stat-icon">👑</span>
-            <div class="stat-info">
-              <span class="stat-label">REC</span>
-              <span class="stat-value" id="highscore-val">0</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Center Level & Progress Capsule (Matching Center Capsule in Reference) -->
-        <div class="hud-group center">
-          <div class="level-capsule" id="level-card">
-            <div class="capsule-rainbow-badge">🌈</div>
-            <div class="capsule-content">
-              <div class="capsule-target">
-                <span class="capsule-sparkle">✨</span>
-                <span class="capsule-label">NÍVEL <strong id="level-val">1</strong></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Action Buttons -->
-        <div class="hud-group right">
+        <!-- Top Bar: Player Profile & Action Buttons -->
+        <div class="hud-row hud-row-utility">
           <button id="btn-player-profile" class="stat-pill player-pill" title="Clique para alterar seu apelido" aria-label="Perfil do Jogador">
             <span class="player-icon">👤</span>
             <span class="player-name-text" id="header-player-name">Jogador</span>
@@ -76,6 +38,45 @@
             <button id="btn-leaderboard" class="icon-btn bubble-btn" title="Placar de Recordes" aria-label="Placar">🏆</button>
             <button id="btn-restart" class="icon-btn bubble-btn" title="Reiniciar Partida" aria-label="Reiniciar">🔄</button>
             <button id="btn-info" class="icon-btn bubble-btn" title="Como Jogar" aria-label="Ajuda">⚙️</button>
+          </div>
+        </div>
+
+        <!-- Main Bar: Coins/Score, Level, Timer, Highscore -->
+        <div class="hud-row hud-row-gameplay">
+          <!-- Coins / Score Pill -->
+          <div class="stat-pill coin-pill" id="score-card">
+            <div class="coin-icon-badge">🪙</div>
+            <div class="stat-info">
+              <span class="score-value" id="score-val">0</span>
+            </div>
+            <div class="pill-plus-btn">+</div>
+            <div id="score-popup-container"></div>
+          </div>
+
+          <!-- Center Level & Progress Capsule -->
+          <div class="level-capsule" id="level-card">
+            <div class="capsule-rainbow-badge">🌈</div>
+            <div class="capsule-content">
+              <div class="capsule-target">
+                <span class="capsule-sparkle">✨</span>
+                <span class="capsule-label">NÍVEL <strong id="level-val">1</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timer & Highscore Pills -->
+          <div class="hud-time-group">
+            <div class="stat-pill timer-pill" id="timer-card">
+              <span class="stat-icon">⏱️</span>
+              <span class="stat-value" id="timer-val">00:00</span>
+            </div>
+            <div class="stat-pill highscore-pill" id="highscore-card">
+              <span class="stat-icon">👑</span>
+              <div class="stat-info">
+                <span class="stat-label">REC</span>
+                <span class="stat-value" id="highscore-val">0</span>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -213,8 +214,9 @@
               <button id="btn-edit-nickname-go" class="btn-text-edit" type="button" title="Alterar apelido">Trocar</button>
             </div>
             <div class="input-row hidden" id="manual-nickname-row">
-              <input type="text" id="player-nickname" maxlength="15" placeholder="Seu apelido..." autocomplete="off" />
+              <input type="text" id="player-nickname" maxlength="15" placeholder="Digite seu apelido..." autocomplete="off" />
               <button id="btn-submit-score" class="btn-accent">Salvar</button>
+              <button id="btn-cancel-edit-go" class="btn-cancel-edit hidden" type="button" title="Cancelar alteração">✕</button>
             </div>
             <div id="submit-status" class="submit-status"></div>
           </div>
