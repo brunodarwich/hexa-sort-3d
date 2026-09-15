@@ -28,16 +28,21 @@
 body, html {
   width: 100%;
   height: 100%;
+  height: 100dvh;
   overflow: hidden;
   background: var(--bg-gradient);
   color: var(--text-main);
   font-family: var(--font-display);
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
 }
 
 #app {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -56,15 +61,15 @@ body, html {
 /* TOP HEADER HUD */
 #game-header {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  right: 16px;
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 10;
   pointer-events: none;
-  gap: 12px;
+  gap: 8px;
 }
 
 .hud-group {
@@ -747,31 +752,44 @@ body, html {
   100% { opacity: 0; transform: translate(-50%, -10px); }
 }
 
-/* RESPONSIVE DESIGN */
+/* RESPONSIVE DESIGN FOR MOBILE PHONES */
 @media (max-width: 640px) {
   #game-header {
-    top: 8px;
-    left: 8px;
-    right: 8px;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    top: max(8px, env(safe-area-inset-top));
+    left: max(6px, env(safe-area-inset-left));
+    right: max(6px, env(safe-area-inset-right));
+    gap: 6px;
+  }
+
+  .hud-group {
+    gap: 6px;
   }
 
   .stat-card {
-    padding: 6px 10px;
+    padding: 5px 8px;
+    border-radius: 10px;
   }
 
-  .stat-icon { font-size: 1rem; }
-  .stat-value { font-size: 0.9rem; }
-  .stat-label { font-size: 0.55rem; }
+  .stat-icon { font-size: 0.95rem; }
+  .stat-value { font-size: 0.85rem; }
+  .stat-label { font-size: 0.52rem; letter-spacing: 0.04em; }
+
+  #highscore-card {
+    display: none; /* Keep clean on small mobile screens; shown on modals */
+  }
 
   .score-card {
-    padding: 6px 16px;
-    min-width: 100px;
+    padding: 6px 14px;
+    min-width: 95px;
+    border-radius: 14px;
   }
 
-  .score-value { font-size: 1.3rem; }
-  .score-label { font-size: 0.6rem; }
+  .score-value { font-size: 1.25rem; }
+  .score-label { font-size: 0.58rem; letter-spacing: 0.1em; }
+
+  .btn-group {
+    gap: 4px;
+  }
 
   .icon-btn {
     width: 36px;
@@ -780,11 +798,41 @@ body, html {
     border-radius: 10px;
   }
 
-  .modal-card {
-    padding: 20px;
-    border-radius: 18px;
+  #deck-hint {
+    bottom: max(8px, env(safe-area-inset-bottom));
   }
 
-  .tut-step { padding: 10px 12px; }
-  .tut-desc { font-size: 0.85rem; }
+  #deck-hint span {
+    font-size: 0.72rem;
+    padding: 4px 10px;
+  }
+
+  .modal-card {
+    padding: 20px 16px;
+    border-radius: 20px;
+    max-height: 85vh;
+  }
+
+  .modal-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .tut-step {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .tut-icon { font-size: 1.15rem; }
+  .tut-desc { font-size: 0.82rem; line-height: 1.35; }
+
+  .gameover-title {
+    font-size: 1.6rem;
+  }
+
+  .go-stat-value {
+    font-size: 1.1rem;
+  }
+
+  .go-stat-value.highlight {
+    font-size: 1.35rem;
+  }
 }

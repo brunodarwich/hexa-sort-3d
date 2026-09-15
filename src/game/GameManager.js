@@ -79,14 +79,15 @@ export class GameManager {
     this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
     this.adjustCameraForScreen(width, height);
 
-    // 3. Renderer
+    // 3. Renderer with mobile battery & performance clamp
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
-      powerPreference: 'high-performance'
+      powerPreference: 'high-performance',
+      precision: 'mediump'
     });
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -100,8 +101,8 @@ export class GameManager {
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
     dirLight.position.set(12, 24, 12);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
     dirLight.shadow.camera.near = 0.5;
     dirLight.shadow.camera.far = 50;
     dirLight.shadow.camera.left = -10;
@@ -129,16 +130,20 @@ export class GameManager {
 
   adjustCameraForScreen(width, height) {
     const aspect = width / height;
-    if (aspect < 0.75) {
-      // Mobile portrait: steeper top-down angle so back slots are perfectly visible
-      this.camera.position.set(0, 20.0, 11.8);
-      this.camera.lookAt(0, 0.2, 0.4);
+    if (aspect < 0.55) {
+      // Ultra tall phone screens (20:9, 19.5:9, iPhone 14/15/16)
+      this.camera.position.set(0, 22.5, 12.5);
+      this.camera.lookAt(0, 0.4, 0.5);
+    } else if (aspect < 0.8) {
+      // Standard mobile portrait (16:9, 18:9)
+      this.camera.position.set(0, 20.0, 11.5);
+      this.camera.lookAt(0, 0.3, 0.4);
     } else if (aspect < 1.1) {
-      // Tablets / Squarish screens
+      // Tablets / iPads / Foldables
       this.camera.position.set(0, 17.5, 10.2);
       this.camera.lookAt(0, 0.2, 0.3);
     } else {
-      // Desktop / Landscape screens
+      // Desktop / Landscape
       this.camera.position.set(0, 16.0, 9.2);
       this.camera.lookAt(0, 0.1, 0.2);
     }
@@ -166,10 +171,12 @@ export class GameManager {
     this.deckGroup = new THREE.Group();
     this.scene.add(this.deckGroup);
 
-    const spacing = 3.3; // Generous breathing room between deck blocks
+    const aspect = (this.container.clientWidth || window.innerWidth) / (this.container.clientHeight || window.innerHeight);
+    const spacing = aspect < 0.65 ? 2.6 : aspect < 0.9 ? 2.9 : 3.3;
+
     for (let i = 0; i < DECK_SLOT_COUNT; i++) {
       const x = (i - 1) * spacing;
-      const z = 5.8; // Cleanly placed below the board
+      const z = 5.8;
       const y = 0;
 
       const pedestal = this.tileFactory.createDeckPedestal(x, y, z, i);
@@ -182,6 +189,14 @@ export class GameManager {
         group: null,
         pedestalMesh: pedestal
       });
+    }
+  }
+
+  vibrate(pattern = 15) {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (e) {}
     }
   }
 
@@ -482,6 +497,7 @@ export class GameManager {
   async placeStackOnSlot(deckSlot, targetSlot) {
     this.isProcessingMerge = true;
     this.sound.playSnap();
+    this.vibrate(18);
 
     // 1. Transfer cards from deck to target slot
     const cards = [...deckSlot.cards];
@@ -714,6 +730,7 @@ export class GameManager {
       );
 
       this.sound.playStackClear(this.currentCombo);
+      this.vibrate([25, 40, 60]);
       this.totalClears++;
 
       // Award points for every card cleared + clear bonus * combo
