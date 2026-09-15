@@ -590,6 +590,13 @@ export class GameManager {
    * 2. Stacks with GREATER number of matching top cards pull from stacks with fewer cards.
    * 3. Tie-breaker: total stack height & newly placed active slot.
    */
+  /**
+   * Calculates attraction priority score:
+   * 1. PURITY IS FIRST PRIORITY: Stacks with FEWER distinct colors have overwhelming priority
+   *    to pull and unpack/strip top layers from multi-color stacks (revealing the colors beneath).
+   * 2. Card count: Stacks with more matching cards on top pull from stacks with fewer cards (when purity is equal).
+   * 3. Total stack height & newly placed tie-breaker.
+   */
   calculateAttractionPriority(slot, colorId, isPrimaryPlaced = false) {
     if (!slot || slot.stack.length === 0) return -1;
 
@@ -599,50 +606,31 @@ export class GameManager {
     // Distinct unique colors count in the whole stack
     const uniqueColorsCount = new Set(slot.stack.map(c => c.color.id)).size;
 
-    // Purity score: 1 color = 4000, 2 colors = 3000, 3 colors = 2000, 4 colors = 1000
-    const purityScore = Math.max(1, 5 - uniqueColorsCount) * 1000;
+    // 1. Purity score: 1 color = 180,000, 2 colors = 160,000, 3 colors = 140,000, 4 colors = 120,000
+    // Pure 1-color stacks ALWAYS pull from multi-color stacks to dismantle them!
+    const purityScore = (10 - uniqueColorsCount) * 20000;
 
-    // Card count score: more matching top cards = higher priority
-    const countScore = topMatches * 50;
+    // 2. Card count score: more matching top cards = higher priority when purity is tied
+    const countScore = topMatches * 100;
 
-    // Tie-breaker: total stack height & strong primary placement bonus
+    // 3. Tie-breaker: total stack height & newly placed bonus
     const totalCardsScore = slot.stack.length * 2;
-    const placementBonus = isPrimaryPlaced ? 50000 : 0;
+    const placementBonus = isPrimaryPlaced ? 15 : 0;
 
     return purityScore + countScore + totalCardsScore + placementBonus;
   }
 
   /**
    * Cascade merge loop:
-   * - Placed middle slot pulls from ALL bordering matching neighbors (both extremities and all adjacent borders).
-   * - Pure / fewer-colored stacks pull from multi-colored stacks.
-   * - Pops ALL cards of matching color when >= 10.
+   * - Pure / fewer-colored stacks pull from multi-colored stacks to dismantle mixed piles.
+   * - Placed middle/target slot pulls from ALL bordering matching neighbors (both extremities).
+   * - Pops ALL cards of matching color when >= 10 with escalating bonus.
    */
   async processCascadingMerges(primaryMagnetSlot) {
     let cascadeStep = 0;
     let keepCascading = true;
     this.currentCombo = 1;
 
-    // 1. Initial Direct Merge: If a tile was just placed (primaryMagnetSlot),
-    // it attracts matching cards from ALL bordering adjacent neighbors!
-    if (primaryMagnetSlot && primaryMagnetSlot.stack.length > 0) {
-      const topColorId = primaryMagnetSlot.stack[primaryMagnetSlot.stack.length - 1].color.id;
-      const matchingNeighbors = this.hexGrid.getNeighbors(primaryMagnetSlot).filter(n => {
-        return n.stack.length > 0 && n.stack[n.stack.length - 1].color.id === topColorId;
-      });
-
-      if (matchingNeighbors.length > 0) {
-        for (const sourceNeighbor of matchingNeighbors) {
-          if (sourceNeighbor.stack.length > 0 && sourceNeighbor.stack[sourceNeighbor.stack.length - 1].color.id === topColorId) {
-            await this.transferMatchingCards(sourceNeighbor, primaryMagnetSlot, topColorId, cascadeStep);
-            cascadeStep++;
-          }
-        }
-        await this.checkAndClearFullStack(primaryMagnetSlot);
-      }
-    }
-
-    // 2. Cascade Loop: Continue merging all adjacent clusters until settled
     while (keepCascading) {
       keepCascading = false;
       const occupiedSlots = this.hexGrid.getOccupiedSlots();
@@ -659,7 +647,7 @@ export class GameManager {
         });
 
         if (matchingNeighbors.length > 0) {
-          // Determine best target in cluster
+          // Identify the best target among slot and all its matching neighbors based on purity
           let bestTarget = slot;
           let bestPriority = this.calculateAttractionPriority(slot, topColorId, slot === primaryMagnetSlot);
 
@@ -671,7 +659,7 @@ export class GameManager {
             }
           }
 
-          // Gather ALL matching neighbors surrounding the bestTarget
+          // Pull from ALL matching neighbors bordering bestTarget
           const sourcesToPull = this.hexGrid.getNeighbors(bestTarget).filter(n => {
             return n.stack.length > 0 && n.stack[n.stack.length - 1].color.id === topColorId;
           });
