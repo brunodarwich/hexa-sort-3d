@@ -283,5 +283,111 @@ export class SoundSystem {
     osc.start(now);
     osc.stop(now + 0.07);
   }
+
+  /**
+   * Impactante efeito sonoro elétrico de Raio e Trovão
+   */
+  playThunder() {
+    if (this.muted) return;
+    this.resume();
+    if (!this.audioCtx) return;
+
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime;
+
+    // 1. Estalo elétrico agudo inicial (Lightning crack)
+    const crackOsc = ctx.createOscillator();
+    const crackGain = ctx.createGain();
+    crackOsc.type = 'sawtooth';
+    crackOsc.frequency.setValueAtTime(1200, now);
+    crackOsc.frequency.exponentialRampToValueAtTime(150, now + 0.12);
+
+    crackGain.gain.setValueAtTime(0.35, now);
+    crackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+    crackOsc.connect(crackGain);
+    crackGain.connect(ctx.destination);
+    crackOsc.start(now);
+    crackOsc.stop(now + 0.15);
+
+    // 2. Estrondo grave de trovão (Thunder rumble)
+    const rumbleOsc = ctx.createOscillator();
+    const rumbleGain = ctx.createGain();
+    rumbleOsc.type = 'triangle';
+    rumbleOsc.frequency.setValueAtTime(95, now + 0.04);
+    rumbleOsc.frequency.linearRampToValueAtTime(45, now + 0.55);
+
+    rumbleGain.gain.setValueAtTime(0.001, now);
+    rumbleGain.gain.setValueAtTime(0.4, now + 0.05);
+    rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+    rumbleOsc.connect(rumbleGain);
+    rumbleGain.connect(ctx.destination);
+    rumbleOsc.start(now + 0.04);
+    rumbleOsc.stop(now + 0.65);
+  }
+
+  /**
+   * Efeito sonoro de embaralhamento / atualização rápida do deque (Re-roll)
+   */
+  playShuffle() {
+    if (this.muted) return;
+    this.resume();
+    if (!this.audioCtx) return;
+
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime;
+
+    // Sequência rápida de 4 cliques suaves de cartas deslizando
+    for (let i = 0; i < 4; i++) {
+      const t = now + i * 0.045;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(380 + i * 45, t);
+      osc.frequency.exponentialRampToValueAtTime(200, t + 0.04);
+
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.05);
+    }
+  }
+
+  /**
+   * Fanfarra brilhante de confirmação de pagamento / compra de power-up
+   */
+  playPurchaseSuccess() {
+    if (this.muted) return;
+    this.resume();
+    if (!this.audioCtx) return;
+
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6 (Acorde Maior brilhante)
+
+    notes.forEach((freq, i) => {
+      const t = now + i * 0.08;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+
+      gain.gain.setValueAtTime(0.16, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.36);
+    });
+  }
 }
 

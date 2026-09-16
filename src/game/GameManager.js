@@ -1445,6 +1445,200 @@ export class GameManager {
   }
 
   /* =========================================================================
+   * POWER-UPS (REROLL & LIGHTNING STRIKE)
+   * ========================================================================= */
+
+  /**
+   * Power-up: Atualizar Deque (Re-roll)
+   * Descarta as pilhas existentes nos 3 slots do deque e gera 3 novas pilhas cheias.
+   */
+  async rerollDeck() {
+    this.sound.playShuffle();
+    this.vibrate(20);
+
+    // 1. Limpar pilhas atuais do deque com efeito de encolhimento
+    for (const deckSlot of this.deckSlots) {
+      if (deckSlot.group) {
+        const group = deckSlot.group;
+        deckSlot.group = null;
+        deckSlot.cards = [];
+
+        let progress = 0;
+        const startScale = group.scale.x;
+        const shrinkInterval = setInterval(() => {
+          progress += 0.2;
+          if (progress >= 1) {
+            clearInterval(shrinkInterval);
+            this.scene.remove(group);
+            group.traverse(child => {
+              if (child.geometry) child.geometry.dispose();
+            });
+          } else {
+            const sc = Math.max(0, startScale * (1 - progress));
+            group.scale.set(sc, sc, sc);
+          }
+        }, 16);
+      } else {
+        deckSlot.cards = [];
+      }
+    }
+
+    // 2. Spawnar 3 novas pilhas com animação de chegada
+    await new Promise(r => setTimeout(r, 120));
+    await this.spawnDeckStacks({ animate: true });
+
+    // 3. Se estava em Game Over e agora há possibilidades, revive
+    if (this.isGameOver) {
+      const emptySlots = this.hexGrid.getEmptySlots();
+      if (emptySlots.length > 0) {
+        this.reviveGame();
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Power-up: Raio Destruidor (Lightning Strike)
+   * Elimina até 3 pilhas inteiras ocupadas do tabuleiro, liberando os espaços.
+   */
+  async lightningStrike() {
+    const occupiedSlots = this.hexGrid.getAllSlots().filter(s => s.stack.length > 0);
+    if (occupiedSlots.length === 0) {
+      return { success: false, reason: 'Nenhuma pilha no tabuleiro para eliminar.' };
+    }
+
+    // Selecionar aleatoriamente até 3 pilhas distintas
+    const shuffled = [...occupiedSlots].sort(() => 0.5 - Math.random());
+    const targetSlots = shuffled.slice(0, 3);
+
+    this.sound.playThunder();
+    this.vibrate(40);
+
+    // Efeito de confetes elétricos
+    confetti({
+      particleCount: 45,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#00f0ff', '#38bdf8', '#fbbf24', '#ffffff', '#e0e7ff']
+    });
+
+    for (let i = 0; i < targetSlots.length; i++) {
+      const slot = targetSlots[i];
+      const posX = slot.worldX;
+      const posZ = slot.worldZ;
+
+      // Disparar efeito visual do Raio em 3D
+      this.spawnLightningBolt(posX, posZ, i * 60);
+
+      // Vaporizar e remover cartas do slot
+      for (const card of slot.stack) {
+        if (card.mesh) {
+          const mesh = card.mesh;
+          let scale = 1;
+          const vaporize = setInterval(() => {
+            scale -= 0.15;
+            if (scale <= 0) {
+              clearInterval(vaporize);
+              this.scene.remove(mesh);
+              if (mesh.geometry) mesh.geometry.dispose();
+            } else {
+              mesh.scale.set(scale, scale * 1.5, scale);
+              mesh.position.y += 0.08;
+            }
+          }, 16);
+        }
+      }
+
+      slot.stack = [];
+      if (slot.highlightMesh) slot.highlightMesh.visible = false;
+      this.updateSlotBadge(slot);
+
+      // Anel de impacto elétrico
+      if (this.animation) {
+        this.animation.spawnArrivalRing(new THREE.Vector3(posX, 0.1, posZ), { hex: 0x00f0ff });
+      }
+    }
+
+    this.totalClears += targetSlots.length;
+    this.addScore(targetSlots.length * 150);
+
+    // Se estava em Game Over, revive o jogo!
+    if (this.isGameOver) {
+      this.reviveGame();
+    }
+
+    return { success: true, count: targetSlots.length };
+  }
+
+  /**
+   * Renderiza malha 3D de raio elétrico caindo do céu no ponto de impacto
+   */
+  spawnLightningBolt(targetX, targetZ, delayMs = 0) {
+    setTimeout(() => {
+      const points = [];
+      const startY = 16.0;
+      const endY = 0.4;
+      const steps = 6;
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const currentY = startY * (1 - t) + endY * t;
+        const jitterX = (Math.random() - 0.5) * (t < 0.9 ? 1.4 : 0.2);
+        const jitterZ = (Math.random() - 0.5) * (t < 0.9 ? 1.4 : 0.2);
+        points.push(new THREE.Vector3(targetX + jitterX, currentY, targetZ + jitterZ));
+      }
+
+      const curve = new THREE.CatmullRomCurve3(points);
+      const boltGeo = new THREE.TubeGeometry(curve, 18, 0.12, 6, false);
+      const boltMat = new THREE.MeshBasicMaterial({
+        color: 0x00f0ff,
+        transparent: true,
+        opacity: 0.95
+      });
+      const boltMesh = new THREE.Mesh(boltGeo, boltMat);
+      this.scene.add(boltMesh);
+
+      const flashLight = new THREE.PointLight(0x00f0ff, 8, 14);
+      flashLight.position.set(targetX, 2.5, targetZ);
+      this.scene.add(flashLight);
+
+      let flickers = 0;
+      const flickerInterval = setInterval(() => {
+        flickers++;
+        boltMesh.visible = !boltMesh.visible;
+        flashLight.intensity = boltMesh.visible ? 8 : 1;
+        if (flickers > 5) {
+          clearInterval(flickerInterval);
+          this.scene.remove(boltMesh);
+          this.scene.remove(flashLight);
+          boltGeo.dispose();
+          boltMat.dispose();
+        }
+      }, 35);
+    }, delayMs);
+  }
+
+  /**
+   * Revive a partida quando um power-up é utilizado na tela de Game Over
+   */
+  reviveGame() {
+    this.isGameOver = false;
+    const modal = document.getElementById('modal-gameover');
+    if (modal) modal.classList.add('hidden');
+
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.timerInterval = setInterval(() => {
+      if (!this.isGameOver) {
+        this.gameTimeSeconds++;
+        this.updateHUD();
+      }
+    }, 1000);
+
+    this.showScorePopup('PARTIDA SALVA! ⚡');
+  }
+
+  /* =========================================================================
    * RENDER LOOP
    * ========================================================================= */
 
