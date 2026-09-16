@@ -113,12 +113,108 @@
 
 @media (min-width: 768px) {
   #game-header {
-    max-width: 600px;
+    max-width: 620px;
     margin: 0 auto;
     padding-top: 18px;
   }
 
+  /* Reposition Power-Ups Dock to the side/corner so it NEVER overlaps the 3D deck or board */
   .powerups-dock {
-    max-width: 440px;
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    transform: none;
+    width: auto;
+    max-width: 180px;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 10px;
+    border-radius: 22px;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+  }
+
+  .powerup-btn {
+    width: 100%;
+    padding: 8px 12px;
+    gap: 10px;
+  }
+
+  .powerup-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  .powerup-btn:active {
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+
+  /* Desktop Toast positioned at top under header for clear visibility */
+  .toast {
+    bottom: auto;
+    top: 96px;
+  }
+}
+
+/* Widescreen Monitor Layout (Laptops & Desktops) */
+@media (min-width: 1024px) {
+  .powerups-dock {
+    right: 32px;
+    bottom: 28px;
+    max-width: 380px;
+    flex-direction: row;
+    padding: 10px 14px;
+    gap: 12px;
+  }
+
+  .powerup-btn {
+    width: auto;
+    flex: 1;
+    min-width: 130px;
+  }
+}
+
+/* Landscape mode on smaller screens / mobile devices */
+@media (max-height: 520px) and (orientation: landscape) {
+  #game-header {
+    padding-top: 4px;
+    gap: 4px;
+  }
+
+  .powerups-dock {
+    left: auto;
+    right: 12px;
+    bottom: 12px;
+    transform: none;
+    flex-direction: column;
+    width: auto;
+    max-width: 150px;
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .powerup-btn {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .powerup-icon-box {
+    width: 26px;
+    height: 26px;
+  }
+
+  .powerup-title {
+    font-size: 11px;
+  }
+
+  .powerup-badge {
+    font-size: 8px;
+    padding: 1px 5px;
+  }
+
+  #deck-hint {
+    font-size: 9px;
+    padding: 3px 8px;
+    bottom: 4px;
   }
 }
