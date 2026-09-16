@@ -219,4 +219,69 @@ export class SoundSystem {
     osc.start(now);
     osc.stop(now + 0.03);
   }
+
+  /**
+   * Level up celebratory fanfare (harmonic chord progression)
+   */
+  playLevelUp() {
+    if (this.muted) return;
+    this.resume();
+    if (!this.audioCtx) return;
+
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime;
+
+    // Upward pentatonic arpeggio with celebratory shimmer
+    const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.setValueAtTime(0.14, now + idx * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.45);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + idx * 0.06);
+      osc.stop(now + idx * 0.06 + 0.46);
+    });
+  }
+
+  /**
+   * Crisp, tactile card deal arrival whoosh/snap
+   * @param {number} step Index of the card slot (0, 1, 2) to give an ascending musical deal
+   */
+  playDeckDeal(step = 0) {
+    if (this.muted) return;
+    this.resume();
+    if (!this.audioCtx) return;
+
+    const ctx = this.audioCtx;
+    const now = ctx.currentTime;
+
+    // Fast whoosh-snap sound
+    const baseFreq = 260 * Math.pow(1.18, step);
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(baseFreq * 1.8, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.8, now + 0.07);
+
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.07);
+  }
 }
+

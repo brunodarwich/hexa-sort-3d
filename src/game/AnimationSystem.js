@@ -354,7 +354,74 @@ export class AnimationSystem {
     });
   }
 
+  /**
+   * Animate new deck stack arriving with physics, swoop-in and elastic landing
+   * @param {THREE.Group} stackGroup The stack group to animate
+   * @param {THREE.Vector3} targetPos The final position on the deck pedestal
+   * @param {number} delay Staggered delay in milliseconds
+   * @param {Function} onImpact Callback when the stack hits the pedestal
+   */
+  animateDeckArrival(stackGroup, targetPos, delay = 0, onImpact = null) {
+    return new Promise((resolve) => {
+      // Start high above with reduced scale and slight tilt
+      const startY = targetPos.y + 3.6;
+      stackGroup.position.set(targetPos.x, startY, targetPos.z);
+      stackGroup.scale.set(0.15, 0.15, 0.15);
+      stackGroup.rotation.x = -0.25;
+      stackGroup.visible = false;
+
+      this.addAnimation({
+        duration: 340,
+        delay,
+        easing: AnimationSystem.easeOutBack,
+        onUpdate: (t) => {
+          stackGroup.visible = true;
+          // Interpolate Y position from sky to pedestal
+          stackGroup.position.y = startY + (targetPos.y - startY) * t;
+          // Expand scale smoothly
+          const s = Math.min(1.0, 0.15 + 0.85 * (t * 1.15));
+          stackGroup.scale.set(s, s, s);
+          // Straighten rotation
+          stackGroup.rotation.x = -0.25 * (1 - t);
+        },
+        onComplete: () => {
+          stackGroup.position.copy(targetPos);
+          stackGroup.scale.set(1, 1, 1);
+          stackGroup.rotation.set(0, 0, 0);
+
+          // Elastic bounce on impact
+          this.animateSquash(stackGroup);
+
+          if (onImpact) {
+            onImpact();
+          }
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
+   * Clears all active animations and visual particles
+   */
+  clear() {
+    this.activeAnimations = [];
+    for (const p of this.particles) {
+      this.scene.remove(p.mesh);
+      if (p.mesh.geometry) p.mesh.geometry.dispose();
+      if (p.mesh.material) p.mesh.material.dispose();
+    }
+    this.particles = [];
+    for (const sw of this.shockwaves) {
+      this.scene.remove(sw.mesh);
+      if (sw.mesh.geometry) sw.mesh.geometry.dispose();
+      if (sw.mesh.material) sw.mesh.material.dispose();
+    }
+    this.shockwaves = [];
+  }
+
   isBusy() {
     return this.activeAnimations.length > 0;
   }
 }
+

@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three';
+import confetti from 'canvas-confetti';
 import { HexGrid, HEX_RADIUS } from './HexGrid.js';
 import { TileFactory, CARD_THICKNESS, PEDESTAL_HEIGHT, PALETTE } from './HexTile.js';
 import { AnimationSystem } from './AnimationSystem.js';
@@ -13,6 +14,154 @@ import { LeaderboardManager } from './Leaderboard.js';
 
 export const DECK_SLOT_COUNT = 3;
 export const STACK_CLEAR_THRESHOLD = 10;
+
+export const LEVEL_THRESHOLDS = [
+  0,      // Nível 1: 0 - 1499
+  1500,   // Nível 2: 1500 - 3999
+  4000,   // Nível 3: 4000 - 7999
+  8000,   // Nível 4: 8000 - 13999
+  14000,  // Nível 5: 14000 - 21999
+  22000,  // Nível 6: 22000 - 31999
+  32000,  // Nível 7: 32000 - 43999
+  44000,  // Nível 8: 44000 - 57999
+  58000,  // Nível 9: 58000 - 73999
+  74000,  // Nível 10: 74000+
+];
+
+export const LEVEL_BACKGROUNDS = {
+  light: [
+    // Nível 1: Classic Studio Ice / Slate
+    {
+      gradient: 'radial-gradient(circle at 50% 36%, #ffffff 0%, #edf2f7 35%, #d9e1ec 70%, #b8c4d4 100%)',
+      bounceLight: 0xfff7ed,
+      fillLight: 0xe2e8f0,
+      metaTheme: '#d8dce4',
+      name: 'Estúdio Cristal'
+    },
+    // Nível 2: Warm Sunset Coral / Peach Aura
+    {
+      gradient: 'radial-gradient(circle at 50% 36%, #fff7ed 0%, #fed7aa 35%, #fbcfe8 70%, #c4b5fd 100%)',
+      bounceLight: 0xffedd5,
+      fillLight: 0xfde047,
+      metaTheme: '#fed7aa',
+      name: 'Pôr do Sol Coral'
+    },
+    // Nível 3: Fresh Emerald Oasis / Jade Mint
+    {
+      gradient: 'radial-gradient(circle at 50% 36%, #f0fdf4 0%, #bbf7d0 35%, #99f6e4 70%, #93c5fd 100%)',
+      bounceLight: 0xdcfce7,
+      fillLight: 0xa7f3d0,
+      metaTheme: '#bbf7d0',
+      name: 'Oásis Esmeralda'
+    },
+    // Nível 4: Dreamy Lavender Twilight / Violet
+    {
+      gradient: 'radial-gradient(circle at 50% 36%, #faf5ff 0%, #e9d5ff 35%, #c7d2fe 70%, #a5b4fc 100%)',
+      bounceLight: 0xf3e8ff,
+      fillLight: 0xc4b5fd,
+      metaTheme: '#e9d5ff',
+      name: 'Crepúsculo Lavanda'
+    },
+    // Nível 5: Radiant Golden Sunburst / Amber
+    {
+      gradient: 'radial-gradient(circle at 50% 36%, #fefce8 0%, #fef08a 35%, #fed7aa 70%, #fca5a5 100%)',
+      bounceLight: 0xfef9c3,
+      fillLight: 0xfde047,
+      metaTheme: '#fef08a',
+      name: 'Aurora Dourada'
+    },
+    // Nível 6: Arctic Cyan / Glacier Azure
+    {
+      gradient: 'radial-gradient(circle at 50% 36%, #ecfeff 0%, #bae6fd 35%, #a5f3fc 70%, #93c5fd 100%)',
+      bounceLight: 0xe0f2fe,
+      fillLight: 0x7dd3fc,
+      metaTheme: '#bae6fd',
+      name: 'Geleira Ártica'
+    },
+    // Nível 7: Radiant Rose Quartz / Magenta Bloom
+    {
+      gradient: 'radial-gradient(circle at 50% 36%, #fff1f2 0%, #ffe4e6 35%, #fecdd3 70%, #f5d0fe 100%)',
+      bounceLight: 0xffe4e6,
+      fillLight: 0xf472b6,
+      metaTheme: '#fecdd3',
+      name: 'Quartzo Rosa'
+    },
+    // Nível 8+: Electric Citrus / Neon Meadow
+    {
+      gradient: 'radial-gradient(circle at 50% 36%, #f7fee7 0%, #ecfccb 35%, #d9f99d 70%, #a7f3d0 100%)',
+      bounceLight: 0xecfccb,
+      fillLight: 0xbef264,
+      metaTheme: '#ecfccb',
+      name: 'Prado Elétrico'
+    }
+  ],
+  dark: [
+    // Nível 1: Deep Obsidian / Cosmic Space
+    {
+      gradient: 'radial-gradient(circle at 50% 32%, #131929 0%, #0c101c 45%, #070913 80%, #030408 100%)',
+      bounceLight: 0xb026ff,
+      fillLight: 0x00f0ff,
+      metaTheme: '#090d18',
+      name: 'Obsidiana Cósmica'
+    },
+    // Nível 2: Cyber Sunset / Deep Rose Crimson
+    {
+      gradient: 'radial-gradient(circle at 50% 32%, #2c1220 0%, #1c0a14 45%, #10050b 80%, #050103 100%)',
+      bounceLight: 0xff007f,
+      fillLight: 0xff7700,
+      metaTheme: '#1c0a14',
+      name: 'Pôr do Sol Cyber'
+    },
+    // Nível 3: Matrix Jade / Bioluminescent Emerald
+    {
+      gradient: 'radial-gradient(circle at 50% 32%, #08291f 0%, #051a14 45%, #030f0b 80%, #010604 100%)',
+      bounceLight: 0x00ff88,
+      fillLight: 0x00e5ff,
+      metaTheme: '#051a14',
+      name: 'Matriz Esmeralda'
+    },
+    // Nível 4: Neon Nebula / Astral Violet
+    {
+      gradient: 'radial-gradient(circle at 50% 32%, #211239 0%, #150a26 45%, #0d0518 80%, #04010a 100%)',
+      bounceLight: 0xbf00ff,
+      fillLight: 0x7000ff,
+      metaTheme: '#150a26',
+      name: 'Nebulosa Neon'
+    },
+    // Nível 5: Molten Amber / Cyber Bronze
+    {
+      gradient: 'radial-gradient(circle at 50% 32%, #2e1c05 0%, #1c1103 45%, #100a01 80%, #050300 100%)',
+      bounceLight: 0xffaa00,
+      fillLight: 0xffd700,
+      metaTheme: '#1c1103',
+      name: 'Âmbar Incandescente'
+    },
+    // Nível 6: Neon Cyan Abyss / Midnight Blue
+    {
+      gradient: 'radial-gradient(circle at 50% 32%, #082338 0%, #041624 45%, #020e17 80%, #010508 100%)',
+      bounceLight: 0x00d4ff,
+      fillLight: 0x0088ff,
+      metaTheme: '#041624',
+      name: 'Abismo Neon'
+    },
+    // Nível 7: Synthwave Magenta / Retro 80s
+    {
+      gradient: 'radial-gradient(circle at 50% 32%, #320f28 0%, #1f0919 45%, #12040f 80%, #050104 100%)',
+      bounceLight: 0xff00aa,
+      fillLight: 0x9900ff,
+      metaTheme: '#1f0919',
+      name: 'Synthwave 80s'
+    },
+    // Nível 8+: Toxic Aurora / Electric Green
+    {
+      gradient: 'radial-gradient(circle at 50% 32%, #122b13 0%, #0b1c0c 45%, #061106 80%, #020602 100%)',
+      bounceLight: 0x55ff00,
+      fillLight: 0x00ffaa,
+      metaTheme: '#0b1c0c',
+      name: 'Aurora Tóxica'
+    }
+  ]
+};
 
 export class GameManager {
   constructor(canvasContainer) {
@@ -335,6 +484,9 @@ export class GameManager {
     this.selectedDeckSlot = null;
     this.hoveredSlot = null;
 
+    if (this.animation) this.animation.clear();
+    this.updateLevelBackground(1, false);
+
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => {
       if (!this.isGameOver) {
@@ -365,56 +517,126 @@ export class GameManager {
       deckSlot.group = null;
     }
 
-    this.spawnDeckStacks();
     this.updateHUD();
+    this.spawnDeckStacks({ animate: true });
+  }
+
+  getLevelForScore(score) {
+    for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+      if (score >= LEVEL_THRESHOLDS[i]) {
+        return i + 1;
+      }
+    }
+    return 1;
+  }
+
+  /**
+   * Smoothly transitions the game background according to current level & theme mode
+   * @param {number} level Target level
+   * @param {boolean} smooth True to crossfade, false for immediate switch
+   */
+  updateLevelBackground(level = this.level, smooth = true) {
+    const list = LEVEL_BACKGROUNDS[this.currentTheme] || LEVEL_BACKGROUNDS.light;
+    const bgDef = list[(level - 1) % list.length];
+    if (!bgDef) return;
+
+    const baseEl = document.getElementById('game-bg-base');
+    const overlayEl = document.getElementById('game-bg-overlay');
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
+    if (metaThemeColor && bgDef.metaTheme) {
+      metaThemeColor.setAttribute('content', bgDef.metaTheme);
+    }
+
+    // Harmonize 3D lights with level atmosphere
+    if (this.bounceLight && bgDef.bounceLight) {
+      this.bounceLight.color.setHex(bgDef.bounceLight);
+    }
+    if (this.fillLight && bgDef.fillLight) {
+      this.fillLight.color.setHex(bgDef.fillLight);
+    }
+
+    if (baseEl) {
+      if (smooth && overlayEl) {
+        overlayEl.style.background = bgDef.gradient;
+        overlayEl.classList.add('fade-in');
+
+        clearTimeout(this._bgFadeTimeout);
+        this._bgFadeTimeout = setTimeout(() => {
+          baseEl.style.background = bgDef.gradient;
+          overlayEl.classList.remove('fade-in');
+        }, 850);
+      } else {
+        baseEl.style.background = bgDef.gradient;
+        if (overlayEl) {
+          overlayEl.classList.remove('fade-in');
+        }
+      }
+    }
+  }
+
+  /**
+   * Triggers the level-up celebration, background change, fanfare and visual popups
+   */
+  triggerLevelUp(oldLevel, newLevel) {
+    this.sound.playLevelUp();
+    this.vibrate([25, 60, 45]);
+    this.updateLevelBackground(newLevel, true);
+
+    // Celebratory confetti shower
+    confetti({
+      particleCount: 70,
+      spread: 90,
+      origin: { y: 0.25 },
+      colors: ['#f59e0b', '#00f0ff', '#22c55e', '#ec4899', '#fef08a', '#ffffff']
+    });
+
+    // Level-up banner announcement
+    const banner = document.getElementById('level-up-banner');
+    const bannerText = document.getElementById('level-up-text');
+    if (banner && bannerText) {
+      const list = LEVEL_BACKGROUNDS[this.currentTheme] || LEVEL_BACKGROUNDS.light;
+      const bgDef = list[(newLevel - 1) % list.length];
+      bannerText.textContent = `NÍVEL ${newLevel} • ${bgDef.name}`;
+      banner.classList.remove('hidden');
+
+      clearTimeout(this._levelBannerTimeout);
+      this._levelBannerTimeout = setTimeout(() => {
+        banner.classList.add('hidden');
+      }, 2800);
+    }
+
+    // Glow & pulse level capsule in HUD
+    const levelCard = document.getElementById('level-card');
+    if (levelCard) {
+      levelCard.classList.remove('level-up-shine');
+      void levelCard.offsetWidth;
+      levelCard.classList.add('level-up-shine');
+      setTimeout(() => levelCard.classList.remove('level-up-shine'), 1400);
+    }
   }
 
   getDifficultySettings() {
-    let activeColorsCount = 3;
-    let minStackHeight = 3;
-    let maxStackHeight = 5;
-    let maxColorLayers = 1;
+    this.level = this.getLevelForScore(this.score);
 
-    // Smoother, relaxed pacing for introducing new colors and split layers
-    if (this.score >= 1500) {
-      this.level = 2;
-      activeColorsCount = 4;
-      maxColorLayers = 2;
-    }
-    if (this.score >= 4000) {
-      this.level = 3;
-      activeColorsCount = 5;
-      minStackHeight = 4;
-      maxStackHeight = 6;
-      maxColorLayers = 2;
-    }
-    if (this.score >= 8000) {
-      this.level = 4;
-      activeColorsCount = 6;
-      maxColorLayers = 3;
-      maxStackHeight = 7;
-    }
-    if (this.score >= 14000) {
-      this.level = 5;
-      activeColorsCount = 7;
-      minStackHeight = 5;
-      maxStackHeight = 8;
-      maxColorLayers = 3;
-    }
-    if (this.score >= 22000) {
-      this.level = 6;
-      activeColorsCount = 8;
-      maxColorLayers = 4;
-    }
+    let activeColorsCount = Math.min(8, 2 + this.level);
+    let minStackHeight = this.level >= 4 ? 4 : 3;
+    let maxStackHeight = Math.min(8, 4 + Math.floor(this.level / 2));
+    let maxColorLayers = Math.min(4, Math.floor(this.level / 2) + 1);
 
     const availableColors = PALETTE.slice(0, activeColorsCount);
     return { availableColors, minStackHeight, maxStackHeight, maxColorLayers };
   }
 
-  spawnDeckStacks() {
+  /**
+   * Spawns new stacks in empty deck slots with optional arrival animation
+   */
+  async spawnDeckStacks({ animate = false } = {}) {
     const { availableColors, minStackHeight, maxStackHeight, maxColorLayers } = this.getDifficultySettings();
+    const animPromises = [];
 
-    for (const deckSlot of this.deckSlots) {
+    for (let i = 0; i < this.deckSlots.length; i++) {
+      const deckSlot = this.deckSlots[i];
       if (deckSlot.cards.length > 0) continue;
 
       const stackGroup = new THREE.Group();
@@ -448,6 +670,23 @@ export class GameManager {
           currentY += CARD_THICKNESS;
         }
       }
+
+      if (animate && this.animation) {
+        const slotIdx = i;
+        const p = this.animation.animateDeckArrival(stackGroup, deckSlot.pos, slotIdx * 85, () => {
+          this.sound.playDeckDeal(slotIdx);
+          this.vibrate(10);
+          const topCard = deckSlot.cards[deckSlot.cards.length - 1];
+          if (topCard && this.animation) {
+            this.animation.spawnShockwaveRing(deckSlot.pos, topCard.color);
+          }
+        });
+        animPromises.push(p);
+      }
+    }
+
+    if (animPromises.length > 0) {
+      await Promise.all(animPromises);
     }
   }
 
@@ -657,10 +896,11 @@ export class GameManager {
     // 2. Run recursive cascade merge with targetSlot as the primary magnet!
     await this.processCascadingMerges(targetSlot);
 
-    // 3. Replenish deck if all slots empty
+    // 3. Replenish deck if all slots empty with arrival animation
     const remainingDeck = this.deckSlots.filter(s => s.cards.length > 0);
     if (remainingDeck.length === 0) {
-      this.spawnDeckStacks();
+      await new Promise(r => setTimeout(r, 120));
+      await this.spawnDeckStacks({ animate: true });
     }
 
     // 4. Check for Game Over condition
@@ -978,7 +1218,10 @@ export class GameManager {
       this.tileFactory.setTheme(theme);
     }
 
-    // 2. Adjust Studio Lighting Rig for dark/neon atmosphere
+    // 2. Synchronize current level background to match new theme
+    this.updateLevelBackground(this.level, true);
+
+    // 3. Adjust Studio Lighting Rig for dark/neon atmosphere
     if (this.ambientLight) {
       this.ambientLight.color.setHex(isDark ? 0x99aaff : 0xffffff);
       this.ambientLight.intensity = isDark ? 0.70 : 1.05;
@@ -1003,7 +1246,7 @@ export class GameManager {
       this.ambientMotes.material.opacity = isDark ? 0.65 : 0.40;
     }
 
-    // 3. Re-render all slot stack badges with new theme styling
+    // 4. Re-render all slot stack badges with new theme styling
     if (this.hexGrid) {
       for (const slot of this.hexGrid.getAllSlots()) {
         if (slot.stack.length > 0) {
@@ -1024,6 +1267,15 @@ export class GameManager {
     }
 
     this.showScorePopup(`+${points}`);
+
+    // Check Level Progression
+    const newLevel = this.getLevelForScore(this.score);
+    if (newLevel > this.level) {
+      const oldLevel = this.level;
+      this.level = newLevel;
+      this.triggerLevelUp(oldLevel, newLevel);
+    }
+
     this.updateHUD();
 
     const scoreVal = document.getElementById('score-val');

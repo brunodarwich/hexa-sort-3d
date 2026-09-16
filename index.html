@@ -17,11 +17,21 @@
   <body>
     <div id="app">
       <!-- 3D WebGL Canvas Container -->
+      <!-- Dynamic Background Layers for Silky Level Transitions -->
+      <div id="game-bg-base" class="game-bg"></div>
+      <div id="game-bg-overlay" class="game-bg game-bg-overlay"></div>
+
       <div id="canvas-container"></div>
 
       <!-- Floating Combo & Feedback Banner -->
       <div id="combo-banner" class="hidden">
         <span id="combo-text">COMBO x2!</span>
+      </div>
+
+      <!-- Floating Level Up Announcement -->
+      <div id="level-up-banner" class="hidden">
+        <div class="level-up-badge">✨ NÍVEL DESBLOQUEADO ✨</div>
+        <div id="level-up-text" class="level-up-name">NÍVEL 2</div>
       </div>
 
       <!-- Top HUD Header -->
