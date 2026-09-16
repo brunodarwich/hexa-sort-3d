@@ -23,15 +23,27 @@
 
       <div id="canvas-container"></div>
 
-      <!-- Floating Combo & Feedback Banner -->
-      <div id="combo-banner" class="hidden">
-        <span id="combo-text">COMBO x2!</span>
-      </div>
+      <!-- Floating Centralized Notification Zone (Level Up & Combos) -->
+      <div id="notification-zone" class="notification-zone">
+        <!-- Floating Level Up Announcement -->
+        <div id="level-up-banner" class="level-banner hidden">
+          <div class="level-banner-tag">
+            <span class="tag-sparkle">✨</span>
+            <span>NOVO NÍVEL ALCANÇADO</span>
+            <span class="tag-sparkle">✨</span>
+          </div>
+          <div class="level-banner-title" id="level-up-title">NÍVEL 2</div>
+          <div class="level-banner-theme" id="level-up-theme">Pôr do Sol Coral</div>
+        </div>
 
-      <!-- Floating Level Up Announcement -->
-      <div id="level-up-banner" class="hidden">
-        <div class="level-up-badge">✨ NÍVEL DESBLOQUEADO ✨</div>
-        <div id="level-up-text" class="level-up-name">NÍVEL 2</div>
+        <!-- Floating Combo Announcement -->
+        <div id="combo-banner" class="combo-banner hidden">
+          <div class="combo-flame">🔥</div>
+          <div class="combo-body">
+            <span class="combo-label">SEQUÊNCIA</span>
+            <span id="combo-text" class="combo-text">COMBO x2!</span>
+          </div>
+        </div>
       </div>
 
       <!-- Top HUD Header -->

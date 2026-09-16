@@ -96,68 +96,68 @@ export const LEVEL_BACKGROUNDS = {
     }
   ],
   dark: [
-    // Nível 1: Deep Obsidian / Cosmic Space
+    // Nível 1: Obsidiana Cósmica (Deep Navy / Cobalt)
     {
-      gradient: 'radial-gradient(circle at 50% 32%, #131929 0%, #0c101c 45%, #070913 80%, #030408 100%)',
-      bounceLight: 0xb026ff,
-      fillLight: 0x00f0ff,
-      metaTheme: '#090d18',
+      gradient: 'radial-gradient(circle at 50% 32%, #1e293b 0%, #0f172a 40%, #090d18 75%, #020617 100%)',
+      bounceLight: 0x38bdf8,
+      fillLight: 0x0ea5e9,
+      metaTheme: '#0f172a',
       name: 'Obsidiana Cósmica'
     },
-    // Nível 2: Cyber Sunset / Deep Rose Crimson
+    // Nível 2: Pôr do Sol Cyber (Vibrant Neon Magenta & Plum)
     {
-      gradient: 'radial-gradient(circle at 50% 32%, #2c1220 0%, #1c0a14 45%, #10050b 80%, #050103 100%)',
-      bounceLight: 0xff007f,
-      fillLight: 0xff7700,
-      metaTheme: '#1c0a14',
+      gradient: 'radial-gradient(circle at 50% 32%, #701a75 0%, #4a044e 38%, #2e083a 72%, #0f0214 100%)',
+      bounceLight: 0xf43f5e,
+      fillLight: 0xd946ef,
+      metaTheme: '#4a044e',
       name: 'Pôr do Sol Cyber'
     },
-    // Nível 3: Matrix Jade / Bioluminescent Emerald
+    // Nível 3: Matriz Esmeralda (Vibrant Glowing Emerald & Jade)
     {
-      gradient: 'radial-gradient(circle at 50% 32%, #08291f 0%, #051a14 45%, #030f0b 80%, #010604 100%)',
-      bounceLight: 0x00ff88,
-      fillLight: 0x00e5ff,
-      metaTheme: '#051a14',
+      gradient: 'radial-gradient(circle at 50% 32%, #065f46 0%, #044332 38%, #022c22 72%, #01140e 100%)',
+      bounceLight: 0x10b981,
+      fillLight: 0x34d399,
+      metaTheme: '#044332',
       name: 'Matriz Esmeralda'
     },
-    // Nível 4: Neon Nebula / Astral Violet
+    // Nível 4: Nebulosa Neon (Vibrant Astral Indigo & Royal Purple)
     {
-      gradient: 'radial-gradient(circle at 50% 32%, #211239 0%, #150a26 45%, #0d0518 80%, #04010a 100%)',
-      bounceLight: 0xbf00ff,
-      fillLight: 0x7000ff,
-      metaTheme: '#150a26',
+      gradient: 'radial-gradient(circle at 50% 32%, #4338ca 0%, #312e81 38%, #1e1b4b 72%, #090724 100%)',
+      bounceLight: 0xa855f7,
+      fillLight: 0x818cf8,
+      metaTheme: '#312e81',
       name: 'Nebulosa Neon'
     },
-    // Nível 5: Molten Amber / Cyber Bronze
+    // Nível 5: Âmbar Incandescente (Vibrant Molten Copper & Gold)
     {
-      gradient: 'radial-gradient(circle at 50% 32%, #2e1c05 0%, #1c1103 45%, #100a01 80%, #050300 100%)',
-      bounceLight: 0xffaa00,
-      fillLight: 0xffd700,
-      metaTheme: '#1c1103',
+      gradient: 'radial-gradient(circle at 50% 32%, #92400e 0%, #78350f 38%, #451a03 72%, #1a0800 100%)',
+      bounceLight: 0xf59e0b,
+      fillLight: 0xfbbf24,
+      metaTheme: '#78350f',
       name: 'Âmbar Incandescente'
     },
-    // Nível 6: Neon Cyan Abyss / Midnight Blue
+    // Nível 6: Abismo Neon (Vibrant Electric Cyan & Deep Ocean)
     {
-      gradient: 'radial-gradient(circle at 50% 32%, #082338 0%, #041624 45%, #020e17 80%, #010508 100%)',
-      bounceLight: 0x00d4ff,
-      fillLight: 0x0088ff,
-      metaTheme: '#041624',
+      gradient: 'radial-gradient(circle at 50% 32%, #0891b2 0%, #0e7490 38%, #155e75 72%, #041f29 100%)',
+      bounceLight: 0x06b6d4,
+      fillLight: 0x22d3ee,
+      metaTheme: '#0e7490',
       name: 'Abismo Neon'
     },
-    // Nível 7: Synthwave Magenta / Retro 80s
+    // Nível 7: Synthwave 80s (Vibrant Retro Crimson Pink)
     {
-      gradient: 'radial-gradient(circle at 50% 32%, #320f28 0%, #1f0919 45%, #12040f 80%, #050104 100%)',
-      bounceLight: 0xff00aa,
-      fillLight: 0x9900ff,
-      metaTheme: '#1f0919',
+      gradient: 'radial-gradient(circle at 50% 32%, #9d174d 0%, #831843 38%, #500724 72%, #1a020c 100%)',
+      bounceLight: 0xf43f5e,
+      fillLight: 0xfb7185,
+      metaTheme: '#831843',
       name: 'Synthwave 80s'
     },
-    // Nível 8+: Toxic Aurora / Electric Green
+    // Nível 8+: Aurora Tóxica (Vibrant Toxic Neon Lime)
     {
-      gradient: 'radial-gradient(circle at 50% 32%, #122b13 0%, #0b1c0c 45%, #061106 80%, #020602 100%)',
-      bounceLight: 0x55ff00,
-      fillLight: 0x00ffaa,
-      metaTheme: '#0b1c0c',
+      gradient: 'radial-gradient(circle at 50% 32%, #4d7c0f 0%, #365314 38%, #1a2e05 72%, #0a1402 100%)',
+      bounceLight: 0x84cc16,
+      fillLight: 0xa3e635,
+      metaTheme: '#365314',
       name: 'Aurora Tóxica'
     }
   ]
@@ -548,12 +548,19 @@ export class GameManager {
       metaThemeColor.setAttribute('content', bgDef.metaTheme);
     }
 
-    // Harmonize 3D lights with level atmosphere
+    // Update CSS custom property and body background directly
+    document.documentElement.style.setProperty('--bg-gradient', bgDef.gradient);
+    document.body.style.setProperty('--bg-gradient', bgDef.gradient);
+
+    // Harmonize 3D lights and motes with level atmosphere
     if (this.bounceLight && bgDef.bounceLight) {
       this.bounceLight.color.setHex(bgDef.bounceLight);
     }
     if (this.fillLight && bgDef.fillLight) {
       this.fillLight.color.setHex(bgDef.fillLight);
+    }
+    if (this.ambientMotes && this.ambientMotes.material && bgDef.bounceLight) {
+      this.ambientMotes.material.color.setHex(bgDef.bounceLight);
     }
 
     if (baseEl) {
@@ -564,10 +571,12 @@ export class GameManager {
         clearTimeout(this._bgFadeTimeout);
         this._bgFadeTimeout = setTimeout(() => {
           baseEl.style.background = bgDef.gradient;
+          document.body.style.background = bgDef.gradient;
           overlayEl.classList.remove('fade-in');
         }, 850);
       } else {
         baseEl.style.background = bgDef.gradient;
+        document.body.style.background = bgDef.gradient;
         if (overlayEl) {
           overlayEl.classList.remove('fade-in');
         }
@@ -591,22 +600,25 @@ export class GameManager {
       colors: ['#f59e0b', '#00f0ff', '#22c55e', '#ec4899', '#fef08a', '#ffffff']
     });
 
-    // Level-up banner announcement
+    // Level-up banner announcement with hierarchical layout
     const banner = document.getElementById('level-up-banner');
-    const bannerText = document.getElementById('level-up-text');
-    if (banner && bannerText) {
+    const titleEl = document.getElementById('level-up-title');
+    const themeEl = document.getElementById('level-up-theme');
+    if (banner) {
       const list = LEVEL_BACKGROUNDS[this.currentTheme] || LEVEL_BACKGROUNDS.light;
       const bgDef = list[(newLevel - 1) % list.length];
-      bannerText.textContent = `NÍVEL ${newLevel} • ${bgDef.name}`;
+      if (titleEl) titleEl.textContent = `NÍVEL ${newLevel}`;
+      if (themeEl) themeEl.textContent = bgDef.name;
+
       banner.classList.remove('hidden');
 
       clearTimeout(this._levelBannerTimeout);
       this._levelBannerTimeout = setTimeout(() => {
         banner.classList.add('hidden');
-      }, 2800);
+      }, 2600);
     }
 
-    // Glow & pulse level capsule in HUD
+    // Glow & pulse level capsule in HUD (without resizing or shifting the layout)
     const levelCard = document.getElementById('level-card');
     if (levelCard) {
       levelCard.classList.remove('level-up-shine');
@@ -1338,13 +1350,13 @@ export class GameManager {
     const text = document.getElementById('combo-text');
     if (!banner || !text) return;
 
-    text.textContent = `COMBO x${combo}! 🔥`;
+    text.textContent = `COMBO x${combo}!`;
     banner.classList.remove('hidden');
 
     clearTimeout(this.comboTimeout);
     this.comboTimeout = setTimeout(() => {
       banner.classList.add('hidden');
-    }, 2500);
+    }, 2200);
   }
 
   checkGameOverCondition() {

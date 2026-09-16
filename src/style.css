@@ -464,110 +464,173 @@ body, html {
   letter-spacing: 0.02em;
 }
 
-/* COMBO BANNER */
-#combo-banner {
+/* =========================================================================
+ * STANDARDIZED NOTIFICATION ZONE (LEVEL UP & COMBO BANNERS)
+ * Perfectly aligned & centralized across Mobile, Tablet, and Desktop
+ * ========================================================================= */
+.notification-zone {
   position: absolute;
-  top: 13%;
+  top: calc(max(10px, env(safe-area-inset-top)) + 106px);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 25;
-  pointer-events: none;
-  animation: comboPulse 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: rgba(15, 23, 42, 0.82);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 8px 24px;
-  border-radius: 999px;
-  border: 2px solid rgba(249, 115, 22, 0.5);
-  box-shadow: 0 8px 28px rgba(234, 88, 12, 0.35), 0 0 20px rgba(249, 115, 22, 0.25);
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-#combo-banner.hidden {
-  display: none;
-}
-
-#combo-text {
-  font-family: var(--font-display);
-  font-size: 2.2rem;
-  font-weight: 900;
-  color: #fff;
-  background: linear-gradient(180deg, #fef08a 0%, #f97316 45%, #ef4444 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-@keyframes comboPulse {
-  0% { transform: translateX(-50%) scale(0.4); opacity: 0; }
-  65% { transform: translateX(-50%) scale(1.14); opacity: 1; }
-  100% { transform: translateX(-50%) scale(1); opacity: 1; }
-}
-
-/* LEVEL UP BANNER & CAPSULE SHINE */
-#level-up-banner {
-  position: absolute;
-  top: 15%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 30;
-  pointer-events: none;
+  width: calc(100% - 32px);
+  max-width: 440px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  padding: 12px 32px;
-  border-radius: 999px;
-  border: 2px solid rgba(251, 191, 36, 0.7);
-  box-shadow: 0 12px 36px rgba(245, 158, 11, 0.45), 0 0 30px rgba(251, 191, 36, 0.35);
-  animation: levelUpPop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  gap: 10px;
+  z-index: 60;
+  pointer-events: none;
 }
 
-#level-up-banner.hidden {
-  display: none;
+/* 1. STANDARDIZED LEVEL UP BANNER */
+.level-banner {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 24px;
+  border-radius: 24px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(251, 191, 36, 0.85);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), 0 0 32px rgba(245, 158, 11, 0.38);
+  animation: bannerPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
 }
 
-.level-up-badge {
-  font-size: 0.85rem;
+.level-banner.hidden {
+  display: none !important;
+}
+
+.level-banner-tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   color: #fef08a;
   text-transform: uppercase;
   text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
 }
 
-.level-up-name {
+.tag-sparkle {
+  font-size: 0.85rem;
+}
+
+.level-banner-title {
   font-family: var(--font-display);
-  font-size: 2.2rem;
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
   font-weight: 900;
+  line-height: 1.15;
+  margin: 2px 0;
   background: linear-gradient(180deg, #ffffff 0%, #fef08a 40%, #f59e0b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.5));
-  letter-spacing: 0.06em;
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.6));
+  letter-spacing: 0.05em;
 }
 
-@keyframes levelUpPop {
-  0% { transform: translateX(-50%) scale(0.3); opacity: 0; }
-  60% { transform: translateX(-50%) scale(1.18); opacity: 1; }
-  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+.level-banner-theme {
+  display: inline-block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  letter-spacing: 0.03em;
 }
 
+/* 2. STANDARDIZED COMBO BANNER (HIGH IMPACT ACROSS ALL DEVICES) */
+.combo-banner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 8px 24px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(249, 115, 22, 0.85);
+  box-shadow: 0 12px 32px rgba(234, 88, 12, 0.40), 0 0 24px rgba(249, 115, 22, 0.30);
+  animation: bannerPopIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+
+.combo-banner.hidden {
+  display: none !important;
+}
+
+.combo-flame {
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  filter: drop-shadow(0 0 8px rgba(249, 115, 22, 0.8));
+}
+
+.combo-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.05;
+}
+
+.combo-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #fed7aa;
+  text-transform: uppercase;
+}
+
+.combo-text {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 4.5vw, 2.0rem);
+  font-weight: 900;
+  background: linear-gradient(180deg, #ffffff 0%, #fed7aa 28%, #f97316 65%, #ef4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  letter-spacing: 0.04em;
+}
+
+@keyframes bannerPopIn {
+  0% { transform: scale(0.4); opacity: 0; }
+  68% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 3. LEVEL CAPSULE SHINE PULSE (ZERO LAYOUT DISPLACEMENT) */
 .level-capsule.level-up-shine {
-  animation: capsuleShine 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  animation: capsuleGlowPulse 1.2s ease-out !important;
 }
 
-@keyframes capsuleShine {
-  0% { transform: scale(1); filter: brightness(1); }
-  35% { transform: scale(1.22); filter: brightness(1.6) drop-shadow(0 0 20px #f59e0b); }
-  70% { transform: scale(0.96); }
-  100% { transform: scale(1); filter: brightness(1); }
+@keyframes capsuleGlowPulse {
+  0% {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    filter: brightness(1);
+  }
+  35% {
+    box-shadow: 0 0 28px #f59e0b, 0 0 45px rgba(245, 158, 11, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    border-color: #f59e0b;
+    filter: brightness(1.35);
+  }
+  70% {
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+  }
+  100% {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    filter: brightness(1);
+  }
 }
 
 /* =========================================================================
@@ -1323,12 +1386,21 @@ body, html {
   #highscore-card {
     display: inline-flex;
   }
+
+  .notification-zone {
+    top: calc(max(14px, env(safe-area-inset-top)) + 64px);
+  }
 }
 
 /* =========================================================================
  * RESPONSIVE DESIGN FOR MOBILE PHONES & COMPACT SCREENS (<= 768px)
  * ========================================================================= */
 @media (max-width: 768px) {
+  .notification-zone {
+    top: calc(max(8px, env(safe-area-inset-top)) + 102px);
+    width: calc(100% - 20px);
+  }
+
   #game-header {
     top: max(8px, env(safe-area-inset-top));
     left: 50%;
@@ -1468,6 +1540,20 @@ body, html {
  * ULTRA COMPACT / SMALL MOBILE PHONES (<= 380px)
  * ========================================================================= */
 @media (max-width: 380px) {
+  .notification-zone {
+    top: calc(max(6px, env(safe-area-inset-top)) + 92px);
+    width: calc(100% - 16px);
+  }
+
+  .level-banner {
+    padding: 10px 16px;
+    border-radius: 18px;
+  }
+
+  .combo-banner {
+    padding: 6px 16px;
+  }
+
   #game-header {
     width: calc(100% - 10px);
     gap: 4px;
@@ -1672,17 +1758,41 @@ body, html {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), 0 0 14px rgba(0, 240, 255, 0.15);
 }
 
-[data-theme="dark"] #combo-banner {
-  background: rgba(10, 14, 25, 0.92);
+[data-theme="dark"] .combo-banner {
+  background: rgba(8, 12, 22, 0.94);
   border: 2px solid #ff0055;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), 0 0 25px rgba(255, 0, 85, 0.45);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.8), 0 0 25px rgba(255, 0, 85, 0.45);
 }
 
-[data-theme="dark"] #combo-text {
-  background: linear-gradient(180deg, #ffea00 0%, #ff0055 60%, #b026ff 100%);
+[data-theme="dark"] .combo-text {
+  background: linear-gradient(180deg, #ffea00 0%, #ff0055 55%, #bf36ff 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 0 14px rgba(255, 0, 85, 0.7));
+}
+
+[data-theme="dark"] .level-banner {
+  background: rgba(8, 12, 22, 0.94);
+  border: 2px solid #00f0ff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 240, 255, 0.45);
+}
+
+[data-theme="dark"] .level-banner-title {
+  background: linear-gradient(180deg, #ffffff 0%, #00f0ff 48%, #bf36ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 14px rgba(0, 240, 255, 0.6));
+}
+
+[data-theme="dark"] .level-banner-tag {
+  color: #00f0ff;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+}
+
+[data-theme="dark"] .level-banner-theme {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: rgba(0, 240, 255, 0.35);
+  color: #f8fafc;
 }
 
 [data-theme="dark"] .score-popup {
