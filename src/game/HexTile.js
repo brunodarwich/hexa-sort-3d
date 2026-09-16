@@ -164,6 +164,9 @@ export class TileFactory {
         mat.emissiveIntensity = isDark ? 0.38 : 0.16;
         mat.roughness = isDark ? 0.12 : 0.18;
         mat.metalness = isDark ? 0.12 : 0.05;
+        mat.opacity = 1.0;
+        mat.transparent = false;
+        mat.depthWrite = true;
         mat.needsUpdate = true;
       }
     }
@@ -228,11 +231,18 @@ export class TileFactory {
         roughness: isDark ? 0.12 : 0.18,
         metalness: isDark ? 0.12 : 0.05,
         emissive: colorDef.emissive,
-        emissiveIntensity: isDark ? 0.38 : 0.16
+        emissiveIntensity: isDark ? 0.38 : 0.16,
+        transparent: false,
+        opacity: 1.0,
+        depthWrite: true
       });
       this.materialsCache.set(colorDef.id, mat);
     }
-    return this.materialsCache.get(colorDef.id);
+    const mat = this.materialsCache.get(colorDef.id);
+    mat.transparent = false;
+    mat.opacity = 1.0;
+    mat.depthWrite = true;
+    return mat;
   }
 
   /**

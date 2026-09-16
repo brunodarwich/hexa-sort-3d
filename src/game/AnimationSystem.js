@@ -65,7 +65,8 @@ export class AnimationSystem {
     // 3. Update Shockwave Rings
     for (let i = this.shockwaves.length - 1; i >= 0; i--) {
       const sw = this.shockwaves[i];
-      sw.life -= deltaTime * 1.4; // Prolonged ripple (~0.7s)
+      const fadeSpeed = sw.fadeSpeed || 1.4;
+      sw.life -= deltaTime * fadeSpeed;
 
       if (sw.life <= 0) {
         this.scene.remove(sw.mesh);
@@ -74,9 +75,11 @@ export class AnimationSystem {
         this.shockwaves.splice(i, 1);
       } else {
         const progress = 1 - sw.life;
-        const scale = sw.baseScale * (1 + progress * 2.5);
+        const maxExp = sw.maxExpansion !== undefined ? sw.maxExpansion : 2.5;
+        const scale = sw.baseScale * (1 + progress * maxExp);
         sw.mesh.scale.set(scale, scale, scale);
-        sw.mesh.material.opacity = Math.max(0, sw.life);
+        const baseOp = sw.baseOpacity !== undefined ? sw.baseOpacity : 1.0;
+        sw.mesh.material.opacity = Math.max(0, sw.life * baseOp);
       }
     }
   }
@@ -210,6 +213,10 @@ export class AnimationSystem {
       // 4. Animate each card scaling up, spinning, and dispersing with white flash
       let finished = 0;
       cards.forEach((cardMesh, idx) => {
+        // Clone material so fading out transparent/opacity ONLY affects dying cards, NOT shared cache!
+        if (cardMesh.material) {
+          cardMesh.material = cardMesh.material.clone();
+        }
         const initialScale = cardMesh.scale.clone();
         const initialY = cardMesh.position.y;
         const delay = idx * 26; // Staggered clear explosion
@@ -238,6 +245,7 @@ export class AnimationSystem {
           onComplete: () => {
             this.scene.remove(cardMesh);
             if (cardMesh.geometry) cardMesh.geometry.dispose();
+            if (cardMesh.material) cardMesh.material.dispose();
             finished++;
             if (finished === cards.length) {
               resolve();
@@ -249,7 +257,7 @@ export class AnimationSystem {
   }
 
   /**
-   * Spawns an energetic expanding glowing shockwave ring on the floor
+   * Spawns an energetic expanding glowing shockwave ring on the floor (for full 10-card clears)
    */
   spawnShockwaveRing(pos, colorDef) {
     const ringGeom = new THREE.RingGeometry(0.5, 1.05, 36);
@@ -271,6 +279,39 @@ export class AnimationSystem {
     this.shockwaves.push({
       mesh,
       life: 1.0,
+      fadeSpeed: 1.4,
+      maxExpansion: 2.2,
+      baseOpacity: 0.95,
+      baseScale: 1.0
+    });
+  }
+
+  /**
+   * Spawns a discreet, soft circular ripple ring on the pedestal when new deck cards land
+   */
+  spawnArrivalRing(pos, colorDef) {
+    const ringGeom = new THREE.RingGeometry(0.68, 0.84, 36);
+    ringGeom.rotateX(-Math.PI / 2);
+
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: colorDef.hex,
+      transparent: true,
+      opacity: 0.32,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const mesh = new THREE.Mesh(ringGeom, ringMat);
+    mesh.position.set(pos.x, 0.03, pos.z);
+    this.scene.add(mesh);
+
+    this.shockwaves.push({
+      mesh,
+      life: 1.0,
+      fadeSpeed: 2.8, // Quick, smooth fade (~0.35s)
+      maxExpansion: 0.28, // Soft subtle expansion (+28%)
+      baseOpacity: 0.32,
       baseScale: 1.0
     });
   }

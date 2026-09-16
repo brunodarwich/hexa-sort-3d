@@ -678,7 +678,7 @@ export class GameManager {
           this.vibrate(10);
           const topCard = deckSlot.cards[deckSlot.cards.length - 1];
           if (topCard && this.animation) {
-            this.animation.spawnShockwaveRing(deckSlot.pos, topCard.color);
+            this.animation.spawnArrivalRing(deckSlot.pos, topCard.color);
           }
         });
         animPromises.push(p);
@@ -1251,6 +1251,26 @@ export class GameManager {
       for (const slot of this.hexGrid.getAllSlots()) {
         if (slot.stack.length > 0) {
           this.updateSlotBadge(slot);
+        }
+      }
+    }
+
+    // 5. Ensure all existing cards on the board and in deck have canonical opaque materials
+    if (this.hexGrid) {
+      for (const slot of this.hexGrid.getAllSlots()) {
+        for (const card of slot.stack) {
+          if (card.mesh && card.color) {
+            card.mesh.material = this.tileFactory.getCardMaterial(card.color);
+          }
+        }
+      }
+    }
+    if (this.deckSlots) {
+      for (const deckSlot of this.deckSlots) {
+        for (const card of deckSlot.cards) {
+          if (card.mesh && card.color) {
+            card.mesh.material = this.tileFactory.getCardMaterial(card.color);
+          }
         }
       }
     }
