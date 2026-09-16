@@ -583,6 +583,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  const scoreCard = document.getElementById('score-card');
+  if (scoreCard) {
+    scoreCard.addEventListener('click', () => {
+      game.sound.playClick();
+      if (modalShop) modalShop.classList.remove('hidden');
+    });
+  }
+
   document.querySelectorAll('.btn-shop-buy').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       game.sound.playClick();

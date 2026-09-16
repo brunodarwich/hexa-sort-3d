@@ -306,31 +306,33 @@ export class GameManager {
   }
 
   adjustCameraForScreen(width, height) {
-    // Fit the full board and deck inside the space actually assigned by CSS.
-    const target = new THREE.Vector3(0, 0.7, 1.2);
-    const direction = new THREE.Vector3(0, 19, 13).normalize();
+    // Dynamic framing so the 3D board is large, prominent and unobstructed
+    const target = new THREE.Vector3(0, 0.4, 0.6);
+    const direction = new THREE.Vector3(0, 18.5, 12.5).normalize();
     const points = [];
-    for (const x of [-5.3, 5.3]) {
-      for (const y of [0, 2.2]) {
-        for (const z of [-4.5, 7.7]) points.push(new THREE.Vector3(x, y, z));
+    for (const x of [-4.5, 4.5]) {
+      for (const y of [0, 2.3]) {
+        for (const z of [-4.1, 6.7]) {
+          points.push(new THREE.Vector3(x, y, z));
+        }
       }
     }
-    let distance = 14;
-    for (; distance < 90; distance += 0.5) {
+    let distance = 10;
+    for (; distance < 80; distance += 0.4) {
       this.camera.position.copy(target).addScaledVector(direction, distance);
       this.camera.lookAt(target);
       this.camera.updateMatrixWorld();
       if (points.every(point => {
         const p = point.clone().project(this.camera);
-        return Math.abs(p.x) < 0.94 && Math.abs(p.y) < 0.94;
+        return Math.abs(p.x) < 0.90 && Math.abs(p.y) < 0.86;
       })) break;
     }
   }
 
   getDeckLayout(width, height) {
     const aspect = width / height;
-    const spacing = aspect < 0.65 ? 2.6 : aspect < 0.9 ? 2.9 : 3.2;
-    const z = 6.4;
+    const spacing = aspect < 0.65 ? 2.5 : aspect < 0.9 ? 2.8 : 3.1;
+    const z = 5.6;
     return { spacing, z };
   }
 
