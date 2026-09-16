@@ -228,51 +228,584 @@
         </div>
       </div>
 
-      <!-- Instructions Modal -->
-      <div id="modal-info" class="modal-overlay hidden">
-        <div class="modal-card">
-          <button class="modal-close" data-close="modal-info">
+      <!-- Instructions Modal (Interactive Carousel with 3D Simulated Visuals & ADHD Focus) -->
+      <div id="modal-info" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tut-main-title">
+        <div class="modal-card modal-tutorial-card">
+          <button class="modal-close" data-close="modal-info" aria-label="Fechar tutorial">
             <span class="material-symbols-outlined">close</span>
           </button>
-          <div class="modal-header">
-            <h2>Como Jogar Hexa Sort</h2>
-          </div>
-          <div class="modal-body tutorial-content">
-            <div class="tut-step">
-              <div class="tut-icon-box">1</div>
-              <div class="tut-desc">
-                <strong>Posicione as Pilhas:</strong> Arraste as pilhas de cartas do deque inferior para qualquer espaço vazio no tabuleiro hexagonal.
-              </div>
+
+          <!-- Tutorial Header & Gamified Progress -->
+          <div class="tut-header">
+            <div class="tut-header-top">
+              <span class="tut-adhd-badge">
+                <span class="material-symbols-outlined text-[15px]">auto_awesome</span>
+                Tutorial Interativo
+              </span>
+              <span class="tut-step-counter" id="tut-step-counter">Passo 1 de 5</span>
             </div>
-            <div class="tut-step">
-              <div class="tut-icon-box">2</div>
-              <div class="tut-desc">
-                <strong>Regras de Atração do Ímã:</strong>
-                <br>• Pilhas com <em>apenas 1 cor</em> (ou menos cores) têm prioridade de atração.
-                <br>• Pilhas com <em>maior número</em> de cartas puxam pilhas menores da mesma cor.
-              </div>
-            </div>
-            <div class="tut-step">
-              <div class="tut-icon-box">3</div>
-              <div class="tut-desc">
-                <strong>Estouro Total & Bônus Acumulativo:</strong> Ao juntar <strong>10 ou mais cartas da mesma cor</strong>, todas explodem juntas! Cada carta além da 10ª concede um <em>bônus progressivo</em> que multiplica sua pontuação.
-              </div>
-            </div>
-            <div class="tut-step">
-              <div class="tut-icon-box">4</div>
-              <div class="tut-desc">
-                <strong>Reações em Cadeia:</strong> Revelar novas cores embaixo pode disparar combos automáticos com multiplicadores!
-              </div>
-            </div>
-            <div class="tut-step">
-              <div class="tut-icon-box">5</div>
-              <div class="tut-desc">
-                <strong>Modo Infinito:</strong> O jogo termina apenas quando você não tiver mais espaço para posicionar as pilhas restantes. Sobreviva o máximo possível!
+            <h2 id="tut-main-title" class="tut-title">Como Jogar Hexa Sort</h2>
+
+            <!-- Visual Gamified Progress Bar -->
+            <div class="tut-progress-container" aria-label="Progresso do tutorial">
+              <div class="tut-progress-track">
+                <div class="tut-progress-fill" id="tut-progress-fill" style="width: 20%;"></div>
               </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button class="btn-primary" data-close="modal-info">Entendi, Vamos Jogar!</button>
+
+          <!-- Carousel Slides Track -->
+          <div class="tut-carousel-viewport">
+            <div class="tut-carousel-track" id="tut-carousel-track">
+
+              <!-- SLIDE 1: Posicione as Pilhas -->
+              <div class="tut-slide active" data-step="0">
+                <div class="tut-stage-wrapper">
+                  <div class="tut-spotlight-halo tut-spotlight-1"></div>
+                  <div class="tut-interactive-stage" id="tut-stage-1" title="Clique para testar a ação!">
+                    <!-- SVG Scene 1: Posicione as Pilhas -->
+                    <svg class="tut-svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="s1-board-slot" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.25" />
+                          <stop offset="100%" stop-color="#0284c7" stop-opacity="0.08" />
+                        </linearGradient>
+                        <linearGradient id="s1-card-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#3b82f6" />
+                          <stop offset="100%" stop-color="#1d4ed8" />
+                        </linearGradient>
+                        <linearGradient id="s1-card-green" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#22c55e" />
+                          <stop offset="100%" stop-color="#15803d" />
+                        </linearGradient>
+                        <linearGradient id="s1-card-yellow" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#facc15" />
+                          <stop offset="100%" stop-color="#ca8a04" />
+                        </linearGradient>
+                        <filter id="tut-glow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="6" result="blur" />
+                          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                      </defs>
+
+                      <!-- Background Grid Ambience -->
+                      <ellipse cx="200" cy="80" rx="65" ry="32" fill="url(#s1-board-slot)" filter="url(#tut-glow)" />
+
+                      <!-- Target Board Slot (Center Top) -->
+                      <g class="tut-target-hex" transform="translate(200, 78)">
+                        <!-- Contact Shadow -->
+                        <ellipse cx="0" cy="22" rx="44" ry="18" fill="rgba(15,23,42,0.14)" />
+                        <!-- 3D Pedestal Base -->
+                        <polygon points="-38,10 0,26 38,10 38,16 0,32 -38,16" fill="#cbd5e1" class="tut-pedestal-edge" />
+                        <!-- Empty Hex Outline -->
+                        <polygon points="0,-22 38,-4 38,10 0,26 -38,10 -38,-4" fill="var(--panel-bg, #ffffff)" stroke="#0ea5e9" stroke-width="2.5" stroke-dasharray="6,4" class="tut-slot-pulse" />
+                        <!-- Center Target Icon -->
+                        <circle cx="0" cy="3" r="14" fill="#e0f2fe" opacity="0.9" />
+                        <text x="0" y="7" text-anchor="middle" font-size="14" font-weight="900" fill="#0284c7" font-family="'Rubik', sans-serif">＋</text>
+                        <text x="0" y="-30" text-anchor="middle" font-size="11" font-weight="800" fill="#0284c7" letter-spacing="0.5" font-family="'Outfit', sans-serif">ESPAÇO VAZIO NO TABULEIRO</text>
+                      </g>
+
+                      <!-- Lower Deck Tray Container -->
+                      <rect x="50" y="152" width="300" height="60" rx="20" fill="var(--bg-surface, #f1f5f9)" stroke="var(--panel-border, #cbd5e1)" stroke-width="1.5" />
+                      <text x="200" y="204" text-anchor="middle" font-size="10" font-weight="700" fill="var(--text-muted, #64748b)" letter-spacing="1" font-family="'Outfit', sans-serif">DEQUE INFERIOR DE CARTAS</text>
+
+                      <!-- Left Slot on Deck (Static Yellow Stack) -->
+                      <g transform="translate(105, 172)">
+                        <ellipse cx="0" cy="14" rx="28" ry="10" fill="rgba(15,23,42,0.12)" />
+                        <polygon points="-24,0 0,11 24,0 24,5 0,16 -24,5" fill="#a16207" />
+                        <polygon points="0,-11 24,0 24,5 0,16 -24,5 -24,0" fill="url(#s1-card-yellow)" />
+                        <polygon points="0,-16 24,-5 24,-1 0,10 -24,-1 -24,-5" fill="url(#s1-card-yellow)" />
+                      </g>
+
+                      <!-- Right Slot on Deck (Static Blue Stack) -->
+                      <g transform="translate(295, 172)">
+                        <ellipse cx="0" cy="14" rx="28" ry="10" fill="rgba(15,23,42,0.12)" />
+                        <polygon points="-24,0 0,11 24,0 24,5 0,16 -24,5" fill="#1e40af" />
+                        <polygon points="0,-11 24,0 24,5 0,16 -24,5 -24,0" fill="url(#s1-card-blue)" />
+                      </g>
+
+                      <!-- Drag Trajectory Motion Line -->
+                      <path d="M 200,165 C 200,135 200,120 200,98" stroke="#10b981" stroke-width="3" stroke-dasharray="5,4" fill="none" class="tut-drag-trajectory" />
+
+                      <!-- Active Dragging Stack (Moving from Deck to Board) -->
+                      <g id="tut-drag-stack" class="tut-moving-stack" transform="translate(200, 166)">
+                        <ellipse cx="0" cy="14" rx="30" ry="11" fill="rgba(15,23,42,0.2)" class="tut-moving-shadow" />
+                        <!-- Card 1 (Bottom Green) -->
+                        <polygon points="-28,0 0,13 28,0 28,6 0,19 -28,6" fill="#15803d" />
+                        <polygon points="0,-13 28,0 28,6 0,19 -28,6 -28,0" fill="url(#s1-card-green)" stroke="rgba(255,255,255,0.4)" stroke-width="0.75" />
+                        <!-- Card 2 (Middle Green) -->
+                        <polygon points="-28,-6 0,7 28,-6 28,0 0,13 -28,0" fill="#15803d" />
+                        <polygon points="0,-19 28,-6 28,0 0,13 -28,0 -28,-6" fill="url(#s1-card-green)" stroke="rgba(255,255,255,0.4)" stroke-width="0.75" />
+                        <!-- Card 3 (Top Blue) -->
+                        <polygon points="-28,-12 0,1 28,-12 28,-6 0,7 -28,-6" fill="#1d4ed8" />
+                        <polygon points="0,-25 28,-12 28,-6 0,7 -28,-6 -28,-12" fill="url(#s1-card-blue)" stroke="rgba(255,255,255,0.6)" stroke-width="1" />
+                        <!-- Badge Top -->
+                        <circle cx="0" cy="-18" r="9" fill="#ffffff" filter="url(#tut-glow)" />
+                        <text x="0" y="-15" text-anchor="middle" font-size="9" font-weight="900" fill="#1d4ed8" font-family="'Rubik', sans-serif">3</text>
+                      </g>
+
+                      <!-- Animated Touch Hand / Cursor Pointer -->
+                      <g id="tut-hand-cursor" class="tut-hand-pointer" transform="translate(216, 178)">
+                        <circle cx="0" cy="0" r="16" fill="rgba(16,185,129,0.22)" class="tut-cursor-ping" />
+                        <path d="M 0,0 L 4,14 L 9,9 L 16,14 L 18,12 L 11,7 L 16,4 Z" fill="#ffffff" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round" />
+                      </g>
+                    </svg>
+                    <div class="tut-tap-hint">
+                      <span class="material-symbols-outlined text-[16px]">touch_app</span>
+                      Toque para simular jogada
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Descriptive Content in Quick Pills for ADHD Scannability -->
+                <div class="tut-info-panel">
+                  <div class="tut-pill-action">
+                    <span class="tut-pill-icon"><span class="material-symbols-outlined">touch_app</span></span>
+                    <span class="tut-pill-text"><strong>Ação Básica:</strong> Arraste do deque para uma casa vazia.</span>
+                  </div>
+                  <p class="tut-text">
+                    As pilhas de cartas ficam aguardando no deque inferior. Seu objetivo é posicioná-las no tabuleiro para iniciar conexões e agrupamentos estratégicos.
+                  </p>
+                </div>
+              </div>
+
+              <!-- SLIDE 2: Atração do Ímã -->
+              <div class="tut-slide" data-step="1">
+                <div class="tut-stage-wrapper">
+                  <div class="tut-spotlight-halo tut-spotlight-2"></div>
+                  <div class="tut-interactive-stage" id="tut-stage-2" title="Clique para ver o ímã puxar!">
+                    <!-- SVG Scene 2: Regras do Ímã -->
+                    <svg class="tut-svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="s2-card-red" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#ff334b" />
+                          <stop offset="100%" stop-color="#b91c1c" />
+                        </linearGradient>
+                        <linearGradient id="s2-card-yellow" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#facc15" />
+                          <stop offset="100%" stop-color="#ca8a04" />
+                        </linearGradient>
+                        <linearGradient id="s2-flux-line" x1="100%" y1="0%" x2="0%" y2="0%">
+                          <stop offset="0%" stop-color="#ff334b" stop-opacity="0.8" />
+                          <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.9" />
+                          <stop offset="100%" stop-color="#ef4444" stop-opacity="1" />
+                        </linearGradient>
+                      </defs>
+
+                      <!-- Left Hex: Pilha Maior (Destino Receptor) -->
+                      <g transform="translate(130, 115)">
+                        <!-- Pedestal -->
+                        <ellipse cx="0" cy="22" rx="46" ry="18" fill="rgba(15,23,42,0.16)" />
+                        <polygon points="-40,10 0,27 40,10 40,18 0,35 -40,18" fill="#94a3b8" />
+                        <polygon points="0,-23 40,-6 40,10 0,27 -40,10 -40,-6" fill="var(--panel-bg, #ffffff)" stroke="#cbd5e1" stroke-width="1.5" />
+                        
+                        <!-- 4 Cartas Vermelhas Empilhadas -->
+                        <!-- Base 1 -->
+                        <polygon points="-32,2 0,14 32,2 32,8 0,20 -32,8" fill="#991b1b" />
+                        <polygon points="0,-10 32,2 32,8 0,20 -32,8 -32,2" fill="url(#s2-card-red)" />
+                        <!-- Base 2 -->
+                        <polygon points="-32,-5 0,7 32,-5 32,1 0,13 -32,1" fill="#991b1b" />
+                        <polygon points="0,-17 32,-5 32,1 0,13 -32,1 -32,-5" fill="url(#s2-card-red)" />
+                        <!-- Base 3 -->
+                        <polygon points="-32,-12 0,0 32,-12 32,-6 0,6 -32,-6" fill="#991b1b" />
+                        <polygon points="0,-24 32,-12 32,-6 0,6 -32,-6 -32,-12" fill="url(#s2-card-red)" />
+                        <!-- Top 4 -->
+                        <polygon points="-32,-19 0,-7 32,-19 32,-13 0,-1 -32,-13" fill="#991b1b" />
+                        <polygon points="0,-31 32,-19 32,-13 0,-1 -32,-13 -32,-19" fill="url(#s2-card-red)" stroke="rgba(255,255,255,0.7)" stroke-width="1" />
+
+                        <!-- Badge Contagem 4 -->
+                        <circle cx="0" cy="-21" r="11" fill="#ffffff" filter="url(#tut-glow)" />
+                        <text x="0" y="-17" text-anchor="middle" font-size="11" font-weight="900" fill="#b91c1c" font-family="'Rubik', sans-serif">4</text>
+
+                        <!-- Magnet Icon Over Host -->
+                        <g transform="translate(-24, -48)" class="tut-magnet-icon">
+                          <circle cx="0" cy="0" r="16" fill="#ef4444" />
+                          <text x="0" y="5" text-anchor="middle" font-size="14">🧲</text>
+                        </g>
+                        <text x="0" y="50" text-anchor="middle" font-size="11" font-weight="800" fill="#ef4444" font-family="'Outfit', sans-serif">PILHA MAIOR (PUXA)</text>
+                      </g>
+
+                      <!-- Right Hex: Pilha Menor / Mista (Origem) -->
+                      <g transform="translate(270, 115)">
+                        <!-- Pedestal -->
+                        <ellipse cx="0" cy="22" rx="46" ry="18" fill="rgba(15,23,42,0.16)" />
+                        <polygon points="-40,10 0,27 40,10 40,18 0,35 -40,18" fill="#94a3b8" />
+                        <polygon points="0,-23 40,-6 40,10 0,27 -40,10 -40,-6" fill="var(--panel-bg, #ffffff)" stroke="#cbd5e1" stroke-width="1.5" />
+
+                        <!-- Cartas Amarelas de baixo -->
+                        <polygon points="-32,2 0,14 32,2 32,8 0,20 -32,8" fill="#a16207" />
+                        <polygon points="0,-10 32,2 32,8 0,20 -32,8 -32,2" fill="url(#s2-card-yellow)" />
+                        <polygon points="-32,-5 0,7 32,-5 32,1 0,13 -32,1" fill="#a16207" />
+                        <polygon points="0,-17 32,-5 32,1 0,13 -32,1 -32,-5" fill="url(#s2-card-yellow)" />
+
+                        <!-- Carta Vermelha do Topo (A que será atraída!) -->
+                        <g id="tut-magnet-traveler" class="tut-flying-card" transform="translate(0, -12)">
+                          <polygon points="-32,0 0,12 32,0 32,6 0,18 -32,6" fill="#991b1b" />
+                          <polygon points="0,-12 32,0 32,6 0,18 -32,6 -32,0" fill="url(#s2-card-red)" stroke="#ffffff" stroke-width="1.2" />
+                          <circle cx="0" cy="-2" r="8" fill="#ffffff" />
+                          <text x="0" y="1" text-anchor="middle" font-size="8" font-weight="900" fill="#b91c1c" font-family="'Rubik', sans-serif">1</text>
+                        </g>
+
+                        <text x="0" y="50" text-anchor="middle" font-size="11" font-weight="800" fill="var(--text-muted, #64748b)" font-family="'Outfit', sans-serif">PILHA MENOR (DOA)</text>
+                      </g>
+
+                      <!-- Magnetic Waves & Directional Flow Beam -->
+                      <g class="tut-magnetic-flux">
+                        <path d="M 270,95 Q 200,45 140,85" stroke="url(#s2-flux-line)" stroke-width="3" stroke-dasharray="6,4" fill="none" class="tut-flux-anim" />
+                        <!-- Animated Energy Particles -->
+                        <circle cx="230" cy="72" r="3.5" fill="#facc15" class="tut-particle-glow" />
+                        <circle cx="190" cy="65" r="4.5" fill="#ff334b" class="tut-particle-glow" />
+                        <circle cx="160" cy="74" r="3.5" fill="#facc15" class="tut-particle-glow" />
+                      </g>
+
+                      <!-- Pill Badge "Menor vai para Maior" -->
+                      <g transform="translate(200, 32)">
+                        <rect x="-85" y="-12" width="170" height="24" rx="12" fill="#1e1b4b" stroke="#818cf8" stroke-width="1.5" />
+                        <text x="0" y="4" text-anchor="middle" font-size="10" font-weight="800" fill="#e0e7ff" font-family="'Outfit', sans-serif" letter-spacing="0.5">MENOR ➔ MAIOR DA COR</text>
+                      </g>
+                    </svg>
+                    <div class="tut-tap-hint">
+                      <span class="material-symbols-outlined text-[16px]">touch_app</span>
+                      Toque para ativar atração
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Descriptive Content -->
+                <div class="tut-info-panel">
+                  <div class="tut-pill-action">
+                    <span class="tut-pill-icon"><span class="material-symbols-outlined">magnet</span></span>
+                    <span class="tut-pill-text"><strong>Regra de Ouro:</strong> Menos cartas saltam para mais cartas!</span>
+                  </div>
+                  <p class="tut-text">
+                    Cartas vizinhas da mesma cor no topo se conectam automaticamente. Pilhas com apenas 1 cor têm prioridade, e pilhas com maior volume atraem as menores.
+                  </p>
+                </div>
+              </div>
+
+              <!-- SLIDE 3: Estouro Total & Super Bônus -->
+              <div class="tut-slide" data-step="2">
+                <div class="tut-stage-wrapper">
+                  <div class="tut-spotlight-halo tut-spotlight-3"></div>
+                  <div class="tut-interactive-stage" id="tut-stage-3" title="Clique para explodir 10 cartas!">
+                    <!-- SVG Scene 3: Estouro de 10 Cartas -->
+                    <svg class="tut-svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <radialGradient id="s3-burst-glow" cx="50%" cy="50%" r="50%">
+                          <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.5" />
+                          <stop offset="60%" stop-color="#f59e0b" stop-opacity="0.15" />
+                          <stop offset="100%" stop-color="#f59e0b" stop-opacity="0" />
+                        </radialGradient>
+                        <linearGradient id="s3-gold-card" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#fde047" />
+                          <stop offset="100%" stop-color="#d97706" />
+                        </linearGradient>
+                      </defs>
+
+                      <!-- Burst Ambient Glow Background -->
+                      <circle cx="200" cy="105" r="90" fill="url(#s3-burst-glow)" class="tut-ambient-pulse" />
+
+                      <!-- Hex Pedestal -->
+                      <g transform="translate(200, 140)">
+                        <ellipse cx="0" cy="24" rx="55" ry="22" fill="rgba(15,23,42,0.18)" />
+                        <polygon points="-46,12 0,30 46,12 46,22 0,40 -46,22" fill="#cbd5e1" />
+                        <polygon points="0,-26 46,-8 46,12 0,30 -46,12 -46,-8" fill="var(--panel-bg, #ffffff)" stroke="#f59e0b" stroke-width="2" />
+                      </g>
+
+                      <!-- Starburst Sparkle Rays (Flashes when pop happens) -->
+                      <g id="tut-burst-rays" class="tut-starburst" transform="translate(200, 95)">
+                        <line x1="0" y1="-65" x2="0" y2="-45" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+                        <line x1="48" y1="-48" x2="35" y2="-35" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+                        <line x1="65" y1="0" x2="45" y2="0" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+                        <line x1="48" y1="48" x2="35" y2="35" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+                        <line x1="-48" y1="-48" x2="-35" y2="-35" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+                        <line x1="-65" y1="0" x2="-45" y2="0" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+                        <line x1="-48" y1="48" x2="-35" y2="35" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+                        <!-- Sparkle Stars -->
+                        <polygon points="0,-25 3,-15 13,-12 3,-9 0,1 -3,-9 -13,-12 -3,-15" fill="#fef08a" class="tut-sparkle-star" transform="translate(55, -25)" />
+                        <polygon points="0,-25 3,-15 13,-12 3,-9 0,1 -3,-9 -13,-12 -3,-15" fill="#fef08a" class="tut-sparkle-star" transform="translate(-55, -15)" />
+                      </g>
+
+                      <!-- Big Stack of 10 Cards -->
+                      <g id="tut-ten-stack" class="tut-popping-stack" transform="translate(200, 138)">
+                        <!-- Repeated 10 layers with crisp gold gradient -->
+                        <g transform="translate(0, 0)">
+                          <polygon points="-36,0 0,14 36,0 36,6 0,20 -36,6" fill="#b45309" />
+                          <polygon points="0,-14 36,0 36,6 0,20 -36,6 -36,0" fill="url(#s3-gold-card)" />
+                        </g>
+                        <g transform="translate(0, -7)">
+                          <polygon points="-36,0 0,14 36,0 36,6 0,20 -36,6" fill="#b45309" />
+                          <polygon points="0,-14 36,0 36,6 0,20 -36,6 -36,0" fill="url(#s3-gold-card)" />
+                        </g>
+                        <g transform="translate(0, -14)">
+                          <polygon points="-36,0 0,14 36,0 36,6 0,20 -36,6" fill="#b45309" />
+                          <polygon points="0,-14 36,0 36,6 0,20 -36,6 -36,0" fill="url(#s3-gold-card)" />
+                        </g>
+                        <g transform="translate(0, -21)">
+                          <polygon points="-36,0 0,14 36,0 36,6 0,20 -36,6" fill="#b45309" />
+                          <polygon points="0,-14 36,0 36,6 0,20 -36,6 -36,0" fill="url(#s3-gold-card)" />
+                        </g>
+                        <g transform="translate(0, -28)">
+                          <polygon points="-36,0 0,14 36,0 36,6 0,20 -36,6" fill="#b45309" />
+                          <polygon points="0,-14 36,0 36,6 0,20 -36,6 -36,0" fill="url(#s3-gold-card)" />
+                        </g>
+                        <g transform="translate(0, -35)">
+                          <polygon points="-36,0 0,14 36,0 36,6 0,20 -36,6" fill="#b45309" />
+                          <polygon points="0,-14 36,0 36,6 0,20 -36,6 -36,0" fill="url(#s3-gold-card)" />
+                        </g>
+                        <g transform="translate(0, -42)">
+                          <polygon points="-36,0 0,14 36,0 36,6 0,20 -36,6" fill="#b45309" />
+                          <polygon points="0,-14 36,0 36,6 0,20 -36,6 -36,0" fill="url(#s3-gold-card)" />
+                        </g>
+                        <g transform="translate(0, -49)">
+                          <polygon points="-36,0 0,14 36,0 36,6 0,20 -36,6" fill="#b45309" />
+                          <polygon points="0,-14 36,0 36,6 0,20 -36,6 -36,0" fill="url(#s3-gold-card)" stroke="#fff" stroke-width="1" />
+                        </g>
+
+                        <!-- Glowing Counter 10/10 Badge -->
+                        <g transform="translate(0, -68)" class="tut-10-badge">
+                          <rect x="-42" y="-14" width="84" height="28" rx="14" fill="#f59e0b" stroke="#ffffff" stroke-width="2" filter="url(#tut-glow)" />
+                          <text x="0" y="5" text-anchor="middle" font-size="13" font-weight="900" fill="#ffffff" font-family="'Rubik', sans-serif">10 / 10 💥</text>
+                        </g>
+                      </g>
+
+                      <!-- Score Floating Popup "+1.500 BÔNUS!" -->
+                      <g id="tut-score-popup" class="tut-score-float" transform="translate(200, 32)">
+                        <rect x="-75" y="-14" width="150" height="28" rx="14" fill="#047857" stroke="#34d399" stroke-width="2" />
+                        <text x="0" y="5" text-anchor="middle" font-size="11" font-weight="900" fill="#ffffff" font-family="'Rubik', sans-serif">⭐ +1.500 BÔNUS x2!</text>
+                      </g>
+                    </svg>
+                    <div class="tut-tap-hint">
+                      <span class="material-symbols-outlined text-[16px]">touch_app</span>
+                      Toque para estourar o combo
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Descriptive Content -->
+                <div class="tut-info-panel">
+                  <div class="tut-pill-action">
+                    <span class="tut-pill-icon"><span class="material-symbols-outlined">explosion</span></span>
+                    <span class="tut-pill-text"><strong>Estouro Total:</strong> 10 ou mais cartas explodem juntas!</span>
+                  </div>
+                  <p class="tut-text">
+                    Ao juntar 10 cartas da mesma cor, o lote inteiro desaparece liberando a casa. Cartas além de 10 concedem bônus progressivo multiplicando seus pontos!
+                  </p>
+                </div>
+              </div>
+
+              <!-- SLIDE 4: Reações em Cadeia (Combos) -->
+              <div class="tut-slide" data-step="3">
+                <div class="tut-stage-wrapper">
+                  <div class="tut-spotlight-halo tut-spotlight-4"></div>
+                  <div class="tut-interactive-stage" id="tut-stage-4" title="Clique para ver o combo em cadeia!">
+                    <!-- SVG Scene 4: Reações em Cadeia & Combos -->
+                    <svg class="tut-svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="s4-card-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#c084fc" />
+                          <stop offset="100%" stop-color="#7e22ce" />
+                        </linearGradient>
+                        <linearGradient id="s4-card-cyan" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#38bdf8" />
+                          <stop offset="100%" stop-color="#0369a1" />
+                        </linearGradient>
+                      </defs>
+
+                      <!-- Left Hex Slot: Revelação da Cor de Baixo -->
+                      <g transform="translate(130, 118)">
+                        <ellipse cx="0" cy="22" rx="46" ry="18" fill="rgba(15,23,42,0.16)" />
+                        <polygon points="-40,10 0,27 40,10 40,18 0,35 -40,18" fill="#94a3b8" />
+                        <polygon points="0,-23 40,-6 40,10 0,27 -40,10 -40,-6" fill="var(--panel-bg, #ffffff)" stroke="#cbd5e1" stroke-width="1.5" />
+
+                        <!-- Cartas Roxas que foram reveladas embaixo -->
+                        <g id="tut-revealed-stack" class="tut-revealed-layer">
+                          <polygon points="-32,2 0,14 32,2 32,8 0,20 -32,8" fill="#581c87" />
+                          <polygon points="0,-10 32,2 32,8 0,20 -32,8 -32,2" fill="url(#s4-card-purple)" />
+                          <polygon points="-32,-5 0,7 32,-5 32,1 0,13 -32,1" fill="#581c87" />
+                          <polygon points="0,-17 32,-5 32,1 0,13 -32,1 -32,-5" fill="url(#s4-card-purple)" stroke="#fff" stroke-width="1" />
+                        </g>
+
+                        <!-- Ghost/Poof of the cleared top cards -->
+                        <g class="tut-cleared-ghost" transform="translate(0, -32)">
+                          <circle cx="-12" cy="0" r="10" fill="rgba(34,197,94,0.3)" />
+                          <circle cx="12" cy="-4" r="8" fill="rgba(34,197,94,0.25)" />
+                          <text x="0" y="3" text-anchor="middle" font-size="9" font-weight="900" fill="#15803d">LIMPO!</text>
+                        </g>
+
+                        <text x="0" y="48" text-anchor="middle" font-size="10" font-weight="800" fill="#a855f7" font-family="'Outfit', sans-serif">NOVA COR REVELADA!</text>
+                      </g>
+
+                      <!-- Right Hex Slot: Pilha Roxa Vizinha que Conecta Instantaneamente -->
+                      <g transform="translate(270, 118)">
+                        <ellipse cx="0" cy="22" rx="46" ry="18" fill="rgba(15,23,42,0.16)" />
+                        <polygon points="-40,10 0,27 40,10 40,18 0,35 -40,18" fill="#94a3b8" />
+                        <polygon points="0,-23 40,-6 40,10 0,27 -40,10 -40,-6" fill="var(--panel-bg, #ffffff)" stroke="#cbd5e1" stroke-width="1.5" />
+
+                        <!-- Cartas Roxas da Pilha Vizinha -->
+                        <polygon points="-32,2 0,14 32,2 32,8 0,20 -32,8" fill="#581c87" />
+                        <polygon points="0,-10 32,2 32,8 0,20 -32,8 -32,2" fill="url(#s4-card-purple)" />
+                        <polygon points="-32,-5 0,7 32,-5 32,1 0,13 -32,1" fill="#581c87" />
+                        <polygon points="0,-17 32,-5 32,1 0,13 -32,1 -32,-5" fill="url(#s4-card-purple)" />
+                        <polygon points="-32,-12 0,0 32,-12 32,-6 0,6 -32,-6" fill="#581c87" />
+                        <polygon points="0,-24 32,-12 32,-6 0,6 -32,-6 -32,-12" fill="url(#s4-card-purple)" stroke="#fff" stroke-width="1" />
+
+                        <circle cx="0" cy="-14" r="9" fill="#ffffff" />
+                        <text x="0" y="-11" text-anchor="middle" font-size="9" font-weight="900" fill="#7e22ce">3</text>
+                        <text x="0" y="48" text-anchor="middle" font-size="10" font-weight="800" fill="#a855f7" font-family="'Outfit', sans-serif">PILHA DESTINO</text>
+                      </g>
+
+                      <!-- Instant Combo Chain Energy Arc -->
+                      <g class="tut-chain-arc">
+                        <path d="M 130,100 C 170,55 230,55 270,95" stroke="#c084fc" stroke-width="3.5" stroke-dasharray="7,4" fill="none" class="tut-flux-anim" />
+                        <polygon points="268,90 274,96 266,99" fill="#7e22ce" />
+                      </g>
+
+                      <!-- Big Bouncing Combo Badge -->
+                      <g id="tut-combo-badge" class="tut-combo-pop" transform="translate(200, 42)">
+                        <rect x="-65" y="-15" width="130" height="30" rx="15" fill="#f43f5e" stroke="#ffe4e6" stroke-width="2" filter="url(#tut-glow)" />
+                        <text x="0" y="5" text-anchor="middle" font-size="13" font-weight="900" fill="#ffffff" font-family="'Rubik', sans-serif">COMBO x2! 🔥</text>
+                      </g>
+                    </svg>
+                    <div class="tut-tap-hint">
+                      <span class="material-symbols-outlined text-[16px]">touch_app</span>
+                      Toque para disparar combo
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Descriptive Content -->
+                <div class="tut-info-panel">
+                  <div class="tut-pill-action">
+                    <span class="tut-pill-icon"><span class="material-symbols-outlined">bolt</span></span>
+                    <span class="tut-pill-text"><strong>Reação em Cadeia:</strong> Revelar cores cria fusões automáticas!</span>
+                  </div>
+                  <p class="tut-text">
+                    Quando o topo estoura, a cor de baixo fica exposta e atrai peças vizinhas na hora. Isso dispara combos automáticos com bônus multiplicadores!
+                  </p>
+                </div>
+              </div>
+
+              <!-- SLIDE 5: Modo Infinito & Power-ups -->
+              <div class="tut-slide" data-step="4">
+                <div class="tut-stage-wrapper">
+                  <div class="tut-spotlight-halo tut-spotlight-5"></div>
+                  <div class="tut-interactive-stage" id="tut-stage-5" title="Clique para disparar o Raio!">
+                    <!-- SVG Scene 5: Modo Infinito & Sobrevivência -->
+                    <svg class="tut-svg" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="s5-lightning-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stop-color="#67e8f9" />
+                          <stop offset="50%" stop-color="#38bdf8" />
+                          <stop offset="100%" stop-color="#0284c7" />
+                        </linearGradient>
+                      </defs>
+
+                      <!-- Mini Hex Board (Center) -->
+                      <g transform="translate(200, 105)">
+                        <!-- Slot 1 (Occupied Yellow) -->
+                        <g transform="translate(-60, -25)">
+                          <ellipse cx="0" cy="12" rx="22" ry="9" fill="rgba(15,23,42,0.12)" />
+                          <polygon points="-20,-2 0,7 20,-2 20,2 0,11 -20,2" fill="#ca8a04" />
+                          <polygon points="0,-11 20,-2 20,2 0,11 -20,2 -20,-2" fill="#facc15" />
+                        </g>
+                        <!-- Slot 2 (Occupied Green) -->
+                        <g transform="translate(60, -25)">
+                          <ellipse cx="0" cy="12" rx="22" ry="9" fill="rgba(15,23,42,0.12)" />
+                          <polygon points="-20,-2 0,7 20,-2 20,2 0,11 -20,2" fill="#15803d" />
+                          <polygon points="0,-11 20,-2 20,2 0,11 -20,2 -20,-2" fill="#22c55e" />
+                        </g>
+                        <!-- Slot 3 (Occupied Red) -->
+                        <g transform="translate(-60, 25)">
+                          <ellipse cx="0" cy="12" rx="22" ry="9" fill="rgba(15,23,42,0.12)" />
+                          <polygon points="-20,-2 0,7 20,-2 20,2 0,11 -20,2" fill="#b91c1c" />
+                          <polygon points="0,-11 20,-2 20,2 0,11 -20,2 -20,-2" fill="#ff334b" />
+                        </g>
+                        <!-- Slot 4 (Occupied Purple Target for Lightning) -->
+                        <g id="tut-target-lightning-slot" class="tut-zap-slot" transform="translate(0, 30)">
+                          <ellipse cx="0" cy="12" rx="24" ry="10" fill="rgba(15,23,42,0.15)" />
+                          <polygon points="-22,-4 0,6 22,-4 22,2 0,12 -22,2" fill="#6b21a8" />
+                          <polygon points="0,-14 22,-4 22,2 0,12 -22,2 -22,-4" fill="#a855f7" />
+                        </g>
+                        <!-- Slot 5: Empty Safe Slot (Highlighted) -->
+                        <g transform="translate(0, -35)">
+                          <polygon points="0,-14 24,-2 24,10 0,22 -24,10 -24,-2" fill="none" stroke="#10b981" stroke-width="2.5" stroke-dasharray="4,3" class="tut-slot-pulse" />
+                          <circle cx="0" cy="4" r="8" fill="#d1fae5" />
+                          <text x="0" y="8" text-anchor="middle" font-size="11" font-weight="900" fill="#047857">✓</text>
+                          <text x="0" y="-18" text-anchor="middle" font-size="9" font-weight="800" fill="#059669">VAGA LIVRE</text>
+                        </g>
+                      </g>
+
+                      <!-- Electric Lightning Bolt striking the troubled slot -->
+                      <g id="tut-lightning-bolt" class="tut-lightning-anim">
+                        <polygon points="204,10 192,60 205,62 195,125 212,75 198,73" fill="#38bdf8" stroke="#ffffff" stroke-width="1.5" filter="url(#tut-glow)" />
+                        <!-- Electric Sparks -->
+                        <circle cx="195" cy="125" r="5" fill="#facc15" />
+                        <circle cx="210" cy="120" r="3" fill="#67e8f9" />
+                        <circle cx="185" cy="115" r="4" fill="#ffffff" />
+                      </g>
+
+                      <!-- Power-ups Orbit Helpers -->
+                      <g transform="translate(68, 160)">
+                        <circle cx="0" cy="0" r="18" fill="var(--panel-bg, #ffffff)" stroke="#38bdf8" stroke-width="2" filter="url(#tut-glow)" />
+                        <text x="0" y="6" text-anchor="middle" font-size="16">⚡</text>
+                        <text x="0" y="26" text-anchor="middle" font-size="9" font-weight="800" fill="#0284c7" font-family="'Outfit', sans-serif">RAIO</text>
+                      </g>
+
+                      <g transform="translate(332, 160)">
+                        <circle cx="0" cy="0" r="18" fill="var(--panel-bg, #ffffff)" stroke="#10b981" stroke-width="2" filter="url(#tut-glow)" />
+                        <text x="0" y="6" text-anchor="middle" font-size="16">🔄</text>
+                        <text x="0" y="26" text-anchor="middle" font-size="9" font-weight="800" fill="#059669" font-family="'Outfit', sans-serif">RE-ROLL</text>
+                      </g>
+
+                      <!-- Floating Pill Badge -->
+                      <g transform="translate(200, 22)">
+                        <rect x="-85" y="-11" width="170" height="22" rx="11" fill="#0f172a" stroke="#334155" stroke-width="1" />
+                        <text x="0" y="4" text-anchor="middle" font-size="10" font-weight="800" fill="#f8fafc" font-family="'Outfit', sans-serif" letter-spacing="0.5">SOBREVIVÊNCIA INFINITA</text>
+                      </g>
+                    </svg>
+                    <div class="tut-tap-hint">
+                      <span class="material-symbols-outlined text-[16px]">touch_app</span>
+                      Toque para disparar o raio destruidor
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Descriptive Content -->
+                <div class="tut-info-panel">
+                  <div class="tut-pill-action">
+                    <span class="tut-pill-icon"><span class="material-symbols-outlined">all_inclusive</span></span>
+                    <span class="tut-pill-text"><strong>Sobreviva:</strong> Nunca deixe o tabuleiro lotar!</span>
+                  </div>
+                  <p class="tut-text">
+                    O jogo termina quando não houver espaço para as peças do deque. Use os Power-ups de <strong>Raio Destruidor ⚡</strong> e <strong>Troca de Deque 🔄</strong> para abrir espaço e bater seus recordes!
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Interactive Carousel Navigation Dots & Controls -->
+          <div class="tut-footer">
+            <div class="tut-dots-nav" role="tablist" aria-label="Navegação pelos passos">
+              <button class="tut-dot active" data-step-dot="0" role="tab" aria-selected="true" title="Passo 1: Posicionar"></button>
+              <button class="tut-dot" data-step-dot="1" role="tab" aria-selected="false" title="Passo 2: Atração"></button>
+              <button class="tut-dot" data-step-dot="2" role="tab" aria-selected="false" title="Passo 3: Estouro 10+"></button>
+              <button class="tut-dot" data-step-dot="3" role="tab" aria-selected="false" title="Passo 4: Combos"></button>
+              <button class="tut-dot" data-step-dot="4" role="tab" aria-selected="false" title="Passo 5: Sobrevivência"></button>
+            </div>
+
+            <div class="tut-actions-row">
+              <button type="button" id="btn-tut-prev" class="btn-secondary tut-btn-prev" disabled>
+                <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                Voltar
+              </button>
+              <button type="button" id="btn-tut-next" class="btn-primary tut-btn-next">
+                <span id="tut-btn-next-label">Próximo</span>
+                <span class="material-symbols-outlined text-[18px]" id="tut-btn-next-icon">arrow_forward</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

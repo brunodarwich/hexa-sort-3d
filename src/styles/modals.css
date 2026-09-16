@@ -167,43 +167,605 @@
   color: var(--text-main);
 }
 
-/* Tutorial / Info Modal */
-.tutorial-content {
-  display: flex;
-  flex-direction: column;
+/* =========================================================================
+ * TUTORIAL CAROUSEL & 3D SIMULATED VISUALS (ADHD FOCUSED & INTERACTIVE)
+ * ========================================================================= */
+
+.modal-tutorial-card {
+  max-width: 500px;
+  padding: 20px 22px 18px 22px;
+  overflow: hidden;
   gap: 12px;
 }
 
-.tut-step {
+/* Tutorial Header & Gamified Tracker */
+.tut-header {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tut-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  padding-right: 28px; /* space for close button */
+}
+
+.tut-adhd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.tut-step-counter {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary);
+  background: rgba(16, 185, 129, 0.08);
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.tut-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.tut-progress-container {
+  width: 100%;
+  margin-top: 2px;
+}
+
+.tut-progress-track {
+  width: 100%;
+  height: 6px;
+  background: var(--panel-border-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.tut-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #38bdf8 55%, #f59e0b 100%);
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+/* Carousel Viewport & Slider Track */
+.tut-carousel-viewport {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  border-radius: 18px;
+}
+
+.tut-carousel-track {
+  display: flex;
+  width: 100%;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: transform;
+}
+
+.tut-slide {
+  min-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0.35;
+  transform: scale(0.96);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+}
+
+.tut-slide.active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* 3D Simulated Visual Stage */
+.tut-stage-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--panel-border-subtle);
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(15, 23, 42, 0.04), 0 4px 14px -3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] .tut-stage-wrapper {
+  background: #141527;
+  border-color: rgba(167, 139, 250, 0.16);
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* ADHD Focal Spotlight: Guided Attention Halo */
+.tut-spotlight-halo {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(24px);
+  opacity: 0.65;
+  animation: tutSpotlightPulse 3.5s ease-in-out infinite;
+  z-index: 1;
+}
+
+.tut-spotlight-1 {
+  top: 15%;
+  left: 35%;
+  width: 120px;
+  height: 90px;
+  background: rgba(14, 165, 233, 0.4);
+}
+
+.tut-spotlight-2 {
+  top: 25%;
+  left: 20%;
+  width: 140px;
+  height: 100px;
+  background: rgba(239, 68, 68, 0.35);
+}
+
+.tut-spotlight-3 {
+  top: 20%;
+  left: 35%;
+  width: 140px;
+  height: 120px;
+  background: rgba(245, 158, 11, 0.45);
+}
+
+.tut-spotlight-4 {
+  top: 20%;
+  left: 25%;
+  width: 180px;
+  height: 110px;
+  background: rgba(168, 85, 247, 0.38);
+}
+
+.tut-spotlight-5 {
+  top: 15%;
+  left: 38%;
+  width: 130px;
+  height: 110px;
+  background: rgba(56, 189, 248, 0.4);
+}
+
+@keyframes tutSpotlightPulse {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+.tut-interactive-stage {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.15s ease;
+}
+
+.tut-interactive-stage:hover {
+  filter: brightness(1.02);
+}
+
+.tut-interactive-stage:active {
+  transform: scale(0.99);
+}
+
+.tut-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 195px;
+}
+
+/* Tap to test hint badge */
+.tut-tap-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--panel-bg-translucent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text-main);
+  border: 1px solid var(--panel-border-subtle);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  pointer-events: none;
+  animation: tutHintBounce 2.4s ease-in-out infinite;
+}
+
+@keyframes tutHintBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* ADHD Scannable Info Pill & Concise Text */
+.tut-info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   background: var(--bg-surface);
   border: 1px solid var(--panel-border-subtle);
   border-radius: 16px;
-  padding: 12px;
+  padding: 10px 14px;
 }
 
-.tut-icon-box {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--primary-container);
-  color: var(--on-primary-container);
+.tut-pill-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 13px;
+  font-size: 12.5px;
+  color: var(--text-main);
+  background: var(--panel-bg);
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--panel-border-subtle);
+  width: fit-content;
+}
+
+.tut-pill-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  color: var(--primary);
 }
 
-.tut-desc {
+.tut-pill-icon .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.tut-text {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.tut-text strong {
   color: var(--text-main);
-  line-height: 1.4;
+  font-weight: 700;
+}
+
+/* Tutorial Footer Navigation */
+.tut-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.tut-dots-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tut-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--panel-border);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.5, 0.64, 1);
+}
+
+.tut-dot:hover {
+  background: var(--primary);
+  transform: scale(1.2);
+}
+
+.tut-dot.active {
+  width: 28px;
+  background: var(--primary);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.45);
+}
+
+.tut-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.tut-btn-prev {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13.5px;
+  padding: 10px 14px;
+}
+
+.tut-btn-prev:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.tut-btn-next {
+  flex: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 11px 18px;
+  background: linear-gradient(135deg, var(--primary) 0%, #059669 100%);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.tut-btn-next:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+}
+
+/* =========================================================================
+ * SVG 3D ANIMATIONS & KINETIC MICRO-INTERACTIONS
+ * ========================================================================= */
+
+/* Scene 1 Animations */
+.tut-slot-pulse {
+  animation: tutSlotPulse 2s infinite ease-in-out;
+}
+
+@keyframes tutSlotPulse {
+  0%, 100% { stroke-opacity: 0.4; stroke-width: 2; }
+  50% { stroke-opacity: 1; stroke-width: 3; }
+}
+
+.tut-drag-trajectory {
+  animation: tutDashFlow 1.4s linear infinite;
+}
+
+@keyframes tutDashFlow {
+  to { stroke-dashoffset: -18; }
+}
+
+.tut-hand-pointer {
+  animation: tutHandDrag 2.8s ease-in-out infinite;
+}
+
+.tut-cursor-ping {
+  animation: tutPing 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes tutPing {
+  0% { transform: scale(0.8); opacity: 0.9; }
+  80%, 100% { transform: scale(1.6); opacity: 0; }
+}
+
+.tut-moving-stack {
+  animation: tutStackMove 2.8s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes tutStackMove {
+  0%, 15% {
+    transform: translate(200px, 166px) scale(1);
+  }
+  50% {
+    transform: translate(200px, 110px) scale(1.06);
+  }
+  75%, 90% {
+    transform: translate(200px, 78px) scale(1);
+  }
+  100% {
+    transform: translate(200px, 166px) scale(1);
+  }
+}
+
+@keyframes tutHandDrag {
+  0%, 15% {
+    transform: translate(216px, 178px);
+  }
+  50% {
+    transform: translate(216px, 122px);
+  }
+  75%, 90% {
+    transform: translate(216px, 90px);
+  }
+  100% {
+    transform: translate(216px, 178px);
+  }
+}
+
+/* Scene 2 Magnet Animations */
+.tut-magnet-icon {
+  animation: tutMagnetFloat 2.2s ease-in-out infinite;
+}
+
+@keyframes tutMagnetFloat {
+  0%, 100% { transform: translate(-24px, -48px) rotate(0deg); }
+  50% { transform: translate(-24px, -53px) rotate(-8deg); }
+}
+
+.tut-flying-card {
+  animation: tutCardFly 2.6s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes tutCardFly {
+  0%, 25% {
+    transform: translate(0, -12px);
+  }
+  60%, 85% {
+    transform: translate(-140px, -15px);
+  }
+  100% {
+    transform: translate(0, -12px);
+  }
+}
+
+.tut-flux-anim {
+  animation: tutFluxDash 1.2s linear infinite;
+}
+
+@keyframes tutFluxDash {
+  to { stroke-dashoffset: -20; }
+}
+
+.tut-particle-glow {
+  animation: tutParticleDrift 1.8s ease-in-out infinite;
+}
+
+@keyframes tutParticleDrift {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Scene 3 Pop & Starburst Animations */
+.tut-ambient-pulse {
+  animation: tutAmbientBurst 2s ease-in-out infinite;
+}
+
+@keyframes tutAmbientBurst {
+  0%, 100% { transform: scale(0.9); opacity: 0.3; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+.tut-popping-stack {
+  animation: tutPopBounce 2.5s ease-in-out infinite;
+}
+
+@keyframes tutPopBounce {
+  0%, 60% { transform: translate(200px, 138px) scale(1); }
+  65% { transform: translate(200px, 136px) scale(1.08); }
+  72% { transform: translate(200px, 138px) scale(0.95); opacity: 0.85; }
+  80%, 100% { transform: translate(200px, 138px) scale(1); opacity: 1; }
+}
+
+.tut-starburst {
+  animation: tutRaysSpin 8s linear infinite;
+  transform-origin: 200px 95px;
+}
+
+@keyframes tutRaysSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.tut-sparkle-star {
+  animation: tutSparkleTwinkle 1.6s ease-in-out infinite;
+}
+
+@keyframes tutSparkleTwinkle {
+  0%, 100% { transform: scale(0.6); opacity: 0.4; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+.tut-score-float {
+  animation: tutScoreFloat 2.5s ease-in-out infinite;
+}
+
+@keyframes tutScoreFloat {
+  0%, 55% { transform: translate(200px, 32px) scale(0.9); opacity: 0.7; }
+  65% { transform: translate(200px, 24px) scale(1.1); opacity: 1; }
+  85%, 100% { transform: translate(200px, 28px) scale(1); opacity: 0.95; }
+}
+
+/* Scene 4 Combo Animations */
+.tut-combo-pop {
+  animation: tutComboBounce 1.8s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes tutComboBounce {
+  0%, 100% { transform: translate(200px, 42px) scale(1); }
+  50% { transform: translate(200px, 38px) scale(1.08); }
+}
+
+.tut-revealed-layer {
+  animation: tutRevealGlow 2.4s ease-in-out infinite;
+}
+
+@keyframes tutRevealGlow {
+  0%, 30% { opacity: 0.7; transform: translateY(4px); }
+  60%, 100% { opacity: 1; transform: translateY(0); }
+}
+
+.tut-cleared-ghost {
+  animation: tutPoofFade 2.4s ease-in-out infinite;
+}
+
+@keyframes tutPoofFade {
+  0%, 20% { opacity: 1; transform: translate(0, -32px) scale(1); }
+  50%, 100% { opacity: 0; transform: translate(0, -42px) scale(1.4); }
+}
+
+/* Scene 5 Lightning Strike Animations */
+.tut-lightning-anim {
+  animation: tutLightningFlash 2.2s ease-in-out infinite;
+}
+
+@keyframes tutLightningFlash {
+  0%, 65% { opacity: 0; transform: scaleY(0.6); }
+  70% { opacity: 1; transform: scaleY(1.05); }
+  75% { opacity: 0.3; }
+  80% { opacity: 1; transform: scaleY(1); }
+  88%, 100% { opacity: 0; }
+}
+
+.tut-zap-slot {
+  animation: tutSlotZap 2.2s ease-in-out infinite;
+}
+
+@keyframes tutSlotZap {
+  0%, 68% { opacity: 1; }
+  72% { filter: drop-shadow(0 0 8px #38bdf8); }
+  80%, 100% { opacity: 0.4; }
+}
+
+/* Micro-interaction Kinetic Pulse on Tap */
+.tut-interactive-stage.tut-activated {
+  animation: tutStageKinetic 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tutStageKinetic {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.03); }
+  100% { transform: scale(1); }
 }
 
 /* =========================================================================

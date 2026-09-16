@@ -587,12 +587,160 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  if (btnInfo) {
-    btnInfo.addEventListener('click', () => {
-      game.sound.playClick();
-      modalInfo.classList.remove('hidden');
+  // --- TUTORIAL INTERATIVO COM ILUSTRAÇÕES 3D E ACESSIBILIDADE TDAH ---
+  function setupTutorialCarousel() {
+    const tutTrack = document.getElementById('tut-carousel-track');
+    const tutSlides = document.querySelectorAll('.tut-slide');
+    const tutDots = document.querySelectorAll('[data-step-dot]');
+    const btnPrev = document.getElementById('btn-tut-prev');
+    const btnNext = document.getElementById('btn-tut-next');
+    const nextLabel = document.getElementById('tut-btn-next-label');
+    const nextIcon = document.getElementById('tut-btn-next-icon');
+    const stepCounter = document.getElementById('tut-step-counter');
+    const progressFill = document.getElementById('tut-progress-fill');
+
+    let currentStep = 0;
+    const totalSteps = tutSlides.length || 5;
+
+    function goToStep(step, playSfx = true) {
+      currentStep = Math.max(0, Math.min(totalSteps - 1, step));
+      if (playSfx && game?.sound) {
+        game.sound.playClick();
+      }
+
+      // 1. Atualizar Track do Carrossel
+      if (tutTrack) {
+        tutTrack.style.transform = `translateX(-${currentStep * 100}%)`;
+      }
+
+      // 2. Atualizar estado ativo dos slides
+      tutSlides.forEach((slide, idx) => {
+        if (idx === currentStep) {
+          slide.classList.add('active');
+        } else {
+          slide.classList.remove('active');
+        }
+      });
+
+      // 3. Atualizar Dots de navegação
+      tutDots.forEach((dot, idx) => {
+        const isCurrent = (idx === currentStep);
+        dot.classList.toggle('active', isCurrent);
+        dot.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
+      });
+
+      // 4. Barra de Progresso Gamificada & Contador com percentual
+      const percent = Math.round(((currentStep + 1) / totalSteps) * 100);
+      if (progressFill) {
+        progressFill.style.width = `${percent}%`;
+      }
+      if (stepCounter) {
+        stepCounter.textContent = `Passo ${currentStep + 1} de ${totalSteps} (${percent}%)`;
+      }
+
+      // 5. Botões de Ação (Voltar / Próximo / Jogar)
+      if (btnPrev) {
+        btnPrev.disabled = (currentStep === 0);
+      }
+
+      if (btnNext && nextLabel && nextIcon) {
+        if (currentStep === totalSteps - 1) {
+          nextLabel.textContent = 'Entendi, Vamos Jogar! 🚀';
+          nextIcon.textContent = 'sports_esports';
+        } else {
+          nextLabel.textContent = 'Próximo';
+          nextIcon.textContent = 'arrow_forward';
+        }
+      }
+    }
+
+    // Botões de navegação
+    btnPrev?.addEventListener('click', () => {
+      if (currentStep > 0) goToStep(currentStep - 1);
     });
+
+    btnNext?.addEventListener('click', () => {
+      if (currentStep < totalSteps - 1) {
+        goToStep(currentStep + 1);
+      } else {
+        // Concluiu o tutorial
+        game?.sound?.playLevelUp();
+        modalInfo?.classList.add('hidden');
+        showToast('Tudo pronto! Bom jogo! 🎮');
+      }
+    });
+
+    // Clique direto nos dots
+    tutDots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        const targetStep = parseInt(dot.getAttribute('data-step-dot'), 10);
+        if (!isNaN(targetStep)) {
+          goToStep(targetStep);
+        }
+      });
+    });
+
+    // Suporte a teclado (setas para esquerda / direita)
+    document.addEventListener('keydown', (e) => {
+      if (modalInfo && !modalInfo.classList.contains('hidden')) {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          btnNext?.click();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (currentStep > 0) goToStep(currentStep - 1);
+        }
+      }
+    });
+
+    // Micro-interações táteis / sonoras em cada cena (reforço cinestésico para TDAH)
+    for (let i = 1; i <= 5; i++) {
+      const stage = document.getElementById(`tut-stage-${i}`);
+      if (stage) {
+        stage.addEventListener('click', () => {
+          stage.classList.remove('tut-activated');
+          void stage.offsetWidth; // trigger reflow
+          stage.classList.add('tut-activated');
+
+          // Efeito sonoro temático de acordo com a mecânica do jogo
+          if (game?.sound) {
+            switch (i) {
+              case 1:
+                game.sound.playPick();
+                setTimeout(() => game.sound.playSnap(), 220);
+                break;
+              case 2:
+                game.sound.playCardSlide(3);
+                break;
+              case 3:
+                game.sound.playStackClear(1);
+                break;
+              case 4:
+                game.sound.playLevelUp();
+                break;
+              case 5:
+                game.sound.playThunder();
+                break;
+            }
+          }
+        });
+      }
+    }
+
+    // Ao abrir modal pelo botão de ajuda
+    if (btnInfo) {
+      btnInfo.addEventListener('click', () => {
+        game.sound.playClick();
+        goToStep(0, false);
+        modalInfo.classList.remove('hidden');
+      });
+    }
+
+    // Inicialização
+    goToStep(0, false);
   }
+
+  setupTutorialCarousel();
 
   if (btnLeaderboard) {
     btnLeaderboard.addEventListener('click', () => {
