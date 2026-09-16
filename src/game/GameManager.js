@@ -1328,11 +1328,24 @@ export class GameManager {
     const highscoreVal = document.getElementById('highscore-val');
     const timerVal = document.getElementById('timer-val');
     const levelVal = document.getElementById('level-val');
+    const levelBar = document.getElementById('level-progress-bar');
+    const shopCoins = document.getElementById('shop-coins-display');
 
     if (scoreVal) scoreVal.textContent = this.score.toLocaleString('pt-BR');
+    if (shopCoins) shopCoins.textContent = this.score.toLocaleString('pt-BR');
     if (highscoreVal) highscoreVal.textContent = this.highScore.toLocaleString('pt-BR');
     if (timerVal) timerVal.textContent = LeaderboardManager.formatTime(this.gameTimeSeconds);
     if (levelVal) levelVal.textContent = this.level;
+
+    if (levelBar) {
+      const curIdx = Math.min(this.level - 1, LEVEL_THRESHOLDS.length - 1);
+      const nextIdx = Math.min(this.level, LEVEL_THRESHOLDS.length - 1);
+      const curThreshold = LEVEL_THRESHOLDS[curIdx];
+      const nextThreshold = (nextIdx > curIdx) ? LEVEL_THRESHOLDS[nextIdx] : (curThreshold + 10000);
+      const diff = Math.max(1, nextThreshold - curThreshold);
+      const progress = Math.min(100, Math.max(8, Math.round(((this.score - curThreshold) / diff) * 100)));
+      levelBar.style.width = `${progress}%`;
+    }
   }
 
   showScorePopup(text) {

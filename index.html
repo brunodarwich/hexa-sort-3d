@@ -1,17 +1,18 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Hexa Sort 3D - Modo Infinito</title>
     <meta name="description" content="Jogo de quebra-cabeça 3D Hexa Sort infinito com fusão em cascata, pontuação em tempo real, timer e placar online de recordes." />
-    <meta name="theme-color" content="#d8dce4" />
+    <meta name="theme-color" content="#f8fafc" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Rubik:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./src/style.css" />
     <link rel="stylesheet" href="./src/responsive.css" />
   </head>
@@ -22,6 +23,11 @@
       <div id="game-bg-base" class="game-bg"></div>
       <div id="game-bg-overlay" class="game-bg game-bg-overlay"></div>
 
+      <!-- Ambient Soft Glow Halos behind the board -->
+      <div class="ambient-glow glow-1"></div>
+      <div class="ambient-glow glow-2"></div>
+      <div class="ambient-glow glow-3"></div>
+
       <div id="canvas-container"></div>
 
       <!-- Floating Centralized Notification Zone (Level Up & Combos) -->
@@ -29,20 +35,27 @@
         <!-- Floating Level Up Announcement -->
         <div id="level-up-banner" class="level-banner hidden">
           <div class="level-banner-tag">
-            <span class="tag-sparkle">✨</span>
+            <span class="material-symbols-outlined text-[14px]">sparkles</span>
             <span>NOVO NÍVEL ALCANÇADO</span>
-            <span class="tag-sparkle">✨</span>
+            <span class="material-symbols-outlined text-[14px]">sparkles</span>
           </div>
           <div class="level-banner-title" id="level-up-title">NÍVEL 2</div>
           <div class="level-banner-theme" id="level-up-theme">Pôr do Sol Coral</div>
         </div>
 
-        <!-- Floating Combo Announcement -->
+        <!-- Floating Combo Announcement (Stitch Pill Style) -->
         <div id="combo-banner" class="combo-banner hidden">
-          <div class="combo-flame">🔥</div>
+          <div class="combo-decor-left">
+            <span class="material-symbols-outlined icon-sparkle">sparkles</span>
+            <span class="material-symbols-outlined icon-flame" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+          </div>
           <div class="combo-body">
             <span class="combo-label">SEQUÊNCIA</span>
             <span id="combo-text" class="combo-text">COMBO x2!</span>
+          </div>
+          <div class="combo-decor-right">
+            <span class="material-symbols-outlined icon-bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+            <span class="material-symbols-outlined icon-star" style="font-variation-settings: 'FILL' 1;">star</span>
           </div>
         </div>
       </div>
@@ -51,26 +64,42 @@
       <header id="game-header">
         <!-- Top Bar: Player Profile & Action Buttons -->
         <div class="hud-row hud-row-utility">
-          <button id="btn-player-profile" class="stat-pill player-pill" title="Clique para alterar seu apelido" aria-label="Perfil do Jogador">
-            <span class="player-icon">👤</span>
+          <button id="btn-player-profile" class="stat-pill player-pill" title="Alterar seu apelido" aria-label="Perfil do Jogador">
+            <div class="player-avatar-circle">
+              <span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">face</span>
+            </div>
             <span class="player-name-text" id="header-player-name">Jogador</span>
-            <span class="player-edit-icon">✏️</span>
+            <span class="material-symbols-outlined player-edit-icon">edit</span>
           </button>
+
           <div class="btn-group">
-            <button id="btn-shop" class="icon-btn bubble-btn btn-shop-glow" title="Loja de Power-Ups" aria-label="Loja de Power-Ups">🛒</button>
-            <button id="btn-theme" class="icon-btn bubble-btn" title="Alternar Modo Escuro / Claro" aria-label="Alternar Tema">🌙</button>
-            <button id="btn-sound" class="icon-btn bubble-btn" title="Ativar/Desativar Som" aria-label="Som">🔊</button>
-            <button id="btn-leaderboard" class="icon-btn bubble-btn" title="Placar de Recordes" aria-label="Placar">🏆</button>
-            <button id="btn-restart" class="icon-btn bubble-btn" title="Reiniciar Partida" aria-label="Reiniciar">🔄</button>
-            <button id="btn-info" class="icon-btn bubble-btn" title="Como Jogar" aria-label="Ajuda">❔</button>
+            <button id="btn-shop" class="icon-btn bubble-btn btn-shop-glow" title="Loja de Power-Ups" aria-label="Loja de Power-Ups">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+              <span class="btn-badge-dot">!</span>
+            </button>
+            <button id="btn-theme" class="icon-btn bubble-btn" title="Alternar Modo Escuro / Claro" aria-label="Alternar Tema">
+              <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+            </button>
+            <button id="btn-sound" class="icon-btn bubble-btn" title="Ativar/Desativar Som" aria-label="Som">
+              <span class="material-symbols-outlined" id="sound-icon">volume_up</span>
+            </button>
+            <button id="btn-leaderboard" class="icon-btn bubble-btn" title="Placar de Recordes" aria-label="Placar">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+            </button>
+            <button id="btn-restart" class="icon-btn bubble-btn" title="Reiniciar Partida" aria-label="Reiniciar">
+              <span class="material-symbols-outlined">replay</span>
+            </button>
+            <button id="btn-info" class="icon-btn bubble-btn" title="Como Jogar" aria-label="Ajuda">
+              <span class="material-symbols-outlined">help</span>
+            </button>
           </div>
         </div>
 
-        <!-- Main Bar: Coins/Score, Level, Timer, Highscore -->
+        <!-- Main Gameplay Bar: Coins/Score, Level, Timer, Highscore -->
         <div class="hud-row hud-row-gameplay">
           <!-- Coins / Score Pill -->
           <div class="stat-pill coin-pill" id="score-card">
-            <div class="coin-icon-badge">🪙</div>
+            <span class="coin-icon">🪙</span>
             <div class="stat-info">
               <span class="score-value" id="score-val">0</span>
             </div>
@@ -78,13 +107,16 @@
             <div id="score-popup-container"></div>
           </div>
 
-          <!-- Center Level & Progress Capsule -->
+          <!-- Center Level & Progress Capsule with Gradient Bar -->
           <div class="level-capsule" id="level-card">
-            <div class="capsule-rainbow-badge">🌈</div>
-            <div class="capsule-content">
-              <div class="capsule-target">
+            <div class="level-capsule-inner">
+              <div class="level-badge-row">
                 <span class="capsule-sparkle">✨</span>
                 <span class="capsule-label">NÍVEL <strong id="level-val">1</strong></span>
+                <span class="capsule-sparkle">🌟</span>
+              </div>
+              <div class="level-progress-track">
+                <div class="level-progress-fill" id="level-progress-bar" style="width: 25%;"></div>
               </div>
             </div>
           </div>
@@ -92,11 +124,11 @@
           <!-- Timer & Highscore Pills -->
           <div class="hud-time-group">
             <div class="stat-pill timer-pill" id="timer-card">
-              <span class="stat-icon">⏱️</span>
+              <span class="material-symbols-outlined stat-icon-sym">timer</span>
               <span class="stat-value" id="timer-val">00:00</span>
             </div>
             <div class="stat-pill highscore-pill" id="highscore-card">
-              <span class="stat-icon">👑</span>
+              <span class="stat-icon-crown">👑</span>
               <div class="stat-info">
                 <span class="stat-label">REC</span>
                 <span class="stat-value" id="highscore-val">0</span>
@@ -106,12 +138,12 @@
         </div>
       </header>
 
-      <!-- Floating Power-Ups Dock (Posicionado logo acima do deque inferior) -->
+      <!-- Floating Power-Ups Dock (Tactile Stitch Style) -->
       <div id="powerups-dock" class="powerups-dock">
         <!-- Re-roll (Atualizar Deque) Button -->
         <button id="btn-powerup-reroll" class="powerup-btn powerup-reroll" title="Atualizar as 3 pilhas do deque" aria-label="Atualizar Deque">
-          <div class="powerup-icon-wrap">
-            <span class="powerup-icon">🔄</span>
+          <div class="powerup-icon-box box-reroll">
+            <span class="material-symbols-outlined powerup-icon">sync</span>
           </div>
           <div class="powerup-info">
             <span class="powerup-title">Atualizar</span>
@@ -121,8 +153,8 @@
 
         <!-- Lightning Strike (Raio Destruidor) Button -->
         <button id="btn-powerup-lightning" class="powerup-btn powerup-lightning" title="Eliminar 3 pilhas aleatórias do tabuleiro" aria-label="Raio Destruidor">
-          <div class="powerup-icon-wrap">
-            <span class="powerup-icon">⚡</span>
+          <div class="powerup-icon-box box-lightning">
+            <span class="material-symbols-outlined powerup-icon" style="font-variation-settings: 'FILL' 1;">bolt</span>
           </div>
           <div class="powerup-info">
             <span class="powerup-title">Raio</span>
@@ -133,21 +165,26 @@
 
       <!-- Bottom Drag Shelf / Deck Indicator -->
       <div id="deck-hint">
+        <span class="material-symbols-outlined text-[15px]">touch_app</span>
         <span>Escolha uma pilha e toque no tabuleiro. Ou arraste para jogar.</span>
       </div>
 
       <!-- Welcome / Nickname Setup Modal -->
       <div id="modal-nickname" class="modal-overlay hidden">
         <div class="modal-card nickname-card">
-          <button class="modal-close" data-close="modal-nickname">✕</button>
+          <button class="modal-close" data-close="modal-nickname">
+            <span class="material-symbols-outlined">close</span>
+          </button>
           <div class="modal-header text-center">
-            <div class="modal-badge-icon">🎮</div>
+            <div class="modal-badge-icon">
+              <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
+            </div>
             <h2>Defina seu Apelido</h2>
             <p class="modal-subtitle">Escolha seu nome para o Ranking Global. Todas as suas partidas neste navegador serão computadas automaticamente para você!</p>
           </div>
           <form id="form-nickname" class="nickname-form">
             <div class="nickname-input-group">
-              <span class="input-icon">👤</span>
+              <span class="material-symbols-outlined input-icon">person</span>
               <input type="text" id="input-welcome-nickname" maxlength="15" placeholder="Ex: Bruno, MestreHexa..." autocomplete="off" required />
             </div>
             <p class="nickname-hint">💡 Salvo automaticamente em cache para seus próximos acessos neste dispositivo.</p>
@@ -181,19 +218,21 @@
       <!-- Instructions Modal -->
       <div id="modal-info" class="modal-overlay hidden">
         <div class="modal-card">
-          <button class="modal-close" data-close="modal-info">✕</button>
+          <button class="modal-close" data-close="modal-info">
+            <span class="material-symbols-outlined">close</span>
+          </button>
           <div class="modal-header">
             <h2>Como Jogar Hexa Sort</h2>
           </div>
           <div class="modal-body tutorial-content">
             <div class="tut-step">
-              <div class="tut-icon">1️⃣</div>
+              <div class="tut-icon-box">1</div>
               <div class="tut-desc">
                 <strong>Posicione as Pilhas:</strong> Arraste as pilhas de cartas do deque inferior para qualquer espaço vazio no tabuleiro hexagonal.
               </div>
             </div>
             <div class="tut-step">
-              <div class="tut-icon">2️⃣</div>
+              <div class="tut-icon-box">2</div>
               <div class="tut-desc">
                 <strong>Regras de Atração do Ímã:</strong>
                 <br>• Pilhas com <em>apenas 1 cor</em> (ou menos cores) têm prioridade de atração.
@@ -201,19 +240,19 @@
               </div>
             </div>
             <div class="tut-step">
-              <div class="tut-icon">3️⃣</div>
+              <div class="tut-icon-box">3</div>
               <div class="tut-desc">
-                <strong>Estouro Total & Bônus Acumulativo:</strong> Ao juntar <strong>10 ou mais cartas da mesma cor</strong>, todas explodem juntas! Cada carta além da 10ª concede um <em>bônus acumulativo progressivo</em> que multiplica sua pontuação.
+                <strong>Estouro Total & Bônus Acumulativo:</strong> Ao juntar <strong>10 ou mais cartas da mesma cor</strong>, todas explodem juntas! Cada carta além da 10ª concede um <em>bônus progressivo</em> que multiplica sua pontuação.
               </div>
             </div>
             <div class="tut-step">
-              <div class="tut-icon">4️⃣</div>
+              <div class="tut-icon-box">4</div>
               <div class="tut-desc">
                 <strong>Reações em Cadeia:</strong> Revelar novas cores embaixo pode disparar combos automáticos com multiplicadores!
               </div>
             </div>
             <div class="tut-step">
-              <div class="tut-icon">5️⃣</div>
+              <div class="tut-icon-box">5</div>
               <div class="tut-desc">
                 <strong>Modo Infinito:</strong> O jogo termina apenas quando você não tiver mais espaço para posicionar as pilhas restantes. Sobreviva o máximo possível!
               </div>
@@ -225,21 +264,42 @@
         </div>
       </div>
 
-      <!-- Leaderboard Modal -->
+      <!-- Leaderboard Modal (Stitch Podium Top 3 Style) -->
       <div id="modal-leaderboard" class="modal-overlay hidden">
-        <div class="modal-card">
-          <button class="modal-close" data-close="modal-leaderboard">✕</button>
-          <div class="modal-header">
-            <h2>🏆 Placar de Recordes</h2>
-            <div class="tab-container">
-              <button class="tab-btn active" id="tab-global">Global Online</button>
-              <button class="tab-btn" id="tab-local">Seus Recordes</button>
+        <div class="modal-card leaderboard-card">
+          <button class="modal-close" data-close="modal-leaderboard">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+          <div class="modal-header text-center">
+            <!-- Refined Golden Trophy Orb -->
+            <div class="trophy-orb-wrap">
+              <div class="trophy-orb-ambient"></div>
+              <div class="trophy-orb">
+                <span class="material-symbols-outlined text-trophy" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+              </div>
+              <span class="trophy-sparkle">✦</span>
+            </div>
+            <h2>Placar de Recordes</h2>
+            <p class="modal-subtitle">Os maiores estrategistas hexagonais</p>
+            <div class="tab-container segmented-pills">
+              <button class="tab-btn active" id="tab-global">
+                <span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">public</span>
+                <span>Global Online</span>
+              </button>
+              <button class="tab-btn" id="tab-local">
+                <span class="material-symbols-outlined text-[15px]">person</span>
+                <span>Seus Recordes</span>
+              </button>
             </div>
           </div>
-          <div class="modal-body">
-            <div id="leaderboard-loading" class="loading-spinner hidden">Carregando placar...</div>
-            <div id="leaderboard-list" class="leaderboard-table">
-              <!-- Dynamically populated -->
+          <div class="modal-body leaderboard-body">
+            <div id="leaderboard-loading" class="loading-spinner hidden">
+              <div class="spinner-dot"></div>
+              <span>Carregando placar...</span>
+            </div>
+            <!-- Dynamic Podium & List Container -->
+            <div id="leaderboard-list" class="leaderboard-content-wrap">
+              <!-- Dynamically populated by JS: Podium Top 3 + List 4-10 -->
             </div>
           </div>
           <div class="modal-footer">
@@ -248,29 +308,53 @@
         </div>
       </div>
 
-      <!-- Game Over Modal -->
+      <!-- Game Over Modal (Stitch 2x2 Stats & Segunda Chance) -->
       <div id="modal-gameover" class="modal-overlay hidden">
         <div class="modal-card gameover-card">
           <div class="gameover-badge">GAME OVER</div>
           <h2 class="gameover-title">Fim de Partida!</h2>
           <p class="gameover-sub">O tabuleiro ficou sem espaços livres válidos.</p>
 
+          <!-- 2x2 Tactical Stats Grid -->
           <div class="gameover-stats-grid">
-            <div class="go-stat">
-              <span class="go-stat-label">Pontuação Final</span>
-              <span class="go-stat-value highlight" id="go-final-score">0</span>
+            <!-- Stat 1: Pontuação -->
+            <div class="go-stat-tile stat-score">
+              <div class="go-stat-header">
+                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                <span class="go-stat-title">PONTOS</span>
+              </div>
+              <span class="go-stat-value" id="go-final-score">0</span>
+              <span class="go-stat-sub">Pontuação Total</span>
             </div>
-            <div class="go-stat">
-              <span class="go-stat-label">Tempo de Sobrevivência</span>
+
+            <!-- Stat 2: Tempo -->
+            <div class="go-stat-tile stat-time">
+              <div class="go-stat-header">
+                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">timer</span>
+                <span class="go-stat-title">TEMPO</span>
+              </div>
               <span class="go-stat-value" id="go-final-time">00:00</span>
+              <span class="go-stat-sub">Sobrevivência</span>
             </div>
-            <div class="go-stat">
-              <span class="go-stat-label">Pilhas Eliminadas</span>
+
+            <!-- Stat 3: Pilhas -->
+            <div class="go-stat-tile stat-clears">
+              <div class="go-stat-header">
+                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">layers</span>
+                <span class="go-stat-title">PILHAS</span>
+              </div>
               <span class="go-stat-value" id="go-final-clears">0</span>
+              <span class="go-stat-sub">Eliminadas</span>
             </div>
-            <div class="go-stat">
-              <span class="go-stat-label">Maior Combo</span>
+
+            <!-- Stat 4: Combo -->
+            <div class="go-stat-tile stat-combo">
+              <div class="go-stat-header">
+                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                <span class="go-stat-title">COMBO</span>
+              </div>
               <span class="go-stat-value" id="go-final-combo">x1</span>
+              <span class="go-stat-sub">Sequência máx.</span>
             </div>
           </div>
 
@@ -278,12 +362,17 @@
             🎉 NOVO RECORDE PESSOAL! 🎉
           </div>
 
-          <!-- Submit score to global leaderboard -->
+          <!-- Submit score to global leaderboard confirmation pill -->
           <div class="submit-score-section">
             <div class="auto-submit-pill" id="auto-submit-badge">
-              <span class="auto-submit-icon">✅</span>
-              <span class="auto-submit-text">Registrado no Ranking como: <strong id="go-nickname-display">Jogador</strong></span>
-              <button id="btn-edit-nickname-go" class="btn-text-edit" type="button" title="Alterar apelido">Trocar</button>
+              <div class="auto-submit-left">
+                <span class="material-symbols-outlined text-verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+                <span class="auto-submit-text">Ranking: <strong id="go-nickname-display">Jogador</strong></span>
+              </div>
+              <button id="btn-edit-nickname-go" class="btn-text-edit" type="button" title="Alterar apelido">
+                <span>Trocar</span>
+                <span class="material-symbols-outlined text-[13px]">edit</span>
+              </button>
             </div>
             <div class="input-row hidden" id="manual-nickname-row">
               <input type="text" id="player-nickname" maxlength="15" placeholder="Digite seu apelido..." autocomplete="off" />
@@ -293,15 +382,20 @@
             <div id="submit-status" class="submit-status"></div>
           </div>
 
-          <!-- Second Chance / Revive with Power-Up Section -->
+          <!-- Second Chance / Revive with Power-Up Section (Fixed, no timer) -->
           <div class="gameover-revive-section">
-            <div class="revive-header">
-              <span class="revive-badge">SEGUNDA CHANCE ⚡</span>
-              <p class="revive-subtitle">Não perca seus pontos! Salve a partida e continue jogando agora:</p>
+            <div class="revive-header-row">
+              <div class="revive-badge-chip">
+                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                <span>SEGUNDA CHANCE</span>
+              </div>
             </div>
+            <p class="revive-subtitle">Não perca seus pontos! Salve a partida e continue jogando agora:</p>
             <div class="revive-actions">
               <button id="btn-go-revive-lightning" class="btn-revive btn-revive-lightning" type="button">
-                <span class="revive-icon">⚡</span>
+                <div class="revive-icon-circle">
+                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                </div>
                 <div class="revive-btn-text">
                   <strong>Raio Salva-Vidas</strong>
                   <span>Eliminar 3 pilhas do tabuleiro</span>
@@ -310,7 +404,9 @@
               </button>
 
               <button id="btn-go-revive-reroll" class="btn-revive btn-revive-reroll" type="button">
-                <span class="revive-icon">🔄</span>
+                <div class="revive-icon-circle">
+                  <span class="material-symbols-outlined">sync</span>
+                </div>
                 <div class="revive-btn-text">
                   <strong>Novo Deque</strong>
                   <span>Trocar as 3 pilhas do deque</span>
@@ -326,16 +422,14 @@
         </div>
       </div>
 
-      <!-- Pix & Card Payment Modal -->
+      <!-- Pure Pix Payment Modal (Direct, No International Stripe) -->
       <div id="modal-payment" class="modal-overlay hidden">
         <div class="modal-card payment-card">
-          <button class="modal-close" data-close="modal-payment">✕</button>
+          <button class="modal-close" data-close="modal-payment">
+            <span class="material-symbols-outlined">close</span>
+          </button>
           
           <div class="modal-header text-center">
-            <div class="region-toggle-bar">
-              <button type="button" class="region-tab active" id="tab-region-br">🇧🇷 Brasil (Pix)</button>
-              <button type="button" class="region-tab" id="tab-region-intl">🌐 Internacional (Card)</button>
-            </div>
             <div class="payment-icon-badge" id="payment-icon-badge">⚡</div>
             <h2 id="payment-title">Ativar Raio Destruidor</h2>
             <p class="modal-subtitle" id="payment-subtitle">Pague no app do banco via Pix e o poder será ativado na partida imediatamente!</p>
@@ -352,7 +446,7 @@
             </div>
           </div>
 
-          <!-- Pix Payment Area (Active when BR) -->
+          <!-- Pix Payment Area -->
           <div id="payment-pix-area" class="payment-section">
             <div id="pix-loading-state" class="pix-loading-box">
               <div class="spinner-dot"></div>
@@ -365,7 +459,10 @@
               </div>
               <div class="pix-copia-cola-group">
                 <input type="text" id="input-pix-copiacola" readonly />
-                <button type="button" id="btn-copy-pix" class="btn-secondary">Copiar Código Pix 📋</button>
+                <button type="button" id="btn-copy-pix" class="btn-secondary">
+                  <span>Copiar Código Pix</span>
+                  <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                </button>
               </div>
               <p class="pix-waiting-notice">
                 <span class="pulsing-radar"></span>
@@ -378,83 +475,110 @@
             </div>
           </div>
 
-          <!-- International Card Area (Active when INTL) -->
-          <div id="payment-intl-area" class="payment-section hidden">
-            <div class="intl-card-box">
-              <p class="intl-info-text">
-                Para o público internacional, os pagamentos com cartão são processados de forma segura via Stripe em pacotes de 10 usos ($1.00 USD) para viabilizar as taxas fixas da rede.
-              </p>
-              <button type="button" id="btn-stripe-checkout" class="btn-primary btn-large btn-stripe">
-                <span>Comprar Pacote ($1.00 USD com Cartão)</span>
-              </button>
-            </div>
-          </div>
-
           <div class="modal-footer">
             <button type="button" class="btn-secondary" data-close="modal-payment">Cancelar</button>
           </div>
         </div>
       </div>
 
-      <!-- Power-Ups Store Modal -->
+      <!-- Power-Ups Store Modal (Stitch Grid Style) -->
       <div id="modal-shop" class="modal-overlay hidden">
         <div class="modal-card shop-card">
-          <button class="modal-close" data-close="modal-shop">✕</button>
+          <!-- Top Accent Bar -->
+          <div class="shop-accent-bar"></div>
+          <button class="modal-close" data-close="modal-shop">
+            <span class="material-symbols-outlined">close</span>
+          </button>
           <div class="modal-header text-center">
-            <div class="modal-badge-icon">⚡🛒</div>
-            <h2>Loja de Power-Ups</h2>
+            <!-- Coin Pill Counter -->
+            <div class="shop-coin-pill">
+              <span class="material-symbols-outlined text-amber-500" style="font-variation-settings: 'FILL' 1;">monetization_on</span>
+              <span class="shop-coin-val" id="shop-coins-display">0</span>
+              <span class="shop-coin-lbl">pontos</span>
+            </div>
+            <div class="shop-title-row">
+              <div class="shop-title-icon">
+                <span class="material-symbols-outlined text-amber-500" style="font-variation-settings: 'FILL' 1;">sparkles</span>
+              </div>
+              <h2>Loja de Power-Ups</h2>
+            </div>
             <p class="modal-subtitle">Adquira créditos e use seus poderes a qualquer momento sem pausar o jogo!</p>
           </div>
 
           <div class="shop-grid">
             <!-- 1x Raio -->
             <div class="shop-item-card">
-              <div class="shop-item-icon">⚡</div>
+              <div class="shop-item-icon-box box-amber">
+                <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+              </div>
               <h3>1x Raio</h3>
               <p>Elimina 3 pilhas do tabuleiro</p>
-              <button class="btn-shop-buy" data-item="lightning" data-price-br="R$ 0,25" data-price-intl="$0.10">
+              <button class="btn-shop-buy" data-item="lightning" data-price-br="R$ 0,25">
                 <span class="shop-price">R$ 0,25</span>
               </button>
             </div>
 
             <!-- 1x Atualizar Deque -->
             <div class="shop-item-card">
-              <div class="shop-item-icon">🔄</div>
+              <div class="shop-item-icon-box box-sky">
+                <span class="material-symbols-outlined text-[24px]">sync</span>
+              </div>
               <h3>1x Atualizar</h3>
               <p>Troca as 3 pilhas do deque</p>
-              <button class="btn-shop-buy" data-item="reroll" data-price-br="R$ 0,25" data-price-intl="$0.10">
+              <button class="btn-shop-buy" data-item="reroll" data-price-br="R$ 0,25">
                 <span class="shop-price">R$ 0,25</span>
               </button>
             </div>
 
-            <!-- Pacote 10x Raios -->
+            <!-- Pacote 10x Raios (POPULAR) -->
             <div class="shop-item-card featured">
-              <div class="shop-badge-promo">POPULAR 🔥</div>
-              <div class="shop-item-icon">⚡⚡</div>
+              <div class="shop-badge-promo">
+                <span>✨</span>
+                <span>POPULAR</span>
+              </div>
+              <div class="shop-item-icon-box box-amber">
+                <div class="flex-icons">
+                  <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                  <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                </div>
+              </div>
               <h3>10x Raios</h3>
               <p>Pacote de sobrevivência</p>
-              <button class="btn-shop-buy" data-item="pack_lightning" data-price-br="R$ 2,50" data-price-intl="$1.00">
+              <button class="btn-shop-buy" data-item="pack_lightning" data-price-br="R$ 2,50">
                 <span class="shop-price">R$ 2,50</span>
               </button>
             </div>
 
             <!-- Pacote 10x Atualizar -->
             <div class="shop-item-card">
-              <div class="shop-item-icon">🔄🔄</div>
+              <div class="shop-item-icon-box box-sky">
+                <div class="flex-icons">
+                  <span class="material-symbols-outlined text-[20px]">sync</span>
+                  <span class="material-symbols-outlined text-[16px]">sync</span>
+                </div>
+              </div>
               <h3>10x Atualizar</h3>
               <p>Pacote de renovação</p>
-              <button class="btn-shop-buy" data-item="pack_reroll" data-price-br="R$ 2,50" data-price-intl="$1.00">
+              <button class="btn-shop-buy" data-item="pack_reroll" data-price-br="R$ 2,50">
                 <span class="shop-price">R$ 2,50</span>
               </button>
             </div>
 
             <!-- Combo Mestre -->
             <div class="shop-item-card combo-card">
-              <div class="shop-badge-promo">SUPER DESCONTO ✨</div>
-              <div class="shop-item-icon">⚡🔄</div>
+              <div class="shop-badge-promo promo-gold">
+                <span>✨</span>
+                <span>SUPER DESCONTO</span>
+              </div>
+              <div class="shop-item-icon-box box-purple">
+                <div class="flex-icons">
+                  <span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                  <span class="material-symbols-outlined text-[20px]">sync</span>
+                </div>
+              </div>
               <h3>Combo Mestre</h3>
               <p>10x Raios + 10x Atualizar</p>
-              <button class="btn-shop-buy" data-item="combo_pack" data-price-br="R$ 4,50" data-price-intl="$1.80">
+              <button class="btn-shop-buy" data-item="combo_pack" data-price-br="R$ 4,50">
                 <span class="shop-price">R$ 4,50</span>
               </button>
             </div>

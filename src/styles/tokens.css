@@ -1,0 +1,231 @@
+/* =========================================================================
+ * DESIGN TOKENS & BASE - PORCELAIN GARDEN & VELVET MEADOW
+ * ========================================================================= */
+
+:root,
+[data-theme="light"] {
+  /* Porcelain Garden (Light Theme) */
+  --bg-surface: #f8fafc;
+  --bg-surface-dim: #cbdbf5;
+  --bg-gradient: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 45%, #edf2f7 100%);
+  
+  --panel-bg: #ffffff;
+  --panel-bg-translucent: rgba(255, 255, 255, 0.95);
+  --panel-border: rgba(203, 213, 225, 0.85);
+  --panel-border-subtle: rgba(226, 232, 240, 0.8);
+  --panel-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --card-shadow: 0 4px 16px -2px rgba(148, 163, 184, 0.16), 0 1px 3px 0 rgba(100, 116, 139, 0.08);
+
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --text-white: #ffffff;
+
+  /* Fresh Mint (Primary) */
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-press: #047857;
+  --primary-container: #d1fae5;
+  --on-primary-container: #065f46;
+
+  /* Delicate Lavender (Secondary) */
+  --secondary: #8b5cf6;
+  --secondary-hover: #7c3aed;
+  --secondary-container: #ede9fe;
+  --on-secondary-container: #4c1d95;
+
+  /* Honey Gold / Amber (Tertiary & Currency) */
+  --amber: #f59e0b;
+  --amber-dark: #d97706;
+  --amber-container: #fef3c7;
+  --on-amber-container: #92400e;
+
+  /* Warm Peach / Rose */
+  --peach: #fb7185;
+  --peach-container: #ffe4e6;
+
+  --error: #ef4444;
+  --error-container: #fee2e2;
+
+  --dock-bg: rgba(255, 255, 255, 0.95);
+  --dock-border: rgba(226, 232, 240, 0.9);
+
+  --font-display: 'Rubik', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-ui: 'Rubik', sans-serif;
+}
+
+[data-theme="dark"] {
+  /* Velvet Meadow (Cozy Dark Theme) */
+  --bg-surface: #111223;
+  --bg-surface-dim: #111223;
+  --bg-gradient: linear-gradient(180deg, #111223 0%, #16172b 45%, #1b1c33 100%);
+
+  --panel-bg: #1d1e30;
+  --panel-bg-translucent: rgba(29, 30, 48, 0.95);
+  --panel-border: rgba(167, 139, 250, 0.18);
+  --panel-border-subtle: rgba(255, 255, 255, 0.08);
+  --panel-shadow: 0 16px 36px -4px rgba(10, 11, 22, 0.6), 0 4px 12px 0 rgba(0, 0, 0, 0.4);
+  --card-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.45), 0 2px 6px 0 rgba(167, 139, 250, 0.05);
+
+  --text-main: #f3f4f8;
+  --text-muted: #a6a9c5;
+  --text-light: #737799;
+  --text-white: #ffffff;
+
+  /* Soft Lavender (Primary Hero) */
+  --primary: #a78bfa;
+  --primary-hover: #8b5cf6;
+  --primary-press: #7c3aed;
+  --primary-container: #2e284f;
+  --on-primary-container: #e8ddff;
+
+  /* Calm Sage / Mint (Secondary) */
+  --secondary: #86efac;
+  --secondary-hover: #4ade80;
+  --secondary-container: #1b382b;
+  --on-secondary-container: #dcfce7;
+
+  /* Gentle Peach / Amber */
+  --amber: #fdba74;
+  --amber-dark: #fb923c;
+  --amber-container: #3d261a;
+  --on-amber-container: #ffedd5;
+
+  /* Warm Rose */
+  --peach: #f472b6;
+  --peach-container: #3f1d2e;
+
+  --error: #f87171;
+  --error-container: #451a1a;
+
+  --dock-bg: rgba(27, 28, 51, 0.95);
+  --dock-border: rgba(167, 139, 250, 0.16);
+}
+
+/* Global Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body, html {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-family: var(--font-body);
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Dynamic Background Layers */
+.game-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--bg-gradient);
+  background-size: cover;
+  background-position: center;
+  transition: background 0.35s ease;
+}
+
+.game-bg-overlay {
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.game-bg-overlay.fade-in {
+  opacity: 1;
+}
+
+/* Ambient Soft Glow Halos */
+.ambient-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.35;
+  transition: opacity 0.4s ease, background 0.4s ease;
+}
+
+.glow-1 {
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 320px;
+  height: 320px;
+  background: rgba(167, 243, 208, 0.55);
+}
+
+.glow-2 {
+  top: 65%;
+  left: 30%;
+  transform: translate(-50%, -50%);
+  width: 290px;
+  height: 290px;
+  background: rgba(221, 214, 254, 0.5);
+}
+
+.glow-3 {
+  top: 50%;
+  right: -50px;
+  width: 250px;
+  height: 250px;
+  background: rgba(254, 243, 199, 0.55);
+}
+
+[data-theme="dark"] .glow-1 {
+  background: rgba(134, 239, 172, 0.15);
+}
+[data-theme="dark"] .glow-2 {
+  background: rgba(167, 139, 250, 0.20);
+}
+[data-theme="dark"] .glow-3 {
+  background: rgba(253, 186, 116, 0.15);
+}
+
+#canvas-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+}
+
+canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  outline: none;
+}

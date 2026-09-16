@@ -122,15 +122,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       metaThemeColor.setAttribute('content', theme === 'dark' ? '#090d18' : '#d8dce4');
     }
 
+    const themeIcon = document.getElementById('theme-icon');
+    if (themeIcon) {
+      themeIcon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
+    }
+
     if (btnTheme) {
       if (theme === 'dark') {
-        btnTheme.textContent = '☀️';
-        btnTheme.setAttribute('title', 'Mudar para Modo Claro');
+        btnTheme.setAttribute('title', 'Mudar para Modo Claro (Porcelain Garden)');
         btnTheme.setAttribute('aria-label', 'Mudar para Modo Claro');
       } else {
-        btnTheme.textContent = '🌙';
-        btnTheme.setAttribute('title', 'Mudar para Modo Escuro (Neon)');
-        btnTheme.setAttribute('aria-label', 'Mudar para Modo Escuro (Neon)');
+        btnTheme.setAttribute('title', 'Mudar para Modo Escuro (Velvet Meadow)');
+        btnTheme.setAttribute('aria-label', 'Mudar para Modo Escuro');
       }
     }
 
@@ -139,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (showFeedback) {
-      showToast(theme === 'dark' ? 'Modo Escuro Neon ativado! 🌌⚡' : 'Modo Claro ativado! ☀️');
+      showToast(theme === 'dark' ? 'Modo Velvet Meadow (Cozy) ativado! 🌌' : 'Modo Porcelain Garden (Claro) ativado! ✨');
     }
   }
 
@@ -160,13 +163,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (goNicknameDisplay) goNicknameDisplay.textContent = displayName;
     if (playerNicknameInput) playerNicknameInput.value = displayName;
 
-    // Atualiza ícone do perfil no cabeçalho se houver avatar
-    const playerIconSpan = btnPlayerProfile?.querySelector('.player-icon');
-    if (playerIconSpan) {
+    // Atualiza avatar circular no cabeçalho
+    const avatarCircle = btnPlayerProfile?.querySelector('.player-avatar-circle');
+    if (avatarCircle) {
       if (avatarUrl) {
-        playerIconSpan.innerHTML = `<img src="${avatarUrl}" class="header-avatar-img" alt="Avatar" />`;
+        avatarCircle.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Avatar" />`;
       } else {
-        playerIconSpan.textContent = '👤';
+        avatarCircle.innerHTML = `<span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">face</span>`;
       }
     }
   }
@@ -413,57 +416,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     pendingPaymentSuccessAction = onSuccessCallback;
 
     const details = ITEM_DETAILS[itemType] || ITEM_DETAILS.lightning;
-    const region = paymentService.detectPlayerRegion();
 
     if (paymentIconBadge) paymentIconBadge.textContent = details.icon;
     if (paymentTitle) paymentTitle.textContent = `Ativar ${details.name}`;
     if (summaryProductName) summaryProductName.textContent = details.name;
     if (summaryProductDesc) summaryProductDesc.textContent = details.desc;
-    if (summaryProductPrice) summaryProductPrice.textContent = region === 'BR' ? details.priceBr : details.priceIntl;
-
-    // Alternar abas de região
-    setPaymentRegionUI(region);
+    if (summaryProductPrice) summaryProductPrice.textContent = details.priceBr;
 
     if (modalPayment) modalPayment.classList.remove('hidden');
 
-    // Se for Brasil, gera imediatamente o Pix
-    if (region === 'BR') {
-      loadPixOrder(itemType);
-    }
-  }
-
-  function setPaymentRegionUI(region) {
-    paymentService.setPlayerRegion(region);
-    const details = ITEM_DETAILS[currentSelectedPaymentItem] || ITEM_DETAILS.lightning;
-
-    if (region === 'BR') {
-      tabRegionBr?.classList.add('active');
-      tabRegionIntl?.classList.remove('active');
-      paymentPixArea?.classList.remove('hidden');
-      paymentIntlArea?.classList.add('hidden');
-      if (summaryProductPrice) summaryProductPrice.textContent = details.priceBr;
-    } else {
-      tabRegionIntl?.classList.add('active');
-      tabRegionBr?.classList.remove('active');
-      paymentIntlArea?.classList.remove('hidden');
-      paymentPixArea?.classList.add('hidden');
-      if (summaryProductPrice) summaryProductPrice.textContent = details.priceIntl;
-    }
-  }
-
-  if (tabRegionBr) {
-    tabRegionBr.addEventListener('click', () => {
-      game.sound.playClick();
-      setPaymentRegionUI('BR');
-      loadPixOrder(currentSelectedPaymentItem);
-    });
-  }
-
-  if (tabRegionIntl) {
-    tabRegionIntl.addEventListener('click', () => {
-      game.sound.playClick();
-      setPaymentRegionUI('INTL');
-    });
+    // Gera imediatamente o QR Code Pix
+    loadPixOrder(itemType);
   }
 
   async function loadPixOrder(itemType) {
@@ -606,7 +569,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (btnSound) {
     btnSound.addEventListener('click', () => {
       const isMuted = game.sound.toggleMute();
-      btnSound.textContent = isMuted ? '🔇' : '🔊';
+      const soundIcon = document.getElementById('sound-icon');
+      if (soundIcon) {
+        soundIcon.textContent = isMuted ? 'volume_off' : 'volume_up';
+      }
       showToast(isMuted ? 'Som desativado' : 'Som ativado');
     });
   }
@@ -714,28 +680,88 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    let html = '';
-    scores.forEach((entry, idx) => {
-      const rank = idx + 1;
-      const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : '';
-      const medal = rank === 1 ? '🥇 ' : rank === 2 ? '🥈 ' : rank === 3 ? '🥉 ' : `#${rank}`;
+    const first = scores[0];
+    const second = scores[1] || null;
+    const third = scores[2] || null;
+    const rest = scores.slice(3, 10);
 
-      html += `
-        <div class="leaderboard-row ${rankClass}">
-          <div class="lb-left">
-            <span class="lb-rank">${medal}</span>
-            <div class="lb-info">
-              <span class="lb-name">${escapeHTML(entry.name || 'Anônimo')}</span>
-              <span class="lb-sub">⏱️ ${LeaderboardManager.formatTime(entry.time || 0)} • 💥 ${entry.clears || 0} clears ${entry.date ? `• ${entry.date}` : ''}</span>
+    let html = `
+      <div class="podium-container">
+        <!-- 2nd Place: Silver -->
+        <div class="podium-col rank-2">
+          ${second ? `
+            <div class="podium-avatar-wrap">
+              <div class="podium-rank-badge">2º</div>
+              <div class="podium-avatar">${escapeHTML((second.name || '2')[0]).toUpperCase()}</div>
+            </div>
+            <div class="podium-card">
+              <span class="podium-name">${escapeHTML(second.name || 'Jogador')}</span>
+              <span class="podium-score">${(second.score || 0).toLocaleString('pt-BR')}</span>
+              <span class="podium-time">
+                <span class="material-symbols-outlined text-[11px]">schedule</span> ${LeaderboardManager.formatTime(second.time || 0)}
+              </span>
+            </div>
+          ` : `
+            <div class="podium-card" style="opacity:0.5;"><span class="podium-time">-</span></div>
+          `}
+        </div>
+
+        <!-- 1st Place: Gold Hero (Elevated) -->
+        <div class="podium-col rank-1">
+          <div class="podium-avatar-wrap">
+            <span class="podium-crown">👑</span>
+            <div class="podium-rank-badge">1º</div>
+            <div class="podium-avatar">
+              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">military_tech</span>
             </div>
           </div>
-          <div class="lb-right">
-            <span class="lb-score">${(entry.score || 0).toLocaleString('pt-BR')} pts</span>
-            ${entry.combo && entry.combo > 1 ? `<span class="lb-time">Combo máx: x${entry.combo}</span>` : ''}
+          <div class="podium-card">
+            <span class="podium-name">${escapeHTML(first.name || 'Campeão')}</span>
+            <span class="podium-score">${(first.score || 0).toLocaleString('pt-BR')}</span>
+            <span class="podium-time">
+              <span class="material-symbols-outlined text-[11px]">schedule</span> ${LeaderboardManager.formatTime(first.time || 0)}
+            </span>
           </div>
         </div>
-      `;
-    });
+
+        <!-- 3rd Place: Bronze -->
+        <div class="podium-col rank-3">
+          ${third ? `
+            <div class="podium-avatar-wrap">
+              <div class="podium-rank-badge">3º</div>
+              <div class="podium-avatar">${escapeHTML((third.name || '3')[0]).toUpperCase()}</div>
+            </div>
+            <div class="podium-card">
+              <span class="podium-name">${escapeHTML(third.name || 'Jogador')}</span>
+              <span class="podium-score">${(third.score || 0).toLocaleString('pt-BR')}</span>
+              <span class="podium-time">
+                <span class="material-symbols-outlined text-[11px]">schedule</span> ${LeaderboardManager.formatTime(third.time || 0)}
+              </span>
+            </div>
+          ` : `
+            <div class="podium-card" style="opacity:0.5;"><span class="podium-time">-</span></div>
+          `}
+        </div>
+      </div>
+    `;
+
+    if (rest.length > 0) {
+      html += `<div class="leaderboard-rows-list">`;
+      rest.forEach((entry, idx) => {
+        const rank = idx + 4;
+        html += `
+          <div class="lb-row">
+            <div class="lb-row-left">
+              <span class="lb-row-rank">${rank}</span>
+              <div class="lb-row-avatar">${escapeHTML((entry.name || '#')[0]).toUpperCase()}</div>
+              <span class="lb-row-name">${escapeHTML(entry.name || 'Anônimo')}</span>
+            </div>
+            <span class="lb-row-score">${(entry.score || 0).toLocaleString('pt-BR')} pts</span>
+          </div>
+        `;
+      });
+      html += `</div>`;
+    }
 
     leaderboardList.innerHTML = html;
   }

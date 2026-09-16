@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;family=Rubik:wght@600;700;800;900&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface-container-highest": "#323346",
+        "on-surface-variant": "#cac4d4",
+        "on-tertiary": "#492900",
+        "outline": "#948e9d",
+        "surface-container": "#1d1e30",
+        "primary": "#cebdff",
+        "tertiary-fixed-dim": "#fcb973",
+        "primary-fixed-dim": "#cebdff",
+        "primary-container": "#a78bfa",
+        "inverse-on-surface": "#2e2f41",
+        "primary-fixed": "#e8ddff",
+        "surface-container-high": "#28283b",
+        "tertiary-fixed": "#ffdcbd",
+        "on-tertiary-fixed": "#2c1600",
+        "tertiary-container": "#cd904e",
+        "on-tertiary-fixed-variant": "#683c00",
+        "on-secondary-container": "#e5ffe9",
+        "on-secondary-fixed": "#00210f",
+        "on-primary-container": "#3c1989",
+        "error": "#ffb4ab",
+        "on-secondary-fixed-variant": "#00522d",
+        "on-error": "#690005",
+        "surface-container-lowest": "#0c0d1d",
+        "on-background": "#e1e0f9",
+        "secondary": "#73db9a",
+        "outline-variant": "#494552",
+        "surface-bright": "#37384a",
+        "secondary-fixed": "#8ff8b4",
+        "on-primary-fixed": "#21005e",
+        "inverse-surface": "#e1e0f9",
+        "on-tertiary-container": "#4e2c00",
+        "on-secondary": "#00391d",
+        "background": "#111223",
+        "secondary-container": "#00834b",
+        "surface-container-low": "#191a2b",
+        "on-surface": "#e1e0f9",
+        "tertiary": "#fcb973",
+        "inverse-primary": "#674bb5",
+        "surface-tint": "#cebdff",
+        "surface-variant": "#323346",
+        "error-container": "#93000a",
+        "surface": "#111223",
+        "on-primary": "#381385",
+        "surface-dim": "#111223",
+        "secondary-fixed-dim": "#73db9a",
+        "on-error-container": "#ffdad6",
+        "on-primary-fixed-variant": "#4f319c"
+      },
+      borderRadius: {
+        "DEFAULT": "1rem",
+        "lg": "1.5rem",
+        "xl": "2rem",
+        "full": "9999px"
+      },
+      fontFamily: {
+        "display-hero": ["Rubik", "sans-serif"],
+        "headline-lg": ["Rubik", "sans-serif"],
+        "headline-md": ["Rubik", "sans-serif"],
+        "headline-sm": ["Rubik", "sans-serif"],
+        "body-lg": ["Outfit", "sans-serif"],
+        "body-md": ["Outfit", "sans-serif"],
+        "label-btn": ["Rubik", "sans-serif"],
+        "label-badge": ["Rubik", "sans-serif"],
+        "counter-xl": ["Rubik", "sans-serif"]
+      }
+    }
+  }
+};</script><style>@layer base{html,body{width:100%;min-height:100%;margin:0;padding:0;background-color:#0e0632;user-select:none;-webkit-tap-highlight-color:transparent;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head><body class="bg-gradient-to-b from-[#0f0b24] to-[#161233] text-on-surface font-body-md flex justify-center items-center min-h-screen"><div class="relative w-full max-w-[430px] h-[884px] flex flex-col overflow-hidden bg-gradient-to-b from-[#110d28] via-[#1a1438] to-[#15102f]"><main class="flex-1 flex flex-col relative w-full h-full bg-transparent overflow-hidden"><div class="flex flex-col w-full relative select-none">
+<!-- Dynamic Gameplay Mocked in Blur Backdrop -->
+<div class="relative w-full overflow-hidden p-2.5">
+<!-- Faux Hexagon Board Background -->
+<div class="relative w-full rounded-2xl bg-[#1d1742]/50 p-3 overflow-hidden border border-white/5">
+<!-- Ambient Hex Grid Patterns -->
+<div class="absolute inset-0 opacity-15 pointer-events-none flex flex-wrap gap-2 justify-center items-center scale-110">
+<div class="w-16 h-18 bg-primary rounded-xl rotate-45"></div>
+<div class="w-16 h-18 bg-secondary rounded-xl -rotate-12"></div>
+<div class="w-16 h-18 bg-tertiary rounded-xl rotate-12"></div>
+<div class="w-16 h-18 bg-secondary-container rounded-xl rotate-45"></div>
+<div class="w-16 h-18 bg-primary rounded-xl -rotate-45"></div>
+<div class="w-16 h-18 bg-tertiary rounded-xl rotate-6"></div>
+</div>
+<!-- Top Mini Game HUD (Frosted Context) -->
+<div class="flex items-center justify-between mb-3 opacity-40">
+<div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm">
+<span class="material-symbols-outlined text-amber-300 text-sm" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-headline-sm text-xs text-on-surface tracking-wide">NÍVEL 24</span>
+</div>
+<div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm">
+<span class="material-symbols-outlined text-rose-300 text-sm" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-headline-sm text-xs text-on-surface tracking-wide">0/5</span>
+</div>
+</div>
+<!-- Centered Modal Scrim Overlay (Soft Velvet Glassmorphism) -->
+<div class="relative z-10 w-full backdrop-blur-xl bg-[#201a3d]/90 rounded-[28px] p-4 flex flex-col items-center shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10">
+<!-- Top Status Alert Tag (Soft Peach / Terracotta, warm & non-aggressive) -->
+<div class="-mt-7 mb-1.5">
+<div class="flex items-center gap-1.5 bg-gradient-to-r from-[#e07a5f] to-[#d46a50] text-[#fff6f2] px-4 py-1.5 rounded-full shadow-[0_4px_12px_rgba(212,106,80,0.35)] border border-white/20">
+<span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">hourglass_bottom</span>
+<span class="font-label-badge text-xs tracking-wider uppercase font-bold">GAME OVER</span>
+</div>
+</div>
+<!-- Header Titles -->
+<h1 class="font-display-hero text-[30px] font-extrabold text-white text-center tracking-tight mt-0.5">
+          Fim de Partida!
+        </h1>
+<p class="font-body-md text-xs sm:text-[13px] text-purple-200/70 text-center max-w-[280px] mb-3 leading-snug">
+          O tabuleiro ficou sem espaços livres válidos para novas pilhas.
+        </p>
+<!-- New Personal Record Ribbon (Warm Amber Glow) -->
+<div class="w-full bg-gradient-to-r from-amber-500/20 via-amber-400/25 to-amber-500/20 border border-amber-300/30 p-2 rounded-xl shadow-sm flex items-center justify-center gap-2 mb-3 text-center">
+<span class="material-symbols-outlined text-amber-300 text-lg animate-bounce" style="font-variation-settings: 'FILL' 1;">celebration</span>
+<span class="font-label-btn text-[13px] font-bold text-amber-200 tracking-wider uppercase">NOVO RECORDE PESSOAL!</span>
+<span class="material-symbols-outlined text-amber-300 text-lg animate-bounce" style="font-variation-settings: 'FILL' 1;">celebration</span>
+</div>
+<!-- 2x2 Stats Matrix (Soft Pastel Pills with Rounded Corners & Soft Depth) -->
+<div class="grid grid-cols-2 gap-2 w-full mb-3">
+<!-- Final Score Pill -->
+<div class="bg-gradient-to-b from-[#2d2552] to-[#251e44] p-2.5 rounded-2xl flex flex-col items-center justify-center text-center border border-amber-400/20 shadow-inner">
+<div class="flex items-center gap-1 mb-0.5">
+<span class="material-symbols-outlined text-amber-300 text-[15px]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+<span class="font-label-badge text-[11px] font-bold text-amber-200/80 uppercase tracking-wider">PONTOS</span>
+</div>
+<span class="font-counter-xl text-[26px] font-extrabold text-amber-300 tracking-tight leading-tight">3.840</span>
+<span class="font-body-md text-[11px] text-amber-100/60 font-medium">+450 bônus</span>
+</div>
+<!-- Survival Time Pill -->
+<div class="bg-gradient-to-b from-[#2d2552] to-[#251e44] p-2.5 rounded-2xl flex flex-col items-center justify-center text-center border border-teal-400/20 shadow-inner">
+<div class="flex items-center gap-1 mb-0.5">
+<span class="material-symbols-outlined text-emerald-300 text-[15px]" style="font-variation-settings: 'FILL' 1;">timer</span>
+<span class="font-label-badge text-[11px] font-bold text-emerald-200/80 uppercase tracking-wider">TEMPO</span>
+</div>
+<span class="font-counter-xl text-[26px] font-extrabold text-emerald-100 tracking-tight leading-tight">06:18</span>
+<span class="font-body-md text-[11px] text-emerald-200/60 font-medium">Sobrevivência</span>
+</div>
+<!-- Stacks Cleared -->
+<div class="bg-gradient-to-b from-[#2d2552] to-[#251e44] p-2.5 rounded-2xl flex flex-col items-center justify-center text-center border border-purple-400/20 shadow-inner">
+<div class="flex items-center gap-1 mb-0.5">
+<span class="material-symbols-outlined text-purple-300 text-[15px]" style="font-variation-settings: 'FILL' 1;">layers</span>
+<span class="font-label-badge text-[11px] font-bold text-purple-200/80 uppercase tracking-wider">PILHAS</span>
+</div>
+<span class="font-counter-xl text-[26px] font-extrabold text-purple-100 tracking-tight leading-tight">42</span>
+<span class="font-body-md text-[11px] text-purple-200/60 font-medium">Eliminadas</span>
+</div>
+<!-- Max Combo -->
+<div class="bg-gradient-to-b from-[#2d2552] to-[#251e44] p-2.5 rounded-2xl flex flex-col items-center justify-center text-center border border-orange-400/20 shadow-inner">
+<div class="flex items-center gap-1 mb-0.5">
+<span class="material-symbols-outlined text-orange-300 text-[15px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="font-label-badge text-[11px] font-bold text-orange-200/80 uppercase tracking-wider">COMBO</span>
+</div>
+<span class="font-counter-xl text-[26px] font-extrabold text-orange-200 tracking-tight leading-tight">x5</span>
+<span class="font-body-md text-[11px] text-orange-200/60 font-medium">Sequência máx.</span>
+</div>
+</div>
+<!-- Leaderboard Confirmation Bar -->
+<div class="w-full bg-emerald-500/10 border border-emerald-400/20 py-1.5 px-3 rounded-full flex items-center justify-between mb-3">
+<div class="flex items-center gap-1.5 min-w-0">
+<span class="material-symbols-outlined text-emerald-300 text-[17px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-body-md text-xs text-emerald-200 truncate">Ranking: <strong class="font-semibold text-white">Bruno (#14)</strong></span>
+</div>
+<button class="text-emerald-300 font-label-badge text-[11px] font-bold uppercase tracking-wider hover:text-emerald-200 flex items-center gap-0.5 transition-colors" type="button">
+            Trocar
+            <span class="material-symbols-outlined text-[13px]">edit</span>
+</button>
+</div>
+<!-- High-Conversion Revive Callout ("SEGUNDA CHANCE") (Warm, Inviting Card) -->
+<div class="w-full bg-gradient-to-b from-[#2b214f]/90 to-[#221a42]/90 border border-amber-400/30 p-3 rounded-2xl shadow-lg mb-3 relative overflow-hidden">
+<!-- Top Floating Tag -->
+<div class="flex items-center justify-between mb-1.5">
+<div class="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-amber-500 text-stone-900 px-2.5 py-0.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-label-badge text-[10px] font-extrabold uppercase tracking-wide">SEGUNDA CHANCE</span>
+</div>
+<span class="font-label-badge text-[11px] font-bold text-amber-300 animate-pulse flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]">schedule</span>
+            EXPIRA EM 00:15
+          </span>
+</div>
+<p class="font-body-md text-xs text-purple-100/80 mb-2 leading-relaxed">
+            Não perca seus pontos! Salve a partida e continue jogando agora:
+          </p>
+<!-- Micro-Transaction Tactile Buttons with Soft Mint Accents -->
+<div class="flex flex-col gap-2">
+<!-- Booster Revive 1 -->
+<div class="w-full bg-[#1b1538]/70 border border-white/5 p-2 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-9 h-9 rounded-xl bg-amber-400/15 border border-amber-400/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-amber-300 text-lg" style="font-variation-settings: 'FILL' 1;">flash_on</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-xs font-bold text-white truncate">Raio Salva-Vidas</span>
+<span class="font-body-md text-[11px] text-purple-200/60 truncate">Elimina 3 pilhas do centro</span>
+</div>
+</div>
+<button class="shrink-0 bg-gradient-to-b from-[#6ee7b7] to-[#34d399] hover:from-[#7ef0c1] hover:to-[#40deaa] text-emerald-950 font-bold px-3.5 py-1.5 rounded-xl text-xs shadow-[0_3px_0_#059669] active:translate-y-0.5 active:shadow-[0_1px_0_#059669] transition-all flex items-center gap-1" type="button">
+<span>R$ 0,25</span>
+</button>
+</div>
+<!-- Booster Revive 2 -->
+<div class="w-full bg-[#1b1538]/70 border border-white/5 p-2 rounded-xl flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-9 h-9 rounded-xl bg-teal-400/15 border border-teal-400/30 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-teal-300 text-lg" style="font-variation-settings: 'FILL' 1;">autorenew</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-sm text-xs font-bold text-white truncate">Novo Deque</span>
+<span class="font-body-md text-[11px] text-purple-200/60 truncate">Troca as 3 peças da bandeja</span>
+</div>
+</div>
+<button class="shrink-0 bg-gradient-to-b from-[#6ee7b7] to-[#34d399] hover:from-[#7ef0c1] hover:to-[#40deaa] text-emerald-950 font-bold px-3.5 py-1.5 rounded-xl text-xs shadow-[0_3px_0_#059669] active:translate-y-0.5 active:shadow-[0_1px_0_#059669] transition-all flex items-center gap-1" type="button">
+<span>R$ 0,25</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Primary Action: Restart Game (Fresh Soft Mint / Sage with Smooth 3D Depth) -->
+<button class="w-full bg-gradient-to-b from-[#7fe3ba] via-[#5eead4] to-[#2dd4bf] hover:brightness-105 text-[#00382b] py-3 rounded-2xl font-headline-md text-base font-extrabold shadow-[0_5px_0_#0f766e,0_12px_24px_rgba(45,212,191,0.25)] active:translate-y-1 active:shadow-[0_2px_0_#0f766e] transition-all flex items-center justify-center gap-2 mb-2" type="button">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'wght' 700;">replay</span>
+<span>Jogar Novamente</span>
+</button>
+<!-- Secondary Return Link -->
+<button class="font-label-btn text-xs font-semibold text-purple-200/60 hover:text-white py-1 transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">home</span>
+<span>Voltar ao Menu Principal</span>
+</button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>
