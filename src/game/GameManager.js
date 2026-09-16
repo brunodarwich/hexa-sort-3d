@@ -306,30 +306,31 @@ export class GameManager {
   }
 
   adjustCameraForScreen(width, height) {
-    const aspect = width / height;
-    if (aspect < 0.55) {
-      // Ultra tall phone screens (20:9, 19.5:9, iPhone 14/15/16)
-      this.camera.position.set(0, 23.0, 14.0);
-      this.camera.lookAt(0, 0.3, 1.2);
-    } else if (aspect < 0.8) {
-      // Standard mobile portrait (16:9, 18:9)
-      this.camera.position.set(0, 21.0, 13.0);
-      this.camera.lookAt(0, 0.2, 1.1);
-    } else if (aspect < 1.15) {
-      // Tablets / iPads / Foldables
-      this.camera.position.set(0, 19.0, 11.8);
-      this.camera.lookAt(0, 0.0, 1.0);
-    } else {
-      // Desktop / Laptop / Landscape (16:9, 16:10, ultrawide)
-      this.camera.position.set(0, 17.5, 10.8);
-      this.camera.lookAt(0, -0.1, 0.9);
+    // Fit the full board and deck inside the space actually assigned by CSS.
+    const target = new THREE.Vector3(0, 0.7, 1.2);
+    const direction = new THREE.Vector3(0, 19, 13).normalize();
+    const points = [];
+    for (const x of [-5.3, 5.3]) {
+      for (const y of [0, 2.2]) {
+        for (const z of [-4.5, 7.7]) points.push(new THREE.Vector3(x, y, z));
+      }
+    }
+    let distance = 14;
+    for (; distance < 90; distance += 0.5) {
+      this.camera.position.copy(target).addScaledVector(direction, distance);
+      this.camera.lookAt(target);
+      this.camera.updateMatrixWorld();
+      if (points.every(point => {
+        const p = point.clone().project(this.camera);
+        return Math.abs(p.x) < 0.94 && Math.abs(p.y) < 0.94;
+      })) break;
     }
   }
 
   getDeckLayout(width, height) {
     const aspect = width / height;
     const spacing = aspect < 0.65 ? 2.6 : aspect < 0.9 ? 2.9 : 3.2;
-    const z = aspect >= 1.15 ? 4.9 : aspect >= 0.8 ? 5.1 : 5.3;
+    const z = 6.4;
     return { spacing, z };
   }
 
@@ -722,7 +723,7 @@ export class GameManager {
   initEventListeners() {
     const dom = this.container;
 
-    window.addEventListener('resize', () => {
+    this.resizeObserver = new ResizeObserver(() => {
       const width = this.container.clientWidth || window.innerWidth;
       const height = this.container.clientHeight || window.innerHeight;
       this.camera.aspect = width / height;
@@ -731,6 +732,7 @@ export class GameManager {
       this.updateDeckPositions();
       this.renderer.setSize(width, height);
     });
+    this.resizeObserver.observe(this.container);
 
     dom.addEventListener('pointerdown', (e) => this.onPointerDown(e));
     window.addEventListener('pointermove', (e) => this.onPointerMove(e));
