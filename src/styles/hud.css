@@ -202,48 +202,81 @@
   transform: scale(1.15);
 }
 
-/* Level Capsule */
+/* Level Capsule (Top HUD) */
 .level-capsule {
+  position: relative;
   flex: 1;
   max-width: 140px;
-  background: linear-gradient(90deg, #10b981, #818cf8, #f59e0b);
+  background: var(--panel-bg-translucent);
+  border: 1px solid var(--panel-border-subtle);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: 9999px;
-  padding: 1.5px;
+  padding: 4px 10px 4px 8px;
   box-shadow: var(--card-shadow);
+  cursor: default;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
 }
 
 [data-theme="dark"] .level-capsule {
-  background: linear-gradient(90deg, #a78bfa, #86efac, #fdba74);
+  background: var(--panel-bg-translucent);
+  border-color: rgba(167, 139, 250, 0.22);
+}
+
+.level-capsule:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.12);
 }
 
 .level-capsule-inner {
-  background: var(--panel-bg);
-  border-radius: 9999px;
-  padding: 3px 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
 }
 
 .level-badge-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   line-height: 1;
 }
 
-.capsule-sparkle {
-  font-size: 9px;
+.level-mini-badge {
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #fef08a, #f59e0b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #78350f;
+  box-shadow: 0 1px 4px rgba(245, 158, 11, 0.3);
+  flex-shrink: 0;
+}
+
+.level-mini-icon {
+  font-size: 13px !important;
 }
 
 .capsule-label {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 11px;
-  color: var(--secondary);
+  color: var(--text-main);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+}
+
+.capsule-label strong {
+  color: var(--amber-dark);
+  font-weight: 900;
+}
+
+[data-theme="dark"] .capsule-label strong {
+  color: #fbbf24;
 }
 
 .level-progress-track {
@@ -253,13 +286,29 @@
   border-radius: 9999px;
   margin-top: 3px;
   overflow: hidden;
+  position: relative;
 }
 
 .level-progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #818cf8, #f59e0b);
+  background: linear-gradient(90deg, #10b981, #f59e0b);
   border-radius: 9999px;
-  transition: width 0.4s ease;
+  transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.4);
+}
+
+/* Level Up Shine Animation for the HUD capsule */
+.level-capsule.level-up-shine {
+  animation: levelPillPulse 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border-color: #f59e0b;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+}
+
+@keyframes levelPillPulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.1); box-shadow: 0 0 24px rgba(245, 158, 11, 0.6); }
+  70% { transform: scale(0.98); }
+  100% { transform: scale(1); }
 }
 
 /* Timer & Highscore */
@@ -393,51 +442,136 @@
 }
 
 .level-banner {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 28px;
-  background: var(--panel-bg);
-  border: 2px solid var(--amber);
-  border-radius: 24px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), 0 0 25px rgba(245, 158, 11, 0.35);
+  gap: 8px;
+  padding: 16px 28px 14px 28px;
+  background: var(--panel-bg-translucent);
+  border: 1.5px solid rgba(245, 158, 11, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 28px;
+  box-shadow: 0 20px 48px -8px rgba(15, 23, 42, 0.16), 0 0 32px rgba(245, 158, 11, 0.22);
   animation: levelBannerPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  pointer-events: auto;
+}
+
+[data-theme="dark"] .level-banner {
+  background: rgba(29, 30, 48, 0.95);
+  border-color: rgba(253, 186, 116, 0.4);
+  box-shadow: 0 24px 56px -8px rgba(0, 0, 0, 0.6), 0 0 35px rgba(253, 186, 116, 0.25);
+}
+
+.level-banner-ambient {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 130%;
+  height: 130%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0) 70%);
+  filter: blur(18px);
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 9999px;
 }
 
 .level-banner-tag {
   display: flex;
   align-items: center;
   gap: 6px;
+  background: var(--amber-container);
+  color: var(--on-amber-container);
+  padding: 3px 12px;
+  border-radius: 9999px;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: var(--amber);
   text-transform: uppercase;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.level-banner-tag .icon-sparkle-glow {
+  font-size: 13px;
+  color: var(--amber-dark);
+  animation: sparkleTwinkle 2s infinite ease-in-out;
+}
+
+.level-banner-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0;
+}
+
+.level-hero-emblem {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #fef08a, #f59e0b, #d97706);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+}
+
+.level-hero-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
 .level-banner-title {
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 26px;
+  font-weight: 900;
+  font-size: 28px;
   color: var(--text-main);
-  margin-top: 2px;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
 
-.level-banner-theme {
+.level-banner-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.level-theme-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text-muted);
-  background: var(--panel-border-subtle);
-  padding: 2px 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--panel-border-subtle);
+  padding: 3px 12px;
   border-radius: 9999px;
-  margin-top: 4px;
+}
+
+.level-theme-tag .material-symbols-outlined {
+  color: var(--secondary);
+}
+
+.level-theme-tag strong {
+  font-weight: 700;
+  color: var(--text-main);
 }
 
 @keyframes levelBannerPop {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% { transform: scale(0.65) translateY(-14px); opacity: 0; }
+  60% { transform: scale(1.04) translateY(2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes sparkleTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.25) rotate(15deg); opacity: 0.85; }
 }
 
 /* Power-Ups Dock */

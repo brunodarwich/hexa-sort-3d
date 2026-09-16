@@ -34,19 +34,31 @@
       <div id="notification-zone" class="notification-zone">
         <!-- Floating Level Up Announcement -->
         <div id="level-up-banner" class="level-banner hidden">
+          <div class="level-banner-ambient"></div>
           <div class="level-banner-tag">
-            <span class="material-symbols-outlined text-[14px]">sparkles</span>
+            <span class="material-symbols-outlined icon-sparkle-glow" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
             <span>NOVO NÍVEL ALCANÇADO</span>
-            <span class="material-symbols-outlined text-[14px]">sparkles</span>
+            <span class="material-symbols-outlined icon-sparkle-glow" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
           </div>
-          <div class="level-banner-title" id="level-up-title">NÍVEL 2</div>
-          <div class="level-banner-theme" id="level-up-theme">Pôr do Sol Coral</div>
+          <div class="level-banner-main">
+            <div class="level-hero-emblem">
+              <span class="material-symbols-outlined level-hero-icon" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+            </div>
+            <div class="level-banner-title" id="level-up-title">NÍVEL 2</div>
+          </div>
+          <div class="level-banner-footer">
+            <span class="level-theme-tag">
+              <span class="material-symbols-outlined text-[14px]">palette</span>
+              <span>Novo Ambiente:</span>
+              <strong id="level-up-theme">Pôr do Sol Coral</strong>
+            </span>
+          </div>
         </div>
 
         <!-- Floating Combo Announcement (Stitch Pill Style) -->
         <div id="combo-banner" class="combo-banner hidden">
           <div class="combo-decor-left">
-            <span class="material-symbols-outlined icon-sparkle">sparkles</span>
+            <span class="material-symbols-outlined icon-sparkle" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
             <span class="material-symbols-outlined icon-flame" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
           </div>
           <div class="combo-body">
@@ -108,12 +120,13 @@
           </div>
 
           <!-- Center Level & Progress Capsule with Gradient Bar -->
-          <div class="level-capsule" id="level-card">
+          <div class="level-capsule" id="level-card" title="Seu Nível Atual e Progresso">
             <div class="level-capsule-inner">
               <div class="level-badge-row">
-                <span class="capsule-sparkle">✨</span>
+                <div class="level-mini-badge">
+                  <span class="material-symbols-outlined level-mini-icon" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+                </div>
                 <span class="capsule-label">NÍVEL <strong id="level-val">1</strong></span>
-                <span class="capsule-sparkle">🌟</span>
               </div>
               <div class="level-progress-track">
                 <div class="level-progress-fill" id="level-progress-bar" style="width: 25%;"></div>
@@ -498,7 +511,7 @@
             </div>
             <div class="shop-title-row">
               <div class="shop-title-icon">
-                <span class="material-symbols-outlined text-amber-500" style="font-variation-settings: 'FILL' 1;">sparkles</span>
+                <span class="material-symbols-outlined text-amber-500" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
               </div>
               <h2>Loja de Power-Ups</h2>
             </div>

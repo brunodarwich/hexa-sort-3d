@@ -46,10 +46,46 @@
 
   .level-capsule {
     max-width: 120px;
+    padding: 3px 7px 3px 5px;
+  }
+
+  .level-mini-badge {
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
+  }
+
+  .level-mini-icon {
+    font-size: 11px !important;
   }
 
   .capsule-label {
-    font-size: 10px;
+    font-size: 9.5px;
+  }
+
+  .level-banner {
+    padding: 12px 18px 10px 18px;
+    border-radius: 22px;
+    max-width: 90vw;
+  }
+
+  .level-hero-emblem {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .level-hero-icon {
+    font-size: 18px;
+  }
+
+  .level-banner-title {
+    font-size: 22px;
+  }
+
+  .level-theme-tag {
+    font-size: 11px;
+    padding: 2px 10px;
   }
 
   .stat-value {
