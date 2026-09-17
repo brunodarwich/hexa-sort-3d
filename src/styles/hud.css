@@ -577,7 +577,7 @@
 /* Power-Ups Dock */
 .powerups-dock {
   position: absolute;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 52px);
   top: auto;
   left: 50%;
   transform: translateX(-50%);
@@ -622,13 +622,17 @@
 }
 
 .powerup-icon-box {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.powerup-icon-box .powerup-icon {
+  font-size: 18px;
 }
 
 .box-reroll {
@@ -678,13 +682,14 @@
 
 #deck-hint {
   position: absolute;
-  bottom: 8px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 5px 14px;
+  padding: 4px 14px;
   border-radius: 9999px;
   background: var(--panel-bg-translucent);
   border: 1px solid var(--panel-border-subtle);
@@ -693,6 +698,8 @@
   font-size: 11px;
   font-weight: 500;
   color: var(--text-muted);
+  white-space: nowrap;
+  max-width: calc(100% - 24px);
   pointer-events: none;
   z-index: 20;
 }
