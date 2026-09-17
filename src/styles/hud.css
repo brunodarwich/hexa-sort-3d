@@ -367,7 +367,7 @@
 /* Notification Zone & Combo Banner */
 .notification-zone {
   position: absolute;
-  top: 108px;
+  top: calc(env(safe-area-inset-top, 0px) + 148px);
   left: 0;
   width: 100%;
   display: flex;
@@ -577,21 +577,22 @@
 /* Power-Ups Dock */
 .powerups-dock {
   position: absolute;
-  bottom: 128px;
+  top: calc(env(safe-area-inset-top, 0px) + 94px);
+  bottom: auto;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 32px);
-  max-width: 420px;
+  width: calc(100% - 24px);
+  max-width: 380px;
   background: var(--dock-bg);
   border: 1px solid var(--dock-border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-radius: 20px;
-  padding: 8px 12px;
+  border-radius: 18px;
+  padding: 5px 10px;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  gap: 12px;
+  gap: 8px;
   box-shadow: var(--panel-shadow);
   z-index: 20;
 }
@@ -600,11 +601,11 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   background: var(--bg-surface);
   border: 1px solid var(--panel-border-subtle);
-  border-radius: 14px;
-  padding: 6px 12px;
+  border-radius: 12px;
+  padding: 5px 10px;
   cursor: pointer;
   outline: none;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
