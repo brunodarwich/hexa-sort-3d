@@ -93,8 +93,8 @@
   }
 
   .powerups-dock {
-    top: calc(env(safe-area-inset-top, 0px) + 82px);
-    bottom: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 36px);
+    top: auto;
     left: 50%;
     right: auto;
     transform: translateX(-50%);
@@ -107,7 +107,7 @@
   }
 
   .notification-zone {
-    top: calc(env(safe-area-inset-top, 0px) + 132px);
+    top: calc(env(safe-area-inset-top, 0px) + 88px);
   }
 
   /* Tutorial Modal Mobile Optimization */
@@ -204,13 +204,13 @@
   }
 
   .powerups-dock {
-    top: calc(env(safe-area-inset-top, 0px) + 96px);
-    bottom: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
+    top: auto;
     left: 50%;
     right: auto;
     transform: translateX(-50%);
     width: calc(100% - 32px);
-    max-width: 400px;
+    max-width: 380px;
     flex-direction: row;
     padding: 6px 12px;
     gap: 10px;
@@ -223,8 +223,14 @@
     border-radius: 12px;
   }
 
+  #deck-hint {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    font-size: 11px;
+    padding: 4px 14px;
+  }
+
   .notification-zone {
-    top: calc(env(safe-area-inset-top, 0px) + 152px);
+    top: calc(env(safe-area-inset-top, 0px) + 100px);
   }
 }
 

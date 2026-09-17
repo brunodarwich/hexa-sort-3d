@@ -324,7 +324,7 @@ export class GameManager {
       this.camera.updateMatrixWorld();
       if (points.every(point => {
         const p = point.clone().project(this.camera);
-        return Math.abs(p.x) < 0.90 && Math.abs(p.y) < 0.86;
+        return Math.abs(p.x) < 0.90 && p.y < 0.82 && p.y > -0.62;
       })) break;
     }
   }
