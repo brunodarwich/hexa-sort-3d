@@ -967,6 +967,42 @@
             <div id="submit-status" class="submit-status"></div>
           </div>
 
+          <!-- Boosters Acumulados na Partida (Foguete & Trevo) -->
+          <div class="gameover-boosters-section">
+            <div class="revive-header-row">
+              <div class="revive-badge-chip booster-chip">
+                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                <span>PODERES ACUMULADOS NA PARTIDA</span>
+              </div>
+            </div>
+            <p class="revive-subtitle">Use os poderes que você carregou para salvar a partida:</p>
+            <div class="gameover-boosters-grid">
+              <!-- Botão Foguete Game Over -->
+              <button id="btn-go-use-rocket" class="btn-go-booster btn-go-rocket disabled" type="button" aria-label="Usar Foguete">
+                <div class="go-booster-icon rocket-icon-circle">
+                  <span>🚀</span>
+                </div>
+                <div class="go-booster-info">
+                  <strong>Foguete Inteligente</strong>
+                  <span id="go-rocket-status">0 / 50.000 pts</span>
+                </div>
+                <span class="go-booster-action disabled" id="go-rocket-action-badge">BLOQUEADO</span>
+              </button>
+
+              <!-- Botão Trevo Game Over -->
+              <button id="btn-go-use-clover" class="btn-go-booster btn-go-clover disabled" type="button" aria-label="Usar Trevo">
+                <div class="go-booster-icon clover-icon-circle">
+                  <span>🍀</span>
+                </div>
+                <div class="go-booster-info">
+                  <strong>Trevo da Sorte</strong>
+                  <span id="go-clover-status">0 / 100.000 pts</span>
+                </div>
+                <span class="go-booster-action disabled" id="go-clover-action-badge">BLOQUEADO</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Second Chance / Revive with Power-Up Section (Fixed, no timer) -->
           <div class="gameover-revive-section">
             <div class="revive-header-row">

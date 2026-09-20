@@ -215,11 +215,11 @@ export class GameManager {
     // Badges
     this.slotBadges = new Map(); // slot.id -> Sprite
 
-    // Boosters Laterais (Foguete 50k & Trevo 100k)
-    this.rocketCharge = parseInt(localStorage.getItem('hexasort_rocket_charge') || '0', 10);
-    this.rocketCount = parseInt(localStorage.getItem('hexasort_rocket_count') || '0', 10);
-    this.cloverCharge = parseInt(localStorage.getItem('hexasort_clover_charge') || '0', 10);
-    this.cloverCount = parseInt(localStorage.getItem('hexasort_clover_count') || '0', 10);
+    // Boosters Laterais (Foguete 50k & Trevo 100k) - Inicializados estritamente por partida
+    this.rocketCharge = 0;
+    this.rocketCount = 0;
+    this.cloverCharge = 0;
+    this.cloverCount = 0;
 
     // Clock
     this.clock = new THREE.Clock();
@@ -493,6 +493,13 @@ export class GameManager {
     this.draggedDeckItem = null;
     this.selectedDeckSlot = null;
     this.hoveredSlot = null;
+
+    // Resetar Boosters estritamente por partida (Foguete & Trevo começam em 0)
+    this.rocketCharge = 0;
+    this.rocketCount = 0;
+    this.cloverCharge = 0;
+    this.cloverCount = 0;
+    this.updateLateralBoostersHUD();
 
     if (this.animation) this.animation.clear();
     this.updateLevelBackground(1, false);
@@ -1417,15 +1424,53 @@ export class GameManager {
 
     this.saveBoosterData();
     this.updateLateralBoostersHUD();
+    this.updateGameOverBoostersUI();
   }
 
   saveBoosterData() {
-    try {
-      localStorage.setItem('hexasort_rocket_charge', this.rocketCharge.toString());
-      localStorage.setItem('hexasort_rocket_count', this.rocketCount.toString());
-      localStorage.setItem('hexasort_clover_charge', this.cloverCharge.toString());
-      localStorage.setItem('hexasort_clover_count', this.cloverCount.toString());
-    } catch (e) {}
+    // Boosters são estritamente por partida - sem persistência em localStorage
+  }
+
+  updateGameOverBoostersUI() {
+    const btnRocket = document.getElementById('btn-go-use-rocket');
+    const statusRocket = document.getElementById('go-rocket-status');
+    const badgeRocket = document.getElementById('go-rocket-action-badge');
+
+    const btnClover = document.getElementById('btn-go-use-clover');
+    const statusClover = document.getElementById('go-clover-status');
+    const badgeClover = document.getElementById('go-clover-action-badge');
+
+    if (btnRocket && statusRocket && badgeRocket) {
+      if (this.rocketCount > 0) {
+        btnRocket.classList.remove('disabled');
+        btnRocket.classList.add('ready');
+        statusRocket.textContent = `Pronto (${this.rocketCount}x disponível${this.rocketCount > 1 ? 'is' : ''})!`;
+        badgeRocket.textContent = 'USAR AGORA';
+        badgeRocket.className = 'go-booster-action ready';
+      } else {
+        btnRocket.classList.add('disabled');
+        btnRocket.classList.remove('ready');
+        statusRocket.textContent = `${this.rocketCharge.toLocaleString('pt-BR')} / 50.000 pts`;
+        badgeRocket.textContent = 'BLOQUEADO';
+        badgeRocket.className = 'go-booster-action disabled';
+      }
+    }
+
+    if (btnClover && statusClover && badgeClover) {
+      if (this.cloverCount > 0) {
+        btnClover.classList.remove('disabled');
+        btnClover.classList.add('ready');
+        statusClover.textContent = `Pronto (${this.cloverCount}x disponível${this.cloverCount > 1 ? 'is' : ''})!`;
+        badgeClover.textContent = 'USAR AGORA';
+        badgeClover.className = 'go-booster-action ready';
+      } else {
+        btnClover.classList.add('disabled');
+        btnClover.classList.remove('ready');
+        statusClover.textContent = `${this.cloverCharge.toLocaleString('pt-BR')} / 100.000 pts`;
+        badgeClover.textContent = 'BLOQUEADO';
+        badgeClover.className = 'go-booster-action disabled';
+      }
+    }
   }
 
   updateLateralBoostersHUD() {
@@ -1648,6 +1693,7 @@ export class GameManager {
         }
       }
 
+      this.updateGameOverBoostersUI();
       modal.classList.remove('hidden');
     }
   }
@@ -1844,9 +1890,10 @@ export class GameManager {
     this.addScore(pointsEarned);
 
     // 4. Se o jogo estava em Game Over e espaços foram abertos, revive!
-    if (this.isGameOver && this.hexGrid.getEmptySlots().length > 0) {
+    if (this.isGameOver) {
       this.reviveGame();
     }
+    this.updateGameOverBoostersUI();
 
     // 5. Verificar se novas combinações em cadeia foram destravadas
     await new Promise(r => setTimeout(r, 180));
@@ -2068,10 +2115,11 @@ export class GameManager {
       }
     }
 
-    // 5. Se estava em Game Over e há slots vazios, revive o jogo!
-    if (this.isGameOver && this.hexGrid.getEmptySlots().length > 0) {
+    // 5. Se estava em Game Over, revive o jogo!
+    if (this.isGameOver) {
       this.reviveGame();
     }
+    this.updateGameOverBoostersUI();
 
     this.showScorePopup('🍀 TREVO ATIVADO! (8 CARTAS PURAS)');
     this.isProcessingMerge = false;

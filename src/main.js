@@ -406,6 +406,48 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // --- PODERES ACUMULADOS NA TELA DE GAME OVER (FOGUETE & TREVO) ---
+  const btnGoUseRocket = document.getElementById('btn-go-use-rocket');
+  if (btnGoUseRocket) {
+    btnGoUseRocket.addEventListener('click', async () => {
+      game.sound.playClick();
+      if (game.rocketCount <= 0) {
+        const remaining = Math.max(0, 50000 - game.rocketCharge);
+        showToast(`🚀 Foguete não carregado! Faltam ${remaining.toLocaleString('pt-BR')} pts acumulados na partida.`);
+        return;
+      }
+      const occupied = game.hexGrid.getAllSlots().filter(s => s.stack.length > 0);
+      if (occupied.length === 0) {
+        showToast('Não há pilhas no tabuleiro para detonar.');
+        return;
+      }
+      const res = await game.triggerRocketBooster();
+      if (res && res.success) {
+        showToast(`🚀 Foguete detonou ${res.count} carta(s)! Partida salva!`);
+      } else if (res && res.reason) {
+        showToast(res.reason);
+      }
+    });
+  }
+
+  const btnGoUseClover = document.getElementById('btn-go-use-clover');
+  if (btnGoUseClover) {
+    btnGoUseClover.addEventListener('click', async () => {
+      game.sound.playClick();
+      if (game.cloverCount <= 0) {
+        const remaining = Math.max(0, 100000 - game.cloverCharge);
+        showToast(`🍀 Trevo não carregado! Faltam ${remaining.toLocaleString('pt-BR')} pts acumulados na partida.`);
+        return;
+      }
+      const res = await game.triggerCloverBooster();
+      if (res && res.success) {
+        showToast('🍀 Trevo ativado! 3 pilhas puras geradas e partida salva!');
+      } else if (res && res.reason) {
+        showToast(res.reason);
+      }
+    });
+  }
+
   // --- SEGUNDA CHANCE NO GAME OVER ---
   if (btnGoReviveLightning) {
     btnGoReviveLightning.addEventListener('click', async () => {
