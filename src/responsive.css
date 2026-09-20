@@ -106,6 +106,42 @@
     flex-direction: row;
   }
 
+  .lateral-booster-dock {
+    right: 6px;
+    top: 42%;
+    gap: 6px;
+  }
+
+  .lateral-booster-btn {
+    min-width: 52px;
+    padding: 5px 4px 4px 4px;
+    border-radius: 14px;
+  }
+
+  .booster-gauge-container {
+    width: 34px;
+    height: 34px;
+  }
+
+  .booster-gauge-svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .booster-icon-circle {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+
+  .booster-name {
+    font-size: 9px;
+  }
+
+  .booster-status {
+    font-size: 7.5px;
+  }
+
   .notification-zone {
     top: calc(env(safe-area-inset-top, 0px) + 88px);
   }

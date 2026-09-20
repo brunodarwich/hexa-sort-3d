@@ -389,12 +389,87 @@
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 24px -2px rgba(245, 158, 11, 0.25);
   animation: comboPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background 0.25s ease;
 }
 
 [data-theme="dark"] .combo-banner {
   background: linear-gradient(90deg, rgba(42, 28, 64, 0.95), rgba(65, 38, 92, 0.95), rgba(42, 28, 64, 0.95));
   border-color: rgba(253, 186, 116, 0.5);
   box-shadow: 0 8px 24px -2px rgba(253, 186, 116, 0.2);
+}
+
+/* Tier 5-9: Grande Combo */
+.combo-banner.combo-tier-great {
+  background: linear-gradient(90deg, #fef3c7, #fde68a, #f59e0b, #fde68a);
+  background-size: 200% 100%;
+  border-color: #f59e0b;
+  box-shadow: 0 10px 28px -2px rgba(245, 158, 11, 0.4), 0 0 16px rgba(251, 191, 36, 0.35);
+  transform: scale(1.05);
+}
+
+[data-theme="dark"] .combo-banner.combo-tier-great {
+  background: linear-gradient(90deg, #451a03, #78350f, #92400e, #451a03);
+  border-color: #fbbf24;
+  box-shadow: 0 10px 28px -2px rgba(251, 191, 36, 0.35), 0 0 16px rgba(245, 158, 11, 0.3);
+}
+
+/* Tier 10-14: Mega Combo (Fogo & Ouro) */
+.combo-banner.combo-tier-mega {
+  padding: 8px 22px;
+  background: linear-gradient(90deg, #ffedd5, #fed7aa, #fb923c, #f97316);
+  border: 2px solid #ea580c;
+  box-shadow: 0 12px 32px -2px rgba(234, 88, 12, 0.45), 0 0 24px rgba(249, 115, 22, 0.45);
+  animation: comboPulseMega 1.2s ease-in-out infinite alternate;
+}
+
+[data-theme="dark"] .combo-banner.combo-tier-mega {
+  background: linear-gradient(90deg, #7c2d12, #9a3412, #c2410c, #7c2d12);
+  border-color: #f97316;
+  box-shadow: 0 12px 32px -2px rgba(249, 115, 22, 0.5), 0 0 24px rgba(234, 88, 12, 0.45);
+}
+
+.combo-banner.combo-tier-mega .combo-text {
+  font-size: 16px;
+  color: #9a3412;
+  text-shadow: 0 0 8px rgba(251, 146, 60, 0.6);
+}
+
+[data-theme="dark"] .combo-banner.combo-tier-mega .combo-text {
+  color: #ffedd5;
+  text-shadow: 0 0 10px rgba(249, 115, 22, 0.8);
+}
+
+/* Tier 15+ / Super Explosão (Cósmico / Ultra) */
+.combo-banner.combo-tier-ultra {
+  padding: 10px 26px;
+  background: linear-gradient(90deg, #fdf4ff, #fae8ff, #f0abfc, #fbbf24, #fdf4ff);
+  background-size: 250% 100%;
+  border: 2.5px solid #d946ef;
+  box-shadow: 0 14px 40px -2px rgba(217, 70, 239, 0.55), 0 0 32px rgba(236, 72, 153, 0.5), 0 0 16px rgba(251, 191, 36, 0.6);
+  animation: comboPulseUltra 1s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate, comboShimmer 2.5s linear infinite;
+}
+
+[data-theme="dark"] .combo-banner.combo-tier-ultra {
+  background: linear-gradient(90deg, #4a044e, #701a75, #86198f, #e879f9, #4a044e);
+  border-color: #f472b6;
+  box-shadow: 0 14px 40px -2px rgba(236, 72, 153, 0.6), 0 0 32px rgba(217, 70, 239, 0.55), 0 0 20px rgba(251, 191, 36, 0.6);
+}
+
+.combo-banner.combo-tier-ultra .combo-text {
+  font-size: 17px;
+  font-weight: 900;
+  color: #701a75;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 12px rgba(244, 114, 182, 0.8);
+}
+
+[data-theme="dark"] .combo-banner.combo-tier-ultra .combo-text {
+  color: #fdf4ff;
+  text-shadow: 0 0 14px rgba(232, 121, 249, 0.9);
+}
+
+.combo-banner.combo-bounce {
+  animation: comboReTrigger 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 .combo-decor-left,
@@ -408,6 +483,16 @@
 .icon-flame { font-size: 18px; color: #ea580c; }
 .icon-bolt { font-size: 17px; color: var(--amber); }
 .icon-star { font-size: 15px; color: #16a34a; }
+
+.combo-tier-mega .icon-flame,
+.combo-tier-ultra .icon-flame {
+  animation: flameFlicker 0.6s ease-in-out infinite alternate;
+}
+
+.combo-tier-ultra .icon-sparkle,
+.combo-tier-ultra .icon-bolt {
+  animation: sparkleTwinkle 0.8s ease-in-out infinite alternate;
+}
 
 .combo-body {
   display: flex;
@@ -439,6 +524,66 @@
 @keyframes comboPopIn {
   0% { transform: scale(0.6) translateY(-10px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes comboReTrigger {
+  0% { transform: scale(0.92); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes comboPulseMega {
+  0% { transform: scale(1.04); }
+  100% { transform: scale(1.12); box-shadow: 0 14px 36px rgba(234, 88, 12, 0.6), 0 0 28px rgba(249, 115, 22, 0.6); }
+}
+
+@keyframes comboPulseUltra {
+  0% { transform: scale(1.08); }
+  100% { transform: scale(1.18); box-shadow: 0 16px 44px rgba(217, 70, 239, 0.7), 0 0 38px rgba(236, 72, 153, 0.7), 0 0 24px rgba(251, 191, 36, 0.8); }
+}
+
+@keyframes comboShimmer {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
+@keyframes flameFlicker {
+  0% { transform: scale(1) rotate(-5deg); color: #ea580c; }
+  100% { transform: scale(1.25) rotate(5deg); color: #f97316; }
+}
+
+@keyframes sparkleTwinkle {
+  0% { transform: scale(0.85) rotate(0deg); opacity: 0.7; }
+  100% { transform: scale(1.3) rotate(30deg); opacity: 1; color: #fbbf24; }
+}
+
+/* Screen Shake Effects */
+.screen-shake-mega {
+  animation: screenShakeMega 0.32s ease-in-out;
+}
+
+.screen-shake-super {
+  animation: screenShakeSuper 0.48s ease-in-out;
+}
+
+@keyframes screenShakeMega {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-2px, 3px); }
+  40% { transform: translate(2.5px, -2px); }
+  60% { transform: translate(-1.5px, 1.5px); }
+  80% { transform: translate(1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes screenShakeSuper {
+  0% { transform: translate(0, 0) scale(1); }
+  15% { transform: translate(-4px, 5px) scale(1.008); }
+  30% { transform: translate(4px, -4px) scale(0.996); }
+  45% { transform: translate(-3px, 3px) scale(1.004); }
+  60% { transform: translate(3px, -2px); }
+  75% { transform: translate(-1.5px, 1.5px); }
+  90% { transform: translate(1px, -1px); }
+  100% { transform: translate(0, 0) scale(1); }
 }
 
 .level-banner {
@@ -775,3 +920,228 @@
   25% { transform: translate(-50%, -10px) scale(1.15); opacity: 1; }
   100% { transform: translate(-50%, -32px) scale(0.95); opacity: 0; }
 }
+
+/* =========================================================================
+ * LATERAL BOOSTER DOCK (RIGHT SIDE: FOGUETE 50K & TREVO 100K)
+ * ========================================================================= */
+
+.lateral-booster-dock {
+  position: absolute;
+  right: 14px;
+  top: 48%;
+  transform: translateY(-50%);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.lateral-booster-btn {
+  position: relative;
+  min-width: 66px;
+  padding: 8px 8px 7px 8px;
+  border-radius: 20px;
+  background: var(--panel-bg-translucent);
+  border: 1.5px solid var(--panel-border-subtle);
+  border-bottom: 3.5px solid rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+
+.lateral-booster-btn:hover:not(.locked) {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.lateral-booster-btn:active:not(.locked) {
+  transform: translateY(2px) scale(0.96);
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.15);
+}
+
+.lateral-booster-btn.locked {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.lateral-booster-btn.ready {
+  opacity: 1;
+  border-color: #ef4444;
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+  animation: readyBoosterPulse 1.8s ease-in-out infinite;
+}
+
+.lateral-booster-btn.booster-clover.ready {
+  border-color: #22c55e;
+  box-shadow: 0 0 16px rgba(34, 197, 94, 0.45);
+}
+
+@keyframes readyBoosterPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 24px rgba(239, 68, 68, 0.75);
+  }
+}
+
+.booster-gauge-container {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.booster-gauge-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 44px;
+  height: 44px;
+  transform: rotate(-90deg);
+}
+
+.gauge-bg {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.25);
+  stroke-width: 3.5;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke-width: 3.8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.4s ease;
+}
+
+.gauge-rocket-fill {
+  stroke: #ef4444;
+}
+
+.gauge-clover-fill {
+  stroke: #22c55e;
+}
+
+.booster-icon-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.6), 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.rocket-icon-circle {
+  background: linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%);
+}
+
+.clover-icon-circle {
+  background: linear-gradient(135deg, #dcfce7 0%, #86efac 100%);
+}
+
+[data-theme="dark"] .rocket-icon-circle {
+  background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
+}
+
+[data-theme="dark"] .clover-icon-circle {
+  background: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
+}
+
+.booster-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.booster-name {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11px;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.booster-status {
+  font-family: var(--font-display);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.lateral-booster-btn.ready .booster-status {
+  color: #ef4444;
+  font-weight: 800;
+}
+
+.lateral-booster-btn.booster-clover.ready .booster-status {
+  color: #22c55e;
+  font-weight: 800;
+}
+
+.booster-count-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 9999px;
+  padding: 1px 6px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  border: 1.5px solid var(--panel-bg);
+}
+
+.lateral-booster-btn.booster-clover .booster-count-badge {
+  background: #22c55e;
+}
+
+@media (max-width: 640px) {
+  .lateral-booster-dock {
+    right: 8px;
+    gap: 8px;
+  }
+  .lateral-booster-btn {
+    min-width: 58px;
+    padding: 6px 6px 5px 6px;
+  }
+  .booster-gauge-container {
+    width: 38px;
+    height: 38px;
+  }
+  .booster-gauge-svg {
+    width: 38px;
+    height: 38px;
+  }
+  .booster-icon-circle {
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+  }
+  .booster-name {
+    font-size: 10px;
+  }
+  .booster-status {
+    font-size: 8.5px;
+  }
+}
+

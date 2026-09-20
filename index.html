@@ -176,6 +176,45 @@
         </button>
       </div>
 
+      <!-- Right Lateral Boosters Dock (Vertical Unified: Foguete 50k & Trevo 100k) -->
+      <aside id="lateral-booster-dock" class="lateral-booster-dock" aria-label="Boosters Especiais">
+        <!-- Booster Foguete (50k) -->
+        <button id="btn-booster-rocket" class="lateral-booster-btn booster-rocket locked" title="Foguete Inteligente: Elimina a pilha mais crítica e enfraquece vizinhos (Recarrega com 50.000 pts)" aria-label="Disparar Foguete">
+          <div class="booster-gauge-container">
+            <svg class="booster-gauge-svg" viewBox="0 0 44 44">
+              <circle class="gauge-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="gauge-fill gauge-rocket-fill" id="gauge-rocket-fill" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
+            </svg>
+            <div class="booster-icon-circle rocket-icon-circle">
+              <span class="booster-emoji">🚀</span>
+            </div>
+          </div>
+          <div class="booster-meta">
+            <span class="booster-name">Foguete</span>
+            <span class="booster-status" id="status-booster-rocket">0 / 50k</span>
+          </div>
+          <span class="booster-count-badge hidden" id="badge-booster-rocket">0</span>
+        </button>
+
+        <!-- Booster Trevo (100k) -->
+        <button id="btn-booster-clover" class="lateral-booster-btn booster-clover locked" title="Trevo da Sorte: Recarrega com 100.000 pts" aria-label="Trevo da Sorte">
+          <div class="booster-gauge-container">
+            <svg class="booster-gauge-svg" viewBox="0 0 44 44">
+              <circle class="gauge-bg" cx="22" cy="22" r="18"></circle>
+              <circle class="gauge-fill gauge-clover-fill" id="gauge-clover-fill" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
+            </svg>
+            <div class="booster-icon-circle clover-icon-circle">
+              <span class="booster-emoji">🍀</span>
+            </div>
+          </div>
+          <div class="booster-meta">
+            <span class="booster-name">Trevo</span>
+            <span class="booster-status" id="status-booster-clover">0 / 100k</span>
+          </div>
+          <span class="booster-count-badge hidden" id="badge-booster-clover">0</span>
+        </button>
+      </aside>
+
       <!-- Bottom Drag Shelf / Deck Indicator -->
       <div id="deck-hint">
         <span class="material-symbols-outlined text-[15px]">touch_app</span>

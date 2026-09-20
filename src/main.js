@@ -363,6 +363,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // --- BOOSTER LATERAL: FOGUETE INTELIGENTE (50K) ---
+  const btnBoosterRocket = document.getElementById('btn-booster-rocket');
+  if (btnBoosterRocket) {
+    btnBoosterRocket.addEventListener('click', async () => {
+      game.sound.playClick();
+      if (game.rocketCount <= 0) {
+        const remaining = Math.max(0, 50000 - game.rocketCharge);
+        showToast(`🚀 Foguete recarregando! Faltam ${remaining.toLocaleString('pt-BR')} pts.`);
+        return;
+      }
+      const occupied = game.hexGrid.getAllSlots().filter(s => s.stack.length > 0);
+      if (occupied.length === 0) {
+        showToast('Não há pilhas no tabuleiro para detonar.');
+        return;
+      }
+      const res = await game.triggerRocketBooster();
+      if (res && res.success) {
+        showToast(`🚀 Foguete detonou ${res.count} carta(s)!`);
+      } else if (res && res.reason) {
+        showToast(res.reason);
+      }
+    });
+  }
+
+  // --- BOOSTER LATERAL: TREVO DA SORTE (100K) ---
+  const btnBoosterClover = document.getElementById('btn-booster-clover');
+  if (btnBoosterClover) {
+    btnBoosterClover.addEventListener('click', async () => {
+      game.sound.playClick();
+      if (game.cloverCount <= 0) {
+        const remaining = Math.max(0, 100000 - game.cloverCharge);
+        showToast(`🍀 Trevo recarregando! Faltam ${remaining.toLocaleString('pt-BR')} pts.`);
+        return;
+      }
+      const res = await game.triggerCloverBooster();
+      if (res && res.success) {
+        showToast('🍀 Trevo renovou seu deque com 8 cartas estratégicas!');
+      } else if (res && res.reason) {
+        showToast(res.reason);
+      }
+    });
+  }
+
   // --- SEGUNDA CHANCE NO GAME OVER ---
   if (btnGoReviveLightning) {
     btnGoReviveLightning.addEventListener('click', async () => {

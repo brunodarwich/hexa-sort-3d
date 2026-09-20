@@ -215,6 +215,12 @@ export class GameManager {
     // Badges
     this.slotBadges = new Map(); // slot.id -> Sprite
 
+    // Boosters Laterais (Foguete 50k & Trevo 100k)
+    this.rocketCharge = parseInt(localStorage.getItem('hexasort_rocket_charge') || '0', 10);
+    this.rocketCount = parseInt(localStorage.getItem('hexasort_rocket_count') || '0', 10);
+    this.cloverCharge = parseInt(localStorage.getItem('hexasort_clover_charge') || '0', 10);
+    this.cloverCount = parseInt(localStorage.getItem('hexasort_clover_count') || '0', 10);
+
     // Clock
     this.clock = new THREE.Clock();
 
@@ -374,6 +380,7 @@ export class GameManager {
         pos: new THREE.Vector3(x, y, z),
         cards: [],
         group: null,
+        badge: null,
         pedestalMesh: pedestal
       });
     }
@@ -518,6 +525,7 @@ export class GameManager {
       }
       deckSlot.cards = [];
       deckSlot.group = null;
+      deckSlot.badge = null;
     }
 
     this.updateHUD();
@@ -686,6 +694,32 @@ export class GameManager {
         }
       }
 
+      // Create and attach colored number badge for the deck stack
+      const topCard = deckSlot.cards[deckSlot.cards.length - 1];
+      let topCount = 0;
+      for (let k = deckSlot.cards.length - 1; k >= 0; k--) {
+        if (deckSlot.cards[k].color.id === topCard.color.id) {
+          topCount++;
+        } else {
+          break;
+        }
+      }
+
+      const isDark = this.currentTheme === 'dark';
+      const badge = this.tileFactory.createStackCountSprite();
+      badge.position.set(0, currentY + 0.65, 0);
+      badge.userData.updateCount(topCount, STACK_CLEAR_THRESHOLD, topCard.color.css, isDark);
+
+      if (animate && this.animation) {
+        badge.visible = false;
+        badge.scale.set(0.01, 0.01, 1);
+      } else {
+        badge.visible = true;
+        badge.scale.set(1.15, 1.15, 1);
+      }
+      stackGroup.add(badge);
+      deckSlot.badge = badge;
+
       if (animate && this.animation) {
         const slotIdx = i;
         const p = this.animation.animateDeckArrival(stackGroup, deckSlot.pos, slotIdx * 85, () => {
@@ -694,6 +728,9 @@ export class GameManager {
           const topCard = deckSlot.cards[deckSlot.cards.length - 1];
           if (topCard && this.animation) {
             this.animation.spawnArrivalRing(deckSlot.pos, topCard.color);
+          }
+          if (deckSlot.badge && this.animation) {
+            this.animation.animateBadgePopIn(deckSlot.badge);
           }
         });
         animPromises.push(p);
@@ -892,6 +929,7 @@ export class GameManager {
     // 1. Transfer cards from deck to target slot
     const cards = [...deckSlot.cards];
     deckSlot.cards = [];
+    deckSlot.badge = null;
     this.scene.remove(deckSlot.group);
     deckSlot.group = null;
 
@@ -1161,8 +1199,17 @@ export class GameManager {
         slot.worldZ
       );
 
-      this.sound.playStackClear(this.currentCombo);
-      this.vibrate([25, 40, 60]);
+      const isSuperExplosion = clearedCards.length >= 15 || this.currentCombo >= 15;
+      const isMegaCombo = this.currentCombo >= 10 || clearedCards.length >= 12;
+
+      this.sound.playStackClear(this.currentCombo, isSuperExplosion);
+      if (isSuperExplosion) {
+        this.vibrate([40, 60, 80, 120]);
+      } else if (isMegaCombo) {
+        this.vibrate([30, 50, 70]);
+      } else {
+        this.vibrate([25, 40, 60]);
+      }
       this.totalClears++;
 
       // Award points: Base clear points + cumulative escalating bonus for every extra card above 10!
@@ -1176,12 +1223,14 @@ export class GameManager {
       const clearBonus = (baseClearScore + cumulativeBonus) * this.currentCombo;
       this.addScore(clearBonus);
 
-      if (extraCards > 0) {
-        this.showScorePopup(`+${clearBonus} (${clearedCards.length} CARTAS BÔNUS! 🔥)`);
+      if (isSuperExplosion && clearedCards.length >= 15) {
+        this.showScorePopup(`+${clearBonus.toLocaleString('pt-BR')} (💥 SUPER EXPLOSÃO ${clearedCards.length} CARTAS! 💥)`);
+      } else if (extraCards > 0) {
+        this.showScorePopup(`+${clearBonus.toLocaleString('pt-BR')} (${clearedCards.length} CARTAS BÔNUS! 🔥)`);
       }
 
-      if (this.currentCombo > 1) {
-        this.showComboBanner(this.currentCombo);
+      if (this.currentCombo > 1 || clearedCards.length >= 15) {
+        this.showComboBanner(this.currentCombo, clearedCards.length);
         this.maxCombo = Math.max(this.maxCombo, this.currentCombo);
       }
       this.currentCombo++;
@@ -1190,7 +1239,8 @@ export class GameManager {
       await this.animation.animateStackClear(
         clearedCards.map(c => c.mesh),
         centerPos,
-        colorDef
+        colorDef,
+        { isSuperExplosion, comboTier: this.currentCombo - 1 }
       );
 
       this.updateSlotBadge(slot);
@@ -1271,7 +1321,25 @@ export class GameManager {
       }
     }
 
-    // 5. Ensure all existing cards on the board and in deck have canonical opaque materials
+    // 5. Re-render all deck stack badges with new theme styling
+    if (this.deckSlots) {
+      for (const deckSlot of this.deckSlots) {
+        if (deckSlot.badge && deckSlot.cards.length > 0) {
+          const topCard = deckSlot.cards[deckSlot.cards.length - 1];
+          let topCount = 0;
+          for (let k = deckSlot.cards.length - 1; k >= 0; k--) {
+            if (deckSlot.cards[k].color.id === topCard.color.id) {
+              topCount++;
+            } else {
+              break;
+            }
+          }
+          deckSlot.badge.userData.updateCount(topCount, STACK_CLEAR_THRESHOLD, topCard.color.css, isDark);
+        }
+      }
+    }
+
+    // 6. Ensure all existing cards on the board and in deck have canonical opaque materials
     if (this.hexGrid) {
       for (const slot of this.hexGrid.getAllSlots()) {
         for (const card of slot.stack) {
@@ -1304,6 +1372,9 @@ export class GameManager {
 
     this.showScorePopup(`+${points}`);
 
+    // Acumular pontos para recarregar Boosters Laterais (Foguete 50k & Trevo 100k)
+    this.addBoosterCharge(points);
+
     // Check Level Progression
     const newLevel = this.getLevelForScore(this.score);
     if (newLevel > this.level) {
@@ -1320,6 +1391,92 @@ export class GameManager {
       void scoreVal.offsetWidth;
       scoreVal.classList.add('bump');
       setTimeout(() => scoreVal.classList.remove('bump'), 400);
+    }
+  }
+
+  addBoosterCharge(points) {
+    if (!points || points <= 0) return;
+
+    // 1. Recarga do Foguete (50.000 pts)
+    this.rocketCharge += points;
+    while (this.rocketCharge >= 50000) {
+      this.rocketCharge -= 50000;
+      this.rocketCount += 1;
+      this.sound.playPurchaseSuccess();
+      this.showToast('🚀 Foguete Carregado e Pronto!');
+    }
+
+    // 2. Recarga do Trevo (100.000 pts)
+    this.cloverCharge += points;
+    while (this.cloverCharge >= 100000) {
+      this.cloverCharge -= 100000;
+      this.cloverCount += 1;
+      this.sound.playPurchaseSuccess();
+      this.showToast('🍀 Trevo Carregado e Pronto!');
+    }
+
+    this.saveBoosterData();
+    this.updateLateralBoostersHUD();
+  }
+
+  saveBoosterData() {
+    try {
+      localStorage.setItem('hexasort_rocket_charge', this.rocketCharge.toString());
+      localStorage.setItem('hexasort_rocket_count', this.rocketCount.toString());
+      localStorage.setItem('hexasort_clover_charge', this.cloverCharge.toString());
+      localStorage.setItem('hexasort_clover_count', this.cloverCount.toString());
+    } catch (e) {}
+  }
+
+  updateLateralBoostersHUD() {
+    const btnRocket = document.getElementById('btn-booster-rocket');
+    const gaugeRocketFill = document.getElementById('gauge-rocket-fill');
+    const statusRocket = document.getElementById('status-booster-rocket');
+    const badgeRocket = document.getElementById('badge-booster-rocket');
+
+    const btnClover = document.getElementById('btn-booster-clover');
+    const gaugeCloverFill = document.getElementById('gauge-clover-fill');
+    const statusClover = document.getElementById('status-booster-clover');
+    const badgeClover = document.getElementById('badge-booster-clover');
+
+    const circumference = 113.1; // 2 * PI * 18
+
+    // Foguete HUD
+    if (btnRocket && gaugeRocketFill && statusRocket && badgeRocket) {
+      if (this.rocketCount > 0) {
+        btnRocket.classList.remove('locked');
+        btnRocket.classList.add('ready');
+        gaugeRocketFill.style.strokeDashoffset = '0';
+        statusRocket.textContent = 'PRONTO!';
+        badgeRocket.textContent = `${this.rocketCount}x`;
+        badgeRocket.classList.remove('hidden');
+      } else {
+        btnRocket.classList.add('locked');
+        btnRocket.classList.remove('ready');
+        const pct = Math.min(1, Math.max(0, this.rocketCharge / 50000));
+        gaugeRocketFill.style.strokeDashoffset = `${circumference * (1 - pct)}`;
+        statusRocket.textContent = `${(this.rocketCharge / 1000).toFixed(this.rocketCharge >= 10000 ? 0 : 1)}k/50k`;
+        badgeRocket.classList.add('hidden');
+      }
+    }
+
+    // Trevo HUD
+    if (btnClover && gaugeCloverFill && statusClover && badgeClover) {
+      if (this.cloverCount > 0) {
+        btnClover.classList.remove('locked');
+        btnClover.classList.add('ready');
+        gaugeCloverFill.style.strokeDashoffset = '0';
+        statusClover.textContent = 'PRONTO!';
+        badgeClover.textContent = `${this.cloverCount}x`;
+        badgeClover.classList.remove('hidden');
+      } else {
+        btnClover.classList.add('locked');
+        btnClover.classList.remove('ready');
+        const pct = Math.min(1, Math.max(0, this.cloverCharge / 100000));
+        gaugeCloverFill.style.strokeDashoffset = `${circumference * (1 - pct)}`;
+        statusClover.textContent = `${(this.cloverCharge / 1000).toFixed(this.cloverCharge >= 10000 ? 0 : 1)}k/100k`;
+        badgeClover.classList.add('hidden');
+      }
     }
   }
 
@@ -1346,6 +1503,8 @@ export class GameManager {
       const progress = Math.min(100, Math.max(8, Math.round(((this.score - curThreshold) / diff) * 100)));
       levelBar.style.width = `${progress}%`;
     }
+
+    this.updateLateralBoostersHUD();
   }
 
   showScorePopup(text) {
@@ -1362,18 +1521,50 @@ export class GameManager {
     }, 1800);
   }
 
-  showComboBanner(combo) {
+  showComboBanner(combo, cardClearCount = 10) {
     const banner = document.getElementById('combo-banner');
     const text = document.getElementById('combo-text');
     if (!banner || !text) return;
 
-    text.textContent = `COMBO x${combo}!`;
+    const label = banner.querySelector('.combo-label');
+
+    // Clean previous tier & bounce classes
+    banner.classList.remove('combo-tier-great', 'combo-tier-mega', 'combo-tier-ultra', 'combo-bounce');
+
+    let duration = 1800; // Default for 2-4 combo
+
+    if (combo >= 15 || cardClearCount >= 15) {
+      duration = 3800;
+      banner.classList.add('combo-tier-ultra');
+      if (label) label.textContent = (cardClearCount >= 15 && combo < 15) ? 'EXPLOSÃO MASSIVA' : 'SEQUÊNCIA SUPREMA';
+      text.textContent = (cardClearCount >= 15 && combo < 15)
+        ? `💥 SUPER EXPLOSÃO! (${cardClearCount} CARTAS) 💥`
+        : `💥 ULTRA COMBO x${combo}! 💥`;
+    } else if (combo >= 10) {
+      duration = 2900;
+      banner.classList.add('combo-tier-mega');
+      if (label) label.textContent = 'MEGA SEQUÊNCIA';
+      text.textContent = `🔥 MEGA COMBO x${combo}! 🔥`;
+    } else if (combo >= 5) {
+      duration = 2200;
+      banner.classList.add('combo-tier-great');
+      if (label) label.textContent = 'GRANDE SEQUÊNCIA';
+      text.textContent = `✨ GRANDE COMBO x${combo}! ✨`;
+    } else {
+      if (label) label.textContent = 'SEQUÊNCIA';
+      text.textContent = `COMBO x${combo}!`;
+    }
+
+    // Force smooth re-trigger bounce animation
+    void banner.offsetWidth;
+    banner.classList.add('combo-bounce');
     banner.classList.remove('hidden');
 
     clearTimeout(this.comboTimeout);
     this.comboTimeout = setTimeout(() => {
       banner.classList.add('hidden');
-    }, 2200);
+      banner.classList.remove('combo-tier-great', 'combo-tier-mega', 'combo-tier-ultra', 'combo-bounce');
+    }, duration);
   }
 
   checkGameOverCondition() {
@@ -1462,8 +1653,430 @@ export class GameManager {
   }
 
   /* =========================================================================
-   * POWER-UPS (REROLL & LIGHTNING STRIKE)
+   * POWER-UPS & BOOSTERS (FOGUETE 50K, REROLL & LIGHTNING STRIKE)
    * ========================================================================= */
+
+  showToast(message) {
+    const existing = document.querySelector('.toast');
+    if (existing && existing.parentElement) {
+      existing.parentElement.removeChild(existing);
+    }
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentElement) toast.parentElement.removeChild(toast);
+    }, 2400);
+  }
+
+  /**
+   * Algoritmo Inteligente de Mira do Foguete (Prioridade de Bloqueio)
+   * Avalia todas as pilhas ativas no tabuleiro e escolhe a mais problemática:
+   * Mais alta, com maior entropia/fragmentação de cores e menor sinergia com vizinhos.
+   */
+  findSmartRocketTarget() {
+    const occupiedSlots = this.hexGrid.getAllSlots().filter(s => s.stack.length > 0);
+    if (occupiedSlots.length === 0) return null;
+
+    let bestSlot = occupiedSlots[0];
+    let highestCriticalScore = -1;
+
+    for (const slot of occupiedSlots) {
+      const stack = slot.stack;
+      const height = stack.length;
+      let score = 0;
+
+      // 1. Altura da pilha (mais cartas = maior risco de sufocar o tabuleiro)
+      score += height * 20;
+
+      // 2. Entropia e fragmentação de cores na pilha
+      let colorChanges = 0;
+      const uniqueColors = new Set();
+      for (let i = 0; i < stack.length; i++) {
+        const colorId = stack[i].color ? stack[i].color.id : stack[i].colorId;
+        uniqueColors.add(colorId);
+        if (i > 0) {
+          const prevColorId = stack[i - 1].color ? stack[i - 1].color.id : stack[i - 1].colorId;
+          if (colorId !== prevColorId) {
+            colorChanges++;
+          }
+        }
+      }
+      score += colorChanges * 32; // Penalidade alta para pilhas com cores intercaladas
+      score += uniqueColors.size * 22;
+
+      // 3. Verificação de correspondência com pilhas vizinhas
+      const topCard = stack[stack.length - 1];
+      const topColorId = topCard.color ? topCard.color.id : topCard.colorId;
+      const neighbors = this.hexGrid.getNeighbors(slot);
+      let matchingNeighbors = 0;
+      let occupiedNeighbors = 0;
+
+      for (const n of neighbors) {
+        if (n.stack.length > 0) {
+          occupiedNeighbors++;
+          const nTopCard = n.stack[n.stack.length - 1];
+          const nTopColorId = nTopCard.color ? nTopCard.color.id : nTopCard.colorId;
+          if (nTopColorId === topColorId) {
+            matchingNeighbors++;
+          }
+        }
+      }
+
+      // Se não há vizinhos compatíveis no topo, é um obstáculo rígido
+      if (matchingNeighbors === 0) {
+        score += 45;
+      }
+
+      // Conexão densa com múltiplos vizinhos ocupados
+      if (occupiedNeighbors >= 3) {
+        score += occupiedNeighbors * 10;
+      }
+
+      // Pilhas críticas perto de estourar a capacidade do jogo
+      if (height >= 7) {
+        score += 65;
+      }
+
+      if (score > highestCriticalScore) {
+        highestCriticalScore = score;
+        bestSlot = slot;
+      }
+    }
+
+    return bestSlot;
+  }
+
+  /**
+   * Disparo do Booster Foguete Inteligente
+   * Realiza o voo balístico 3D, vaporiza a pilha alvo e aplica dano splash nos vizinhos.
+   */
+  async triggerRocketBooster() {
+    if (this.isProcessingMerge || (this.animation && this.animation.isBusy())) {
+      return { success: false, reason: 'Aguarde as ações em andamento terminarem.' };
+    }
+
+    if (this.rocketCount <= 0) {
+      const remaining = Math.max(0, 50000 - this.rocketCharge);
+      return {
+        success: false,
+        reason: `Foguete recarregando! Faltam ${remaining.toLocaleString('pt-BR')} pontos.`
+      };
+    }
+
+    const targetSlot = this.findSmartRocketTarget();
+    if (!targetSlot) {
+      return { success: false, reason: 'Nenhuma pilha no tabuleiro para detonar.' };
+    }
+
+    // Consumir 1 carga do Foguete
+    this.rocketCount--;
+    this.saveBoosterData();
+    this.updateLateralBoostersHUD();
+
+    this.isProcessingMerge = true;
+    this.sound.playRocketLaunch();
+    this.vibrate(35);
+
+    // Ponto de início (canto inferior direito do viewport 3D)
+    const startPos = new THREE.Vector3(3.6, 0.4, 4.2);
+    const targetPos = new THREE.Vector3(
+      targetSlot.worldX,
+      targetSlot.stack.length * CARD_THICKNESS + PEDESTAL_HEIGHT,
+      targetSlot.worldZ
+    );
+
+    // Executar voo balístico e impacto
+    await this.animation.launchRocket3D(startPos, targetPos, {
+      duration: 720,
+      onImpact: () => {
+        this.sound.playRocketExplosion();
+        this.vibrate(85);
+      }
+    });
+
+    // 1. Destruição do Alvo Principal (100% da pilha)
+    let totalCardsDestroyed = targetSlot.stack.length;
+    for (const card of targetSlot.stack) {
+      if (card.mesh) {
+        this.scene.remove(card.mesh);
+        if (card.mesh.geometry) card.mesh.geometry.dispose();
+        if (card.mesh.material) card.mesh.material.dispose();
+      }
+    }
+    targetSlot.stack = [];
+    if (targetSlot.highlightMesh) targetSlot.highlightMesh.visible = false;
+    this.updateSlotBadge(targetSlot);
+
+    // 2. Dano Splash Radial nos vizinhos adjacentes (elimina 2 a 3 cartas do topo)
+    const neighbors = this.hexGrid.getNeighbors(targetSlot);
+    for (const nSlot of neighbors) {
+      if (nSlot.stack.length > 0) {
+        const cardsToRemove = Math.min(nSlot.stack.length, 2);
+        for (let c = 0; c < cardsToRemove; c++) {
+          const removedCard = nSlot.stack.pop();
+          totalCardsDestroyed++;
+          if (removedCard && removedCard.mesh) {
+            const mesh = removedCard.mesh;
+            this.animation.addAnimation({
+              duration: 260,
+              easing: (t) => 1 - t,
+              onUpdate: (t) => {
+                mesh.scale.set(t, t, t);
+                mesh.position.y += 0.06;
+              },
+              onComplete: () => {
+                this.scene.remove(mesh);
+                if (mesh.geometry) mesh.geometry.dispose();
+                if (mesh.material) mesh.material.dispose();
+              }
+            });
+          }
+        }
+        this.updateSlotBadge(nSlot);
+      }
+    }
+
+    // 3. Pontuação bônus obtida pela detonação
+    const pointsEarned = 500 + totalCardsDestroyed * 75;
+    this.totalClears += 1;
+    this.addScore(pointsEarned);
+
+    // 4. Se o jogo estava em Game Over e espaços foram abertos, revive!
+    if (this.isGameOver && this.hexGrid.getEmptySlots().length > 0) {
+      this.reviveGame();
+    }
+
+    // 5. Verificar se novas combinações em cadeia foram destravadas
+    await new Promise(r => setTimeout(r, 180));
+    await this.processCascadingMerges(null);
+
+    this.isProcessingMerge = false;
+    return { success: true, count: totalCardsDestroyed, targetSlot };
+  }
+
+  /**
+   * Algoritmo inteligente de cores estratégicas do Trevo da Sorte
+   * Analisa o tabuleiro e seleciona 3 cores ótimas para completar pilhas de 10 cartas e gerar combos em cascata.
+   * @returns {Array<Object>} Lista de 3 objetos de cor da paleta
+   */
+  findSmartCloverColors() {
+    const { availableColors } = this.getDifficultySettings();
+    const colorScores = new Map();
+
+    // Inicializar pontuação das cores disponíveis
+    availableColors.forEach(color => {
+      colorScores.set(color.id, { color, score: 0, countOnBoard: 0 });
+    });
+
+    const occupiedSlots = this.hexGrid.getAllSlots().filter(s => s.stack.length > 0);
+
+    for (const slot of occupiedSlots) {
+      const topCard = slot.stack[slot.stack.length - 1];
+      if (!topCard || !topCard.color) continue;
+
+      const colorId = topCard.color.id;
+      let scoreData = colorScores.get(colorId);
+      if (!scoreData) {
+        scoreData = { color: topCard.color, score: 0, countOnBoard: 0 };
+        colorScores.set(colorId, scoreData);
+      }
+
+      // 1. Contar cartas contíguas da mesma cor no topo da pilha
+      let topRunCount = 0;
+      for (let k = slot.stack.length - 1; k >= 0; k--) {
+        const cId = slot.stack[k].color ? slot.stack[k].color.id : slot.stack[k].colorId;
+        if (cId === colorId) {
+          topRunCount++;
+        } else {
+          break;
+        }
+      }
+
+      scoreData.countOnBoard += topRunCount;
+
+      // 2. Pilha próxima de estourar 10 cartas (+8 cartas fecham um clear imediato!)
+      if (topRunCount + 8 >= STACK_CLEAR_THRESHOLD) {
+        scoreData.score += 220; // Prioridade máxima para clear imediato
+      } else {
+        scoreData.score += topRunCount * 25;
+      }
+
+      // 3. Altura da pilha (pilhas mais altas precisam de descompressão urgente)
+      if (slot.stack.length >= 7) {
+        scoreData.score += 110;
+      } else if (slot.stack.length >= 4) {
+        scoreData.score += 60;
+      }
+
+      // 4. Conexões de vizinhança com a mesma cor no topo (potencial de cascata magnética)
+      const neighbors = this.hexGrid.getNeighbors(slot);
+      for (const nSlot of neighbors) {
+        if (nSlot.stack.length > 0) {
+          const nTopCard = nSlot.stack[nSlot.stack.length - 1];
+          const nColorId = nTopCard.color ? nTopCard.color.id : nTopCard.colorId;
+          if (nColorId === colorId) {
+            scoreData.score += 45;
+          }
+        }
+      }
+    }
+
+    // Ordenar cores pela maior pontuação estratégica
+    const rankedColors = Array.from(colorScores.values())
+      .filter(item => item.score > 0 || item.countOnBoard > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(item => item.color);
+
+    const chosenColors = [];
+
+    // Adicionar as melhores cores identificadas no tabuleiro
+    for (const col of rankedColors) {
+      if (chosenColors.length < 3 && !chosenColors.some(c => c.id === col.id)) {
+        chosenColors.push(col);
+      }
+    }
+
+    // Fallback gracioso: se houver menos de 3 cores no tabuleiro, preencher com as cores ativas da fase
+    if (chosenColors.length < 3) {
+      const remainingPalette = availableColors.filter(c => !chosenColors.some(x => x.id === c.id));
+      const shuffledFallback = [...remainingPalette].sort(() => 0.5 - Math.random());
+      while (chosenColors.length < 3 && shuffledFallback.length > 0) {
+        chosenColors.push(shuffledFallback.pop());
+      }
+    }
+
+    // Garantir exatamente 3 cores (mesmo se a paleta inicial for menor que 3)
+    while (chosenColors.length < 3) {
+      chosenColors.push(availableColors[chosenColors.length % availableColors.length]);
+    }
+
+    return chosenColors.slice(0, 3);
+  }
+
+  /**
+   * Disparo do Booster Trevo da Sorte Inteligente (100k pts)
+   * Dispara o vórtice 3D esmeralda/dourado, descarta as pilhas atuais do deque e gera
+   * 3 pilhas puras com exatamente 8 cartas de cores estratégicas para clears instantâneos.
+   */
+  async triggerCloverBooster() {
+    if (this.isProcessingMerge || (this.animation && this.animation.isBusy())) {
+      return { success: false, reason: 'Aguarde as ações em andamento terminarem.' };
+    }
+
+    if (this.cloverCount <= 0) {
+      const remaining = Math.max(0, 100000 - this.cloverCharge);
+      return {
+        success: false,
+        reason: `Trevo recarregando! Faltam ${remaining.toLocaleString('pt-BR')} pontos.`
+      };
+    }
+
+    // Consumir 1 carga do Trevo
+    this.cloverCount--;
+    this.saveBoosterData();
+    this.updateLateralBoostersHUD();
+
+    this.isProcessingMerge = true;
+    this.sound.playCloverChime();
+    this.vibrate([30, 45, 60]);
+
+    // Desmarcar slot selecionado se houver
+    if (this.selectedDeckSlot) {
+      this.unselectDeckSlot(this.selectedDeckSlot);
+    }
+
+    // 1. Descarte e encolhimento suave das pilhas existentes no deque
+    for (const deckSlot of this.deckSlots) {
+      if (deckSlot.badge && deckSlot.group) {
+        deckSlot.group.remove(deckSlot.badge);
+        deckSlot.badge = null;
+      }
+      if (deckSlot.group) {
+        const group = deckSlot.group;
+        deckSlot.group = null;
+        deckSlot.cards = [];
+
+        let progress = 0;
+        const startScale = group.scale.x;
+        const shrinkInterval = setInterval(() => {
+          progress += 0.25;
+          if (progress >= 1) {
+            clearInterval(shrinkInterval);
+            this.scene.remove(group);
+            group.traverse(child => {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) child.material.dispose();
+            });
+          } else {
+            const sc = Math.max(0, startScale * (1 - progress));
+            group.scale.set(sc, sc, sc);
+          }
+        }, 16);
+      } else {
+        deckSlot.cards = [];
+      }
+    }
+
+    // 2. Determinar as 3 cores estratégicas ideais
+    const strategicColors = this.findSmartCloverColors();
+
+    // 3. Disparar animação de Vórtice 3D descendo em espiral sobre o deque
+    const deckPositions = this.deckSlots.map(s => s.pos.clone());
+    await this.animation.launchCloverVortex3D(deckPositions, { duration: 680 });
+
+    // 4. Gerar 3 pilhas puras de exatamente 8 cartas nos slots do deque
+    const isDark = this.currentTheme === 'dark';
+    const PURE_STACK_HEIGHT = 8;
+
+    for (let i = 0; i < this.deckSlots.length; i++) {
+      const deckSlot = this.deckSlots[i];
+      const color = strategicColors[i];
+
+      const stackGroup = new THREE.Group();
+      stackGroup.position.copy(deckSlot.pos);
+      this.scene.add(stackGroup);
+      deckSlot.group = stackGroup;
+      deckSlot.cards = [];
+
+      let currentY = 0;
+      for (let c = 0; c < PURE_STACK_HEIGHT; c++) {
+        const cardMesh = this.tileFactory.createCard(color);
+        cardMesh.position.set(0, currentY + CARD_THICKNESS / 2, 0);
+        stackGroup.add(cardMesh);
+
+        deckSlot.cards.push({
+          color: color,
+          mesh: cardMesh
+        });
+
+        currentY += CARD_THICKNESS;
+      }
+
+      // Adicionar badge com contagem 8 pura e cor temática
+      const badge = this.tileFactory.createStackCountSprite();
+      badge.position.set(0, currentY + 0.65, 0);
+      badge.userData.updateCount(PURE_STACK_HEIGHT, STACK_CLEAR_THRESHOLD, color.css, isDark);
+      badge.visible = true;
+      badge.scale.set(1.15, 1.15, 1);
+      stackGroup.add(badge);
+      deckSlot.badge = badge;
+
+      if (this.animation) {
+        this.animation.animateBadgePopIn(badge);
+      }
+    }
+
+    // 5. Se estava em Game Over e há slots vazios, revive o jogo!
+    if (this.isGameOver && this.hexGrid.getEmptySlots().length > 0) {
+      this.reviveGame();
+    }
+
+    this.showScorePopup('🍀 TREVO ATIVADO! (8 CARTAS PURAS)');
+    this.isProcessingMerge = false;
+    return { success: true, colors: strategicColors };
+  }
 
   /**
    * Power-up: Atualizar Deque (Re-roll)
@@ -1475,6 +2088,7 @@ export class GameManager {
 
     // 1. Limpar pilhas atuais do deque com efeito de encolhimento
     for (const deckSlot of this.deckSlots) {
+      deckSlot.badge = null;
       if (deckSlot.group) {
         const group = deckSlot.group;
         deckSlot.group = null;
@@ -1644,6 +2258,19 @@ export class GameManager {
     const modal = document.getElementById('modal-gameover');
     if (modal) modal.classList.add('hidden');
 
+    if (this.sound) {
+      this.sound.playRevive();
+    }
+    this.vibrate([30, 50, 60]);
+
+    // Efeito visual de celebração e renascimento
+    confetti({
+      particleCount: 55,
+      spread: 80,
+      origin: { y: 0.55 },
+      colors: ['#22c55e', '#38bdf8', '#fbbf24', '#ffffff', '#a855f7']
+    });
+
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => {
       if (!this.isGameOver) {
@@ -1653,6 +2280,7 @@ export class GameManager {
     }, 1000);
 
     this.showScorePopup('PARTIDA SALVA! ⚡');
+    this.showToast('✨ Partida salva com sucesso! Continue pontuando!');
   }
 
   /* =========================================================================
