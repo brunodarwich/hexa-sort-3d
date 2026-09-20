@@ -893,53 +893,68 @@
         </div>
       </div>
 
-      <!-- Game Over Modal (Stitch 2x2 Stats & Segunda Chance) -->
+      <!-- Game Over Modal (Hero Score, Percentil da Comunidade, Stats & Abas de Salvamento) -->
       <div id="modal-gameover" class="modal-overlay hidden">
         <div class="modal-card gameover-card">
-          <div class="gameover-badge">GAME OVER</div>
-          <h2 class="gameover-title">Fim de Partida!</h2>
-          <p class="gameover-sub">O tabuleiro ficou sem espaços livres válidos.</p>
+          
+          <!-- Header Minimalista -->
+          <div class="go-header-row">
+            <div class="gameover-badge">GAME OVER</div>
+            <h2 class="gameover-title">Partida Concluída!</h2>
+          </div>
 
-          <!-- 2x2 Tactical Stats Grid -->
-          <div class="gameover-stats-grid">
-            <!-- Stat 1: Pontuação -->
-            <div class="go-stat-tile stat-score">
-              <div class="go-stat-header">
-                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
-                <span class="go-stat-title">PONTOS</span>
+          <!-- Hero Score Card com Percentil da Comunidade -->
+          <div class="go-hero-card">
+            <div class="go-hero-top">
+              <span class="go-hero-label">PONTUAÇÃO FINAL</span>
+              <div id="go-tier-badge" class="go-tier-badge tier-gold">
+                <span id="go-tier-icon">🥇</span>
+                <span id="go-tier-name">Ouro</span>
+                <span id="go-tier-top" class="go-tier-top">Top 15%</span>
               </div>
-              <span class="go-stat-value" id="go-final-score">0</span>
-              <span class="go-stat-sub">Pontuação Total</span>
             </div>
 
-            <!-- Stat 2: Tempo -->
-            <div class="go-stat-tile stat-time">
-              <div class="go-stat-header">
-                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">timer</span>
-                <span class="go-stat-title">TEMPO</span>
-              </div>
-              <span class="go-stat-value" id="go-final-time">00:00</span>
-              <span class="go-stat-sub">Sobrevivência</span>
+            <div class="go-hero-score-wrap">
+              <span class="go-hero-score" id="go-final-score">0</span>
+              <span class="go-hero-pts">PTS</span>
             </div>
 
-            <!-- Stat 3: Pilhas -->
-            <div class="go-stat-tile stat-clears">
-              <div class="go-stat-header">
-                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">layers</span>
-                <span class="go-stat-title">PILHAS</span>
+            <!-- Barra Comparativa da Comunidade (Supabase) -->
+            <div class="go-percentile-box">
+              <div class="go-percentile-bar-bg">
+                <div class="go-percentile-bar-fill" id="go-percentile-fill" style="width: 50%;"></div>
               </div>
-              <span class="go-stat-value" id="go-final-clears">0</span>
-              <span class="go-stat-sub">Eliminadas</span>
+              <div class="go-percentile-info">
+                <span class="go-percentile-text" id="go-percentile-text">Superou 50% dos jogadores</span>
+                <span class="go-percentile-badge" id="go-percentile-badge">Top 50%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3-Col Compact Tactical Stats Row -->
+          <div class="go-stats-row">
+            <div class="go-stat-mini">
+              <span class="material-symbols-outlined text-stat-mini">timer</span>
+              <div class="go-stat-mini-info">
+                <span class="go-stat-mini-val" id="go-final-time">00:00</span>
+                <span class="go-stat-mini-label">Tempo</span>
+              </div>
             </div>
 
-            <!-- Stat 4: Combo -->
-            <div class="go-stat-tile stat-combo">
-              <div class="go-stat-header">
-                <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
-                <span class="go-stat-title">COMBO</span>
+            <div class="go-stat-mini">
+              <span class="material-symbols-outlined text-stat-mini">layers</span>
+              <div class="go-stat-mini-info">
+                <span class="go-stat-mini-val" id="go-final-clears">0</span>
+                <span class="go-stat-mini-label">Pilhas</span>
               </div>
-              <span class="go-stat-value" id="go-final-combo">x1</span>
-              <span class="go-stat-sub">Sequência máx.</span>
+            </div>
+
+            <div class="go-stat-mini">
+              <span class="material-symbols-outlined text-stat-mini">local_fire_department</span>
+              <div class="go-stat-mini-info">
+                <span class="go-stat-mini-val" id="go-final-combo">x1</span>
+                <span class="go-stat-mini-label">Combo Máx</span>
+              </div>
             </div>
           </div>
 
@@ -947,7 +962,7 @@
             🎉 NOVO RECORDE PESSOAL! 🎉
           </div>
 
-          <!-- Submit score to global leaderboard confirmation pill -->
+          <!-- Sincronização do Apelido no Ranking -->
           <div class="submit-score-section">
             <div class="auto-submit-pill" id="auto-submit-badge">
               <div class="auto-submit-left">
@@ -967,73 +982,72 @@
             <div id="submit-status" class="submit-status"></div>
           </div>
 
-          <!-- Boosters Acumulados na Partida (Foguete & Trevo) -->
-          <div class="gameover-boosters-section">
-            <div class="revive-header-row">
-              <div class="revive-badge-chip booster-chip">
-                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
-                <span>PODERES ACUMULADOS NA PARTIDA</span>
+          <!-- Seção Salvar Partida com Abas Inteligentes (Poderes vs Pix) -->
+          <div class="gameover-save-container">
+            <div class="go-tabs-header" role="tablist">
+              <button id="tab-btn-boosters" class="go-tab-btn active" role="tab" aria-selected="true" type="button">
+                <span>✨ Poderes da Partida</span>
+                <span id="go-boosters-ready-indicator" class="tab-indicator-badge hidden">PRONTO</span>
+              </button>
+              <button id="tab-btn-pix" class="go-tab-btn" role="tab" aria-selected="false" type="button">
+                <span>⚡ Segunda Chance Pix</span>
+              </button>
+            </div>
+
+            <!-- Aba 1: Poderes Acumulados na Partida -->
+            <div id="go-tab-content-boosters" class="go-tab-content active">
+              <div class="gameover-boosters-grid">
+                <!-- Botão Foguete Game Over -->
+                <button id="btn-go-use-rocket" class="btn-go-booster btn-go-rocket disabled" type="button" aria-label="Usar Foguete">
+                  <div class="go-booster-icon rocket-icon-circle">
+                    <span>🚀</span>
+                  </div>
+                  <div class="go-booster-info">
+                    <strong>Foguete Inteligente</strong>
+                    <span id="go-rocket-status">0 / 50.000 pts</span>
+                  </div>
+                  <span class="go-booster-action disabled" id="go-rocket-action-badge">BLOQUEADO</span>
+                </button>
+
+                <!-- Botão Trevo Game Over -->
+                <button id="btn-go-use-clover" class="btn-go-booster btn-go-clover disabled" type="button" aria-label="Usar Trevo">
+                  <div class="go-booster-icon clover-icon-circle">
+                    <span>🍀</span>
+                  </div>
+                  <div class="go-booster-info">
+                    <strong>Trevo da Sorte</strong>
+                    <span id="go-clover-status">0 / 100.000 pts</span>
+                  </div>
+                  <span class="go-booster-action disabled" id="go-clover-action-badge">BLOQUEADO</span>
+                </button>
               </div>
             </div>
-            <p class="revive-subtitle">Use os poderes que você carregou para salvar a partida:</p>
-            <div class="gameover-boosters-grid">
-              <!-- Botão Foguete Game Over -->
-              <button id="btn-go-use-rocket" class="btn-go-booster btn-go-rocket disabled" type="button" aria-label="Usar Foguete">
-                <div class="go-booster-icon rocket-icon-circle">
-                  <span>🚀</span>
-                </div>
-                <div class="go-booster-info">
-                  <strong>Foguete Inteligente</strong>
-                  <span id="go-rocket-status">0 / 50.000 pts</span>
-                </div>
-                <span class="go-booster-action disabled" id="go-rocket-action-badge">BLOQUEADO</span>
-              </button>
 
-              <!-- Botão Trevo Game Over -->
-              <button id="btn-go-use-clover" class="btn-go-booster btn-go-clover disabled" type="button" aria-label="Usar Trevo">
-                <div class="go-booster-icon clover-icon-circle">
-                  <span>🍀</span>
-                </div>
-                <div class="go-booster-info">
-                  <strong>Trevo da Sorte</strong>
-                  <span id="go-clover-status">0 / 100.000 pts</span>
-                </div>
-                <span class="go-booster-action disabled" id="go-clover-action-badge">BLOQUEADO</span>
-              </button>
-            </div>
-          </div>
+            <!-- Aba 2: Segunda Chance Pix -->
+            <div id="go-tab-content-pix" class="go-tab-content hidden">
+              <div class="revive-actions">
+                <button id="btn-go-revive-lightning" class="btn-revive btn-revive-lightning" type="button">
+                  <div class="revive-icon-circle">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                  </div>
+                  <div class="revive-btn-text">
+                    <strong>Raio Salva-Vidas</strong>
+                    <span>Eliminar 3 pilhas</span>
+                  </div>
+                  <span class="revive-price" id="go-lightning-price">R$ 0,25</span>
+                </button>
 
-          <!-- Second Chance / Revive with Power-Up Section (Fixed, no timer) -->
-          <div class="gameover-revive-section">
-            <div class="revive-header-row">
-              <div class="revive-badge-chip">
-                <span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
-                <span>SEGUNDA CHANCE</span>
+                <button id="btn-go-revive-reroll" class="btn-revive btn-revive-reroll" type="button">
+                  <div class="revive-icon-circle">
+                    <span class="material-symbols-outlined">sync</span>
+                  </div>
+                  <div class="revive-btn-text">
+                    <strong>Novo Deque</strong>
+                    <span>Trocar 3 pilhas</span>
+                  </div>
+                  <span class="revive-price" id="go-reroll-price">R$ 0,25</span>
+                </button>
               </div>
-            </div>
-            <p class="revive-subtitle">Não perca seus pontos! Salve a partida e continue jogando agora:</p>
-            <div class="revive-actions">
-              <button id="btn-go-revive-lightning" class="btn-revive btn-revive-lightning" type="button">
-                <div class="revive-icon-circle">
-                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
-                </div>
-                <div class="revive-btn-text">
-                  <strong>Raio Salva-Vidas</strong>
-                  <span>Eliminar 3 pilhas do tabuleiro</span>
-                </div>
-                <span class="revive-price" id="go-lightning-price">R$ 0,25</span>
-              </button>
-
-              <button id="btn-go-revive-reroll" class="btn-revive btn-revive-reroll" type="button">
-                <div class="revive-icon-circle">
-                  <span class="material-symbols-outlined">sync</span>
-                </div>
-                <div class="revive-btn-text">
-                  <strong>Novo Deque</strong>
-                  <span>Trocar as 3 pilhas do deque</span>
-                </div>
-                <span class="revive-price" id="go-reroll-price">R$ 0,25</span>
-              </button>
             </div>
           </div>
 

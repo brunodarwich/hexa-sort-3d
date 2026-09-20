@@ -448,6 +448,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // --- ALTERNÂNCIA DE ABAS NO GAME OVER (PODERES vs PIX) ---
+  const tabBtnBoosters = document.getElementById('tab-btn-boosters');
+  const tabBtnPix = document.getElementById('tab-btn-pix');
+  const tabContentBoosters = document.getElementById('go-tab-content-boosters');
+  const tabContentPix = document.getElementById('go-tab-content-pix');
+
+  if (tabBtnBoosters && tabBtnPix && tabContentBoosters && tabContentPix) {
+    tabBtnBoosters.addEventListener('click', () => {
+      game.sound.playClick();
+      tabBtnBoosters.classList.add('active');
+      tabBtnBoosters.setAttribute('aria-selected', 'true');
+      tabBtnPix.classList.remove('active');
+      tabBtnPix.setAttribute('aria-selected', 'false');
+      tabContentBoosters.classList.remove('hidden');
+      tabContentPix.classList.add('hidden');
+    });
+
+    tabBtnPix.addEventListener('click', () => {
+      game.sound.playClick();
+      tabBtnPix.classList.add('active');
+      tabBtnPix.setAttribute('aria-selected', 'true');
+      tabBtnBoosters.classList.remove('active');
+      tabBtnBoosters.setAttribute('aria-selected', 'false');
+      tabContentPix.classList.remove('hidden');
+      tabContentBoosters.classList.add('hidden');
+    });
+  }
+
   // --- SEGUNDA CHANCE NO GAME OVER ---
   if (btnGoReviveLightning) {
     btnGoReviveLightning.addEventListener('click', async () => {
@@ -916,7 +944,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const first = scores[0];
     const second = scores[1] || null;
     const third = scores[2] || null;
-    const rest = scores.slice(3, 10);
+    const rest = scores.slice(3, 50);
 
     let html = `
       <div class="podium-container">

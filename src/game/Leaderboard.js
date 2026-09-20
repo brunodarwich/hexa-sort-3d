@@ -261,6 +261,98 @@ export class LeaderboardManager {
   }
 
   /**
+   * Calcula o percentil e o tier do jogador em relação à base de dados de pontuações
+   * @param {number} score Pontuação do jogador
+   * @returns {Promise<Object>} Estatísticas de percentil, tier, ícone e texto
+   */
+  async getScoreStats(score) {
+    const targetScore = Math.max(0, Number(score) || 0);
+    let percentile = 50;
+    let totalSessions = 0;
+
+    // 1. Tentar calcular via Supabase em tempo real
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const [totalRes, lowerRes] = await Promise.all([
+          supabase.from('game_sessions').select('*', { count: 'exact', head: true }),
+          supabase.from('game_sessions').select('*', { count: 'exact', head: true }).lt('score', targetScore)
+        ]);
+
+        if (totalRes.count && totalRes.count > 5) {
+          totalSessions = totalRes.count;
+          const lowerCount = lowerRes.count || 0;
+          percentile = Math.min(99, Math.max(1, Math.round((lowerCount / totalSessions) * 100)));
+        } else {
+          percentile = this.calculateBenchmarkPercentile(targetScore);
+        }
+      } catch (err) {
+        console.warn('Erro ao calcular estatísticas no Supabase, usando benchmark:', err);
+        percentile = this.calculateBenchmarkPercentile(targetScore);
+      }
+    } else {
+      percentile = this.calculateBenchmarkPercentile(targetScore);
+    }
+
+    // 2. Definir Tiers e Badges Visuais
+    let tier = 'Aspirante';
+    let icon = '🎯';
+    let badgeClass = 'tier-rookie';
+    let topText = 'Em Evolução';
+
+    if (percentile >= 98 || targetScore >= 80000) {
+      tier = 'Mestre Hexa';
+      icon = '👑';
+      badgeClass = 'tier-master';
+      topText = 'Top 1% Global';
+    } else if (percentile >= 90 || targetScore >= 45000) {
+      tier = 'Diamante';
+      icon = '💎';
+      badgeClass = 'tier-diamond';
+      topText = `Top ${Math.max(1, 100 - percentile)}% Global`;
+    } else if (percentile >= 75 || targetScore >= 20000) {
+      tier = 'Ouro';
+      icon = '🥇';
+      badgeClass = 'tier-gold';
+      topText = `Top ${100 - percentile}% Global`;
+    } else if (percentile >= 50 || targetScore >= 8000) {
+      tier = 'Prata';
+      icon = '🥈';
+      badgeClass = 'tier-silver';
+      topText = `Top ${100 - percentile}% Global`;
+    } else if (percentile >= 25 || targetScore >= 3000) {
+      tier = 'Bronze';
+      icon = '🥉';
+      badgeClass = 'tier-bronze';
+      topText = `Top ${100 - percentile}% Global`;
+    }
+
+    return {
+      score: targetScore,
+      percentile,
+      tier,
+      icon,
+      badgeClass,
+      topText,
+      betterThanText: percentile > 0 ? `Melhor que ${percentile}% dos jogadores` : 'Inicie sua jornada no Ranking!'
+    };
+  }
+
+  /**
+   * Curva de benchmark calibrada de pontuação
+   */
+  calculateBenchmarkPercentile(score) {
+    if (score >= 100000) return 99;
+    if (score >= 60000) return 95;
+    if (score >= 35000) return 88;
+    if (score >= 20000) return 78;
+    if (score >= 10000) return 65;
+    if (score >= 5000) return 48;
+    if (score >= 2000) return 30;
+    if (score >= 800) return 18;
+    return 8;
+  }
+
+  /**
    * Format seconds to MM:SS string
    */
   static formatTime(seconds) {

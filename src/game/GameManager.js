@@ -1440,6 +1440,18 @@ export class GameManager {
     const statusClover = document.getElementById('go-clover-status');
     const badgeClover = document.getElementById('go-clover-action-badge');
 
+    const readyBadge = document.getElementById('go-boosters-ready-indicator');
+    const hasReadyBoosters = this.rocketCount > 0 || this.cloverCount > 0;
+
+    if (readyBadge) {
+      if (hasReadyBoosters) {
+        readyBadge.classList.remove('hidden');
+        readyBadge.textContent = `${this.rocketCount + this.cloverCount} DISPONÍVEL`;
+      } else {
+        readyBadge.classList.add('hidden');
+      }
+    }
+
     if (btnRocket && statusRocket && badgeRocket) {
       if (this.rocketCount > 0) {
         btnRocket.classList.remove('disabled');
@@ -1651,6 +1663,34 @@ export class GameManager {
       document.getElementById('go-final-time').textContent = LeaderboardManager.formatTime(this.gameTimeSeconds);
       document.getElementById('go-final-clears').textContent = this.totalClears;
       document.getElementById('go-final-combo').textContent = `x${this.maxCombo}`;
+
+      // Calcular e renderizar estatísticas de percentil / comunidade
+      this.leaderboard.getScoreStats(this.score).then(stats => {
+        const tierBadge = document.getElementById('go-tier-badge');
+        const tierIcon = document.getElementById('go-tier-icon');
+        const tierName = document.getElementById('go-tier-name');
+        const tierTop = document.getElementById('go-tier-top');
+        const percFill = document.getElementById('go-percentile-fill');
+        const percText = document.getElementById('go-percentile-text');
+        const percBadge = document.getElementById('go-percentile-badge');
+
+        if (tierBadge && stats) {
+          tierBadge.className = `go-tier-badge ${stats.badgeClass}`;
+          if (tierIcon) tierIcon.textContent = stats.icon;
+          if (tierName) tierName.textContent = stats.tier;
+          if (tierTop) tierTop.textContent = stats.topText;
+        }
+
+        if (percFill && stats) {
+          percFill.style.width = `${Math.min(100, Math.max(5, stats.percentile))}%`;
+        }
+        if (percText && stats) {
+          percText.textContent = stats.betterThanText;
+        }
+        if (percBadge && stats) {
+          percBadge.textContent = stats.topText;
+        }
+      }).catch(e => console.warn('Erro ao carregar stats do score:', e));
 
       const recordNotice = document.getElementById('record-notice');
       if (recordNotice) {

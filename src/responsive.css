@@ -215,6 +215,43 @@
     border-radius: 24px;
   }
 
+  .gameover-card {
+    padding: 14px 12px;
+    gap: 8px;
+    max-height: 94vh;
+  }
+
+  .go-hero-card {
+    padding: 10px 12px;
+    gap: 6px;
+  }
+
+  .go-hero-score {
+    font-size: 30px;
+  }
+
+  .go-stat-mini {
+    padding: 6px 6px;
+    gap: 5px;
+  }
+
+  .go-stat-mini-val {
+    font-size: 12px;
+  }
+
+  .go-stat-mini-label {
+    font-size: 8.5px;
+  }
+
+  .text-stat-mini {
+    font-size: 15px;
+  }
+
+  .gameover-save-container {
+    padding: 8px;
+    gap: 6px;
+  }
+
   .podium-container {
     gap: 5px;
   }

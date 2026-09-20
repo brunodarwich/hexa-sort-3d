@@ -1080,96 +1080,261 @@
 }
 
 /* =========================================================================
- * GAME OVER & SEGUNDA CHANCE (STITCH 2x2 STATS)
+ * GAME OVER & SEGUNDA CHANCE (HERO SCORE, COMMUNITY PERCENTILE & TABS)
  * ========================================================================= */
+
+.gameover-card {
+  max-width: 440px;
+  padding: 22px 20px 18px 20px;
+  gap: 12px;
+  border-radius: 28px;
+}
+
+.go-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
 .gameover-badge {
-  align-self: center;
   background: var(--error-container);
   color: var(--error);
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  padding: 4px 14px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
   border-radius: 9999px;
   text-transform: uppercase;
 }
 
 .gameover-title {
-  text-align: center;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 24px;
+  font-size: 17px;
   letter-spacing: -0.02em;
   color: var(--text-main);
+  margin: 0;
 }
 
-.gameover-sub {
-  text-align: center;
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: -8px;
-}
-
-.gameover-stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.go-stat-tile {
-  background: var(--bg-surface);
-  border: 1px solid var(--panel-border-subtle);
-  border-radius: 16px;
-  padding: 10px;
+/* Hero Score Card */
+.go-hero-card {
+  position: relative;
+  background: linear-gradient(145deg, var(--bg-surface) 0%, var(--card-inner-bg) 100%);
+  border: 1.5px solid var(--panel-border-subtle);
+  border-radius: 20px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  gap: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
 }
 
-.go-stat-header {
+[data-theme="dark"] .go-hero-card {
+  background: linear-gradient(145deg, #18192d 0%, #111224 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.go-hero-top {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 2px;
+  justify-content: space-between;
 }
 
-.go-stat-title {
+.go-hero-label {
   font-family: var(--font-display);
-  font-weight: 800;
   font-size: 10px;
+  font-weight: 800;
   letter-spacing: 0.08em;
+  color: var(--text-muted);
   text-transform: uppercase;
 }
 
-.stat-score .go-stat-header { color: var(--amber-dark); }
-.stat-time .go-stat-header { color: #059669; }
-.stat-clears .go-stat-header { color: #7c3aed; }
-.stat-combo .go-stat-header { color: #ea580c; }
-
-.go-stat-value {
+/* Dynamic Tier Badges */
+.go-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 9999px;
   font-family: var(--font-display);
+  font-size: 11px;
   font-weight: 800;
-  font-size: 22px;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.go-tier-top {
+  font-size: 9.5px;
+  opacity: 0.85;
+  padding-left: 2px;
+}
+
+.tier-master {
+  background: linear-gradient(135deg, #f43f5e 0%, #a855f7 100%);
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(168, 85, 247, 0.4);
+}
+
+.tier-diamond {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(56, 189, 248, 0.35);
+}
+
+.tier-gold {
+  background: linear-gradient(135deg, #d97706 0%, #fbbf24 100%);
+  color: #78350f;
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.35);
+}
+
+.tier-silver {
+  background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%);
+  color: #ffffff;
+}
+
+.tier-bronze {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+  color: #ffffff;
+}
+
+.tier-rookie {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+}
+
+.go-hero-score-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: center;
+  padding: 2px 0;
+}
+
+.go-hero-score {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--amber-dark);
+  line-height: 1;
+}
+
+[data-theme="dark"] .go-hero-score {
+  color: #fbbf24;
+  text-shadow: 0 0 16px rgba(251, 191, 36, 0.3);
+}
+
+.go-hero-pts {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* Percentile Bar (Supabase Community) */
+.go-percentile-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.go-percentile-bar-bg {
+  width: 100%;
+  height: 7px;
+  background: var(--panel-border-subtle);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.go-percentile-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #38bdf8 50%, #f59e0b 100%);
+  border-radius: 9999px;
+  transition: width 0.8s cubic-bezier(0.34, 1.3, 0.64, 1);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.go-percentile-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.go-percentile-text {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-main);
+}
+
+.go-percentile-badge {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--primary);
+  background: rgba(16, 185, 129, 0.1);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+/* 3-Col Compact Stats Row */
+.go-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.go-stat-mini {
+  background: var(--bg-surface);
+  border: 1px solid var(--panel-border-subtle);
+  border-radius: 14px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.02);
+}
+
+.text-stat-mini {
+  font-size: 18px;
+  color: var(--primary);
+}
+
+.go-stat-mini:nth-child(2) .text-stat-mini {
+  color: #7c3aed;
+}
+
+.go-stat-mini:nth-child(3) .text-stat-mini {
+  color: #ea580c;
+}
+
+.go-stat-mini-info {
+  display: flex;
+  flex-direction: column;
   line-height: 1.15;
 }
 
-.stat-score .go-stat-value { color: var(--amber-dark); }
-.stat-time .go-stat-value { color: #059669; }
-.stat-clears .go-stat-value { color: #7c3aed; }
-.stat-combo .go-stat-value { color: #ea580c; }
+.go-stat-mini-val {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-main);
+}
 
-.go-stat-sub {
+.go-stat-mini-label {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 9.5px;
   color: var(--text-muted);
-  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .new-record-banner {
@@ -1177,11 +1342,11 @@
   color: #78350f;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
   text-align: center;
-  padding: 6px 12px;
+  padding: 5px 12px;
   border-radius: 9999px;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
 }
 
 /* Submit Confirmation Pill */
@@ -1194,8 +1359,8 @@
   align-items: center;
   justify-content: space-between;
   background: var(--primary-container);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  padding: 6px 14px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 5px 12px;
   border-radius: 9999px;
 }
 
@@ -1206,13 +1371,13 @@
 }
 
 .text-verified {
-  font-size: 17px;
+  font-size: 16px;
   color: var(--primary);
 }
 
 .auto-submit-text {
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--on-primary-container);
 }
 
@@ -1222,9 +1387,9 @@
   color: var(--on-primary-container);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 11px;
+  font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1279,61 +1444,88 @@
   font-size: 11px;
   color: var(--text-muted);
   text-align: center;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .submit-status.success {
   color: var(--primary);
 }
 
-/* Second Chance Callout */
-.gameover-revive-section {
-  background: linear-gradient(180deg, #fff7ed 0%, #faf5ff 100%);
-  border: 1px solid rgba(251, 146, 60, 0.35);
-  border-radius: 20px;
-  padding: 14px;
+/* =========================================================================
+ * SEÇÃO SALVAR PARTIDA (TABS INTELIGENTES: PODERES vs PIX)
+ * ========================================================================= */
+
+.gameover-save-container {
+  background: var(--card-inner-bg);
+  border: 1px solid var(--panel-border-subtle);
+  border-radius: 18px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-[data-theme="dark"] .gameover-revive-section {
-  background: linear-gradient(180deg, rgba(45, 26, 40, 0.7) 0%, rgba(29, 24, 52, 0.7) 100%);
-  border-color: rgba(251, 146, 60, 0.25);
+.go-tabs-header {
+  display: flex;
+  gap: 6px;
+  background: var(--panel-bg);
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--panel-border-subtle);
 }
 
-.revive-header-row {
+.go-tab-btn {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.revive-badge-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: linear-gradient(90deg, #f59e0b, #d97706);
-  color: #ffffff;
-  padding: 3px 10px;
-  border-radius: 9999px;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 10px;
-  letter-spacing: 0.06em;
-}
-
-.revive-subtitle {
-  font-family: var(--font-body);
-  font-size: 12px;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
   color: var(--text-muted);
-  line-height: 1.35;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.go-tab-btn.active {
+  background: var(--bg-surface);
+  color: var(--text-main);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.tab-indicator-badge {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  animation: pulseBadge 1.5s infinite;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.go-tab-content {
+  width: 100%;
+}
+
+.go-tab-content.hidden {
+  display: none !important;
 }
 
 .revive-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 2px;
+  gap: 6px;
 }
 
 .btn-revive {
@@ -1342,25 +1534,26 @@
   justify-content: space-between;
   background: var(--panel-bg);
   border: 1px solid var(--panel-border-subtle);
-  border-radius: 14px;
-  padding: 8px 12px;
+  border-radius: 12px;
+  padding: 7px 10px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   transition: transform 0.12s ease, border-color 0.15s ease;
 }
 
 .btn-revive:active {
-  transform: translateY(2px);
+  transform: translateY(1px);
 }
 
 .revive-icon-circle {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  font-size: 16px;
 }
 
 .btn-revive-lightning .revive-icon-circle {
@@ -1378,32 +1571,36 @@
   display: flex;
   flex-direction: column;
   text-align: left;
-  margin-left: 10px;
-  line-height: 1.2;
+  margin-left: 8px;
+  line-height: 1.15;
 }
 
 .revive-btn-text strong {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-main);
 }
 
 .revive-btn-text span {
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-muted);
 }
 
 .revive-price {
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 12px;
-  padding: 4px 10px;
+  font-size: 11px;
+  padding: 3px 8px;
   border-radius: 9999px;
   background: var(--primary);
   color: #ffffff;
-  box-shadow: 0 2px 0 var(--primary-press);
+  box-shadow: 0 1.5px 0 var(--primary-press);
+}
+
+.go-footer {
+  margin-top: 2px;
 }
 
 /* =========================================================================
