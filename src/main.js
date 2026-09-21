@@ -274,8 +274,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const scores = await leaderboard.getGlobalScores();
-      const playerNick = (leaderboard.getSavedNickname() || 'Jogador').trim();
-      const playerHighscore = game.highScore || leaderboard.getHighScore() || 0;
 
       // Pódio Top 3
       const first = scores[0] || null;
@@ -347,29 +345,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (p3Name) p3Name.textContent = '---';
         if (p3Score) p3Score.textContent = '0';
       }
-
-      // Card Destaque Pessoal ("Você")
-      let playerRank = scores.findIndex(s => s.name?.toLowerCase() === playerNick.toLowerCase()) + 1;
-      if (playerRank === 0) {
-        if (playerHighscore >= 489120) playerRank = 1;
-        else if (playerHighscore >= 312450) playerRank = 2;
-        else if (playerHighscore >= 287900) playerRank = 3;
-        else if (playerHighscore >= 276400) playerRank = 4;
-        else if (playerHighscore >= 245000) playerRank = 42;
-        else playerRank = 42;
-      }
-
-      const personalRankPos = document.getElementById('personal-rank-pos');
-      const personalRankName = document.getElementById('personal-rank-name');
-      const personalRankLevel = document.getElementById('personal-rank-level');
-      const personalRankScore = document.getElementById('personal-rank-score');
-      const personalUserInitial = document.getElementById('personal-user-initial');
-
-      if (personalRankPos) personalRankPos.textContent = `#${playerRank}`;
-      if (personalRankName) personalRankName.textContent = playerNick || '/capota';
-      if (personalRankLevel) personalRankLevel.textContent = `Nível ${Math.max(1, game.level || Math.floor(playerHighscore / 10000) || 18)}`;
-      if (personalRankScore) personalRankScore.textContent = (playerHighscore > 0 ? playerHighscore : 245885).toLocaleString('pt-BR');
-      if (personalUserInitial) personalUserInitial.textContent = (playerNick || 'C')[0].toUpperCase();
 
       // Lista #4 a #10+
       const rest = scores.slice(3, 50);
