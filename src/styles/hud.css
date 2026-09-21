@@ -1444,13 +1444,54 @@
  * 1. TELA INICIAL (HOME)
  * ========================================================================= */
 
+.home-header {
+  position: relative;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 56px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.home-settings-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(36, 42, 58, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+[data-theme="light"] .home-settings-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(203, 213, 225, 0.8);
+  color: #475569;
+}
+
+.home-settings-btn:hover {
+  background: rgba(51, 57, 73, 0.9);
+  color: #c3f5ff;
+}
+
+.home-settings-btn:active {
+  transform: scale(0.92);
+}
+
 .home-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 20px 96px 20px;
+  padding: 12px 20px 96px 20px;
   position: relative;
   z-index: 10;
   max-width: 440px;
@@ -1458,17 +1499,28 @@
   width: 100%;
 }
 
+.home-hero-center {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: auto 0;
+}
+
 .home-hero-glow {
   position: absolute;
-  top: 35%;
+  top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, rgba(0, 229, 255, 0.16) 0%, rgba(92, 255, 159, 0.04) 60%, transparent 80%);
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.18) 0%, rgba(92, 255, 159, 0.05) 55%, transparent 75%);
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(40px);
+  filter: blur(36px);
   animation: pulse-ambient-glow 4s ease-in-out infinite alternate;
 }
 
@@ -1478,10 +1530,8 @@
 }
 
 .home-logo-container {
-  margin-top: auto;
-  margin-bottom: 8px;
-  width: 230px;
-  height: 230px;
+  width: 220px;
+  height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1497,7 +1547,12 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 16px 36px rgba(0, 229, 255, 0.35));
+  filter: drop-shadow(0 16px 36px rgba(0, 229, 255, 0.3));
+}
+
+.home-subtitle-wrap {
+  margin-top: 14px;
+  text-align: center;
 }
 
 .home-subtitle {
@@ -1508,7 +1563,6 @@
   text-transform: uppercase;
   color: #00e5ff;
   text-shadow: 0 0 12px rgba(0, 229, 255, 0.5);
-  margin-bottom: auto;
   text-align: center;
 }
 
