@@ -920,27 +920,72 @@
   margin-bottom: -2px;
 }
 
-/* Rank 2 (Silver) */
-.podium-col.rank-2 .podium-rank-badge {
-  background: linear-gradient(180deg, #e2e8f0, #cbd5e1);
-  color: #334155;
+.leaderboard-card .podium-rank-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border-subtle);
+  color: var(--text-main);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.podium-col.rank-2 .podium-avatar {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(180deg, #f8fafc, #f1f5f9);
+.leaderboard-card .podium-col.rank-1 .podium-rank-badge {
+  background: var(--amber);
+  color: #ffffff;
+  border-color: #f59e0b;
+}
+
+.leaderboard-card .podium-crown {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20px;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.4));
+  animation: float-crown 2.5s ease-in-out infinite;
+}
+
+.leaderboard-card .podium-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 2px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text-main);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+.leaderboard-card .podium-col.rank-1 .podium-avatar {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(180deg, #fef3c7, #fde68a);
+  border: 3px solid #f59e0b;
+  color: #b45309;
+  font-size: 26px;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.25);
+}
+
+.leaderboard-card .podium-col.rank-2 .podium-avatar {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(180deg, #f1f5f9, #e2e8f0);
   border: 2px solid #94a3b8;
   color: #475569;
 }
 
-/* Rank 3 (Bronze) */
-.podium-col.rank-3 .podium-rank-badge {
-  background: linear-gradient(180deg, #fed7aa, #fb923c);
-  color: #7c2d12;
-}
-
-.podium-col.rank-3 .podium-avatar {
+.leaderboard-card .podium-col.rank-3 .podium-avatar {
   width: 44px;
   height: 44px;
   background: linear-gradient(180deg, #fff7ed, #ffedd5);
@@ -948,7 +993,7 @@
   color: #9a3412;
 }
 
-.podium-card {
+.leaderboard-card .podium-card {
   width: 100%;
   border-radius: 16px;
   border: 1px solid var(--panel-border-subtle);
@@ -961,14 +1006,14 @@
   padding: 16px 6px 10px 6px;
 }
 
-.podium-col.rank-1 .podium-card {
+.leaderboard-card .podium-col.rank-1 .podium-card {
   background: linear-gradient(180deg, rgba(254, 243, 199, 0.6) 0%, var(--panel-bg) 100%);
   border-color: rgba(245, 158, 11, 0.4);
   padding-top: 18px;
   padding-bottom: 12px;
 }
 
-.podium-name {
+.leaderboard-card .podium-name {
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 12px;
@@ -979,7 +1024,7 @@
   white-space: nowrap;
 }
 
-.podium-score {
+.leaderboard-card .podium-score {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 14px;
@@ -987,12 +1032,12 @@
   margin-top: 2px;
 }
 
-.podium-col.rank-1 .podium-score {
+.leaderboard-card .podium-col.rank-1 .podium-score {
   color: var(--amber-dark);
   font-size: 16px;
 }
 
-.podium-time {
+.leaderboard-card .podium-time {
   font-family: var(--font-body);
   font-size: 10px;
   color: var(--text-muted);

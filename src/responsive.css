@@ -93,7 +93,7 @@
   }
 
   .powerups-dock {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 48px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 98px);
     top: auto;
     left: 50%;
     right: auto;
@@ -203,7 +203,7 @@
   }
 
   #deck-hint {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 72px);
     font-size: 9.5px;
     padding: 3px 10px;
     white-space: nowrap;
@@ -267,6 +267,109 @@
 
   .podium-col.rank-1 .podium-score {
     font-size: 14px;
+  }
+
+  /* Screen Ranking & Podium Mobile Responsive Rules */
+  .screen-ranking .podium-wrapper {
+    gap: 8px;
+    padding: 0 4px;
+  }
+
+  .podium-card.rank-1 .podium-pedestal {
+    height: 76px;
+  }
+
+  .podium-card.rank-2 .podium-pedestal {
+    height: 56px;
+  }
+
+  .podium-card.rank-3 .podium-pedestal {
+    height: 46px;
+  }
+
+  .podium-card.rank-1 .podium-avatar-ring {
+    width: 62px;
+    height: 62px;
+  }
+
+  .podium-card.rank-2 .podium-avatar-ring,
+  .podium-card.rank-3 .podium-avatar-ring {
+    width: 52px;
+    height: 52px;
+  }
+
+  /* Screen Profile Mobile Responsive */
+  .profile-card {
+    padding: 14px 12px;
+    gap: 12px;
+  }
+
+  .profile-avatar-large {
+    width: 54px;
+    height: 54px;
+  }
+
+  .stats-2x2-grid {
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 10px 12px;
+  }
+
+  .stat-card-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .player-name-text {
+    max-width: 65px;
+    font-size: 12px;
+  }
+
+  .icon-btn.bubble-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .home-hero-btn {
+    min-width: 170px;
+    height: 52px;
+    font-size: 16px;
+  }
+
+  .home-title {
+    font-size: 26px;
+  }
+
+  .home-subtitle {
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  .screen-ranking .podium-wrapper {
+    gap: 4px;
+  }
+
+  .podium-card.rank-1 .podium-avatar-ring {
+    width: 54px;
+    height: 54px;
+  }
+
+  .podium-card.rank-2 .podium-avatar-ring,
+  .podium-card.rank-3 .podium-avatar-ring {
+    width: 44px;
+    height: 44px;
+  }
+
+  .podium-player-name {
+    font-size: 11px;
+    max-width: 64px;
+  }
+
+  .podium-player-score {
+    font-size: 11px;
   }
 }
 
