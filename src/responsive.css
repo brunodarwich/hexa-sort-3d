@@ -270,43 +270,61 @@
   }
 
   /* Screen Ranking & Podium Mobile Responsive Rules */
-  .screen-ranking .podium-wrapper {
-    gap: 8px;
-    padding: 0 4px;
+  .podium-grid {
+    gap: 6px;
   }
 
-  .podium-card.rank-1 .podium-pedestal {
-    height: 76px;
+  .pedestal-1 {
+    height: 96px;
   }
 
-  .podium-card.rank-2 .podium-pedestal {
-    height: 56px;
+  .pedestal-2 {
+    height: 72px;
   }
 
-  .podium-card.rank-3 .podium-pedestal {
-    height: 46px;
+  .pedestal-3 {
+    height: 58px;
   }
 
-  .podium-card.rank-1 .podium-avatar-ring {
-    width: 62px;
-    height: 62px;
+  .col-rank-1 .avatar-ring {
+    width: 68px;
+    height: 68px;
+    font-size: 24px;
   }
 
-  .podium-card.rank-2 .podium-avatar-ring,
-  .podium-card.rank-3 .podium-avatar-ring {
-    width: 52px;
-    height: 52px;
+  .col-rank-2 .avatar-ring,
+  .col-rank-3 .avatar-ring {
+    width: 54px;
+    height: 54px;
+    font-size: 18px;
+  }
+
+  .podium-name {
+    font-size: 12px;
+    max-width: 80px;
+  }
+
+  .podium-score {
+    font-size: 11px;
+  }
+
+  .col-rank-1 .podium-score {
+    font-size: 13px;
   }
 
   /* Screen Profile Mobile Responsive */
   .profile-card {
-    padding: 14px 12px;
-    gap: 12px;
+    padding: 16px 14px;
+    gap: 14px;
   }
 
-  .profile-avatar-large {
-    width: 54px;
-    height: 54px;
+  .profile-avatar-box {
+    width: 64px;
+    height: 64px;
+  }
+
+  .profile-nickname {
+    font-size: 18px;
   }
 
   .stats-2x2-grid {
@@ -314,11 +332,11 @@
   }
 
   .stat-card {
-    padding: 10px 12px;
+    padding: 12px 12px;
   }
 
   .stat-card-value {
-    font-size: 18px;
+    font-size: 19px;
   }
 }
 
@@ -333,43 +351,56 @@
     height: 30px;
   }
 
-  .home-hero-btn {
-    min-width: 170px;
-    height: 52px;
-    font-size: 16px;
+  .btn-hero-play {
+    max-width: 260px;
+    height: 50px;
   }
 
-  .home-title {
-    font-size: 26px;
+  .btn-hero-play-surface {
+    height: 48px;
+    font-size: 17px;
   }
 
-  .home-subtitle {
-    font-size: 11px;
-    letter-spacing: 2px;
-  }
-
-  .screen-ranking .podium-wrapper {
+  .podium-grid {
     gap: 4px;
   }
 
-  .podium-card.rank-1 .podium-avatar-ring {
-    width: 54px;
-    height: 54px;
+  .col-rank-1 .avatar-ring {
+    width: 58px;
+    height: 58px;
+    font-size: 20px;
   }
 
-  .podium-card.rank-2 .podium-avatar-ring,
-  .podium-card.rank-3 .podium-avatar-ring {
-    width: 44px;
-    height: 44px;
+  .col-rank-2 .avatar-ring,
+  .col-rank-3 .avatar-ring {
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
   }
 
-  .podium-player-name {
+  .podium-name {
     font-size: 11px;
     max-width: 64px;
   }
 
-  .podium-player-score {
-    font-size: 11px;
+  .pedestal-1 {
+    height: 84px;
+  }
+
+  .pedestal-2 {
+    height: 62px;
+  }
+
+  .pedestal-3 {
+    height: 50px;
+  }
+
+  .personal-name {
+    font-size: 14px;
+  }
+
+  .score-big {
+    font-size: 15px;
   }
 }
 

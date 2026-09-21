@@ -248,7 +248,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- 3. TELA DE RANKING (CLASSIFICAÇÃO) ---
   const btnRefreshRanking = document.getElementById('btn-refresh-ranking');
+  const btnRankingHeaderProfile = document.getElementById('btn-ranking-header-profile');
   const rankingCompetitorsList = document.getElementById('ranking-competitors-list');
+
+  if (btnRankingHeaderProfile) {
+    btnRankingHeaderProfile.addEventListener('click', () => {
+      game.sound.playClick();
+      switchScreen('profile');
+    });
+  }
 
   async function renderFullRankingScreen() {
     if (!rankingCompetitorsList) return;

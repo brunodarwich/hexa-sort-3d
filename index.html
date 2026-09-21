@@ -283,21 +283,31 @@
             <div class="header-left">
               <img src="./hexa-infinity-logo.png" alt="Hexa Infinity Logo" class="brand-logo-mini" />
             </div>
-            <div class="header-title-badge">
-              <span class="material-symbols-outlined text-secondary-container" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
-              <span>Classificação</span>
-            </div>
             <div class="header-right">
-              <button id="btn-refresh-ranking" class="icon-circle-btn" aria-label="Atualizar" title="Atualizar Ranking">
-                <span class="material-symbols-outlined">refresh</span>
+              <button id="btn-ranking-header-profile" class="header-user-btn" aria-label="Meu Perfil" title="Meu Perfil">
+                <span class="material-symbols-outlined text-[18px]">person</span>
               </button>
             </div>
           </header>
 
           <main class="ranking-main scrollable-content">
+            <!-- Title Row with Icon -->
+            <div class="screen-title-section">
+              <div class="title-with-icon">
+                <div class="title-icon-badge badge-yellow">
+                  <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+                </div>
+                <h1 class="page-title">Classificação</h1>
+              </div>
+              <button id="btn-refresh-ranking" class="icon-circle-btn" aria-label="Atualizar" title="Atualizar Ranking">
+                <span class="material-symbols-outlined text-[20px]">refresh</span>
+              </button>
+            </div>
+
             <!-- Pódio Top 3 Visual (Stitch Design) -->
             <div class="podium-card">
               <div class="podium-glow-ambient"></div>
+              <div class="podium-glow-ambient-2"></div>
               <div class="podium-grid">
                 <!-- 2º Lugar (Esquerda - Ciano) -->
                 <div class="podium-col col-rank-2">
@@ -308,10 +318,10 @@
                     <span class="podium-tag tag-cyan">2º</span>
                   </div>
                   <span class="podium-name" id="podium-name-2">---</span>
-                  <span class="podium-score" id="podium-score-2">---</span>
+                  <span class="podium-score" id="podium-score-2">0</span>
                   <div class="pedestal pedestal-2">
                     <span class="material-symbols-outlined text-cyan-icon" style="font-variation-settings: 'FILL' 1;">military_tech</span>
-                    <span class="pedestal-tier">Mestre</span>
+                    <span class="pedestal-tier">MESTRE</span>
                   </div>
                 </div>
 
@@ -326,11 +336,17 @@
                     </div>
                     <span class="podium-tag tag-gold">1º</span>
                   </div>
-                  <span class="podium-name" id="podium-name-1">---</span>
-                  <span class="podium-score" id="podium-score-1">---</span>
+                  <div class="podium-name-row">
+                    <span class="podium-name font-black" id="podium-name-1">---</span>
+                    <span class="material-symbols-outlined text-[15px] text-amber" style="font-variation-settings: 'FILL' 1;">verified</span>
+                  </div>
+                  <div class="podium-score-row">
+                    <span class="material-symbols-outlined text-[14px] text-amber" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+                    <span class="podium-score text-amber" id="podium-score-1">0</span>
+                  </div>
                   <div class="pedestal pedestal-1">
                     <span class="material-symbols-outlined icon-trophy" style="font-variation-settings: 'FILL' 1;">trophy</span>
-                    <span class="pedestal-tier">Lendário</span>
+                    <span class="pedestal-tier">LENDÁRIO</span>
                   </div>
                 </div>
 
@@ -343,10 +359,10 @@
                     <span class="podium-tag tag-bronze">3º</span>
                   </div>
                   <span class="podium-name" id="podium-name-3">---</span>
-                  <span class="podium-score" id="podium-score-3">---</span>
+                  <span class="podium-score text-bronze" id="podium-score-3">0</span>
                   <div class="pedestal pedestal-3">
                     <span class="material-symbols-outlined text-bronze-icon" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
-                    <span class="pedestal-tier">Elite</span>
+                    <span class="pedestal-tier">ELITE</span>
                   </div>
                 </div>
               </div>
@@ -354,18 +370,21 @@
 
             <!-- Card Destaque do Jogador ("Você") -->
             <div class="personal-rank-card" id="personal-rank-highlight">
-              <div class="rank-badge-left">
-                <span class="rank-pos" id="personal-rank-pos">#--</span>
-              </div>
-              <div class="personal-user-avatar" id="personal-user-avatar">
-                <span id="personal-user-initial">J</span>
-              </div>
-              <div class="personal-user-meta">
-                <div class="personal-name-row">
-                  <span class="personal-name" id="personal-rank-name">Jogador</span>
-                  <span class="tag-you">Você</span>
+              <div class="personal-rank-accent-bar"></div>
+              <div class="personal-rank-left">
+                <div class="rank-badge-left">
+                  <span class="rank-pos" id="personal-rank-pos">#--</span>
                 </div>
-                <span class="personal-level" id="personal-rank-level">Nível 1</span>
+                <div class="personal-user-avatar" id="personal-user-avatar">
+                  <span id="personal-user-initial">J</span>
+                </div>
+                <div class="personal-user-meta">
+                  <div class="personal-name-row">
+                    <span class="personal-name" id="personal-rank-name">Jogador</span>
+                    <span class="tag-you">Você</span>
+                  </div>
+                  <span class="personal-level" id="personal-rank-level">Nível 1</span>
+                </div>
               </div>
               <div class="personal-user-score">
                 <span class="material-symbols-outlined icon-bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
@@ -379,7 +398,7 @@
             <!-- Lista de Competidores #4 a #10+ -->
             <div class="competitors-section">
               <div class="section-title-row">
-                <span>Outros Competidores</span>
+                <span>OUTROS COMPETIDORES</span>
               </div>
               <div class="competitors-list" id="ranking-competitors-list">
                 <div class="ranking-empty-state">
@@ -397,25 +416,30 @@
             <div class="header-left">
               <img src="./hexa-infinity-logo.png" alt="Hexa Infinity Logo" class="brand-logo-mini" />
             </div>
-            <div class="header-title-badge">
-              <span class="material-symbols-outlined">account_circle</span>
-              <span>Meu Perfil</span>
-            </div>
             <div class="header-right">
-              <button id="btn-profile-settings" class="icon-circle-btn" aria-label="Configurações" title="Configurações">
-                <span class="material-symbols-outlined">settings</span>
-              </button>
+              <div class="header-user-btn active" title="Meu Perfil">
+                <span class="material-symbols-outlined text-[18px]">person</span>
+              </div>
             </div>
           </header>
 
           <main class="profile-main scrollable-content">
+            <!-- Title Row with Settings Shortcut -->
+            <div class="screen-title-section">
+              <h1 class="page-title text-cyan">Meu Perfil</h1>
+              <button id="btn-profile-settings" class="icon-circle-btn" aria-label="Configurações" title="Configurações">
+                <span class="material-symbols-outlined text-[20px]">settings</span>
+              </button>
+            </div>
+
             <!-- Card de Identidade do Jogador -->
             <div class="profile-card">
+              <div class="profile-card-ambient"></div>
               <div class="profile-avatar-row">
                 <div class="profile-avatar-box">
                   <img id="profile-avatar-img" class="profile-avatar-img hidden" src="" alt="Avatar" />
                   <div id="profile-avatar-fallback" class="profile-avatar-fallback">
-                    <span class="material-symbols-outlined text-[36px]">person</span>
+                    <span class="material-symbols-outlined text-[38px]">person</span>
                   </div>
                 </div>
                 <div class="profile-name-col">
@@ -439,11 +463,11 @@
                 <!-- Estado Deslogado -->
                 <div id="profile-logged-out" class="cloud-cta-container">
                   <div class="cloud-cta-text">
-                    <span class="material-symbols-outlined text-secondary text-[22px]">cloud_done</span>
+                    <span class="material-symbols-outlined text-secondary text-[22px] flex-shrink-0">cloud_done</span>
                     <p>Salve seu progresso na nuvem e dispute o ranking global em tempo real!</p>
                   </div>
                   <button id="btn-google-login-profile" class="btn-google-stitch" type="button">
-                    <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" width="18" height="18">
                       <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4"></path>
                       <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
                       <path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.14-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.97 0 12s.45 3.82 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
@@ -456,7 +480,7 @@
                 <!-- Estado Logado -->
                 <div id="profile-logged-in" class="cloud-user-connected hidden">
                   <div class="user-info-row">
-                    <span class="material-symbols-outlined text-green-500 text-[20px]">verified_user</span>
+                    <span class="material-symbols-outlined text-green-500 text-[22px]">verified_user</span>
                     <div class="user-email-col">
                       <strong id="profile-google-name">Nome</strong>
                       <span id="profile-google-email">email@gmail.com</span>
@@ -472,7 +496,7 @@
             <!-- Grade 2x2 de Estatísticas -->
             <div class="profile-stats-section">
               <div class="section-title-row">
-                <span>Estatísticas</span>
+                <span class="text-cyan text-[15px] font-bold">Estatísticas:</span>
               </div>
               <div class="stats-2x2-grid">
                 <!-- 1: Partidas -->
@@ -499,7 +523,7 @@
                     <span class="material-symbols-outlined text-[18px]">bolt</span>
                     <span>Max Combos</span>
                   </div>
-                  <span class="stat-card-value text-cyan" id="stat-profile-combo">x1</span>
+                  <span class="stat-card-value text-cyan" id="stat-profile-combo">1x</span>
                 </div>
 
                 <!-- 4: Pilhas Eliminadas -->
