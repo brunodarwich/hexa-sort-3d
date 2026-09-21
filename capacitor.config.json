@@ -1,0 +1,6 @@
+{
+  "appId": "com.brunodarwich.hexainfinity",
+  "appName": "Hexa Infinity",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

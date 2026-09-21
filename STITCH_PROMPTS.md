@@ -1,6 +1,6 @@
-# 🚀 Guia Completo e Prompts do Hexa Sort 3D para o Stitch with Google
+# 🚀 Guia Completo e Prompts do Hexa Infinity para o Stitch with Google
 
-Este documento traz a pesquisa detalhada sobre o **Stitch with Google** e um conjunto completo de prompts estruturados para você gerar, prototipar e exportar cada tela do jogo **Hexa Sort 3D** com alta fidelidade visual.
+Este documento traz a pesquisa detalhada sobre o **Stitch with Google** e um conjunto completo de prompts estruturados para você gerar, prototipar e exportar cada tela do jogo **Hexa Infinity** com alta fidelidade visual.
 
 ---
 
@@ -20,7 +20,7 @@ O **Stitch with Google** (disponível em [stitch.withgoogle.com](https://stitch.
 ## 🎨 2. Como Usar no Stitch (Passo a Passo)
 
 1. Acesse [stitch.withgoogle.com](https://stitch.withgoogle.com) e faça login com sua conta Google.
-2. Crie um novo projeto chamado **"Hexa Sort 3D Mobile & Web Game"**.
+2. Crie um novo projeto chamado **"Hexa Infinity Mobile & Web Game"**.
 3. No painel de Design System, cole o conteúdo do arquivo [`DESIGN.md`](file:///c:/Users/Bruno/Documents/antigravity/mysterious-hawking/DESIGN.md) que acabamos de criar.
 4. Para cada tela abaixo, copie o bloco de prompt correspondente e envie no chat do Stitch.
 5. Utilize os botões de variante e o refinamento ("zoom-in") para ajustar espaçamentos ou detalhes finos.
@@ -38,7 +38,7 @@ Seguindo o framework recomendado pelo Google Labs (**PTCF**: *Persona, Task, Con
 ```markdown
 **Persona:** Especialista em UI/UX para jogos casuais mobile e web 3D (estilo Royal Match, Hexa Sort e Candy Crush).
 
-**Task:** Crie a tela principal de gameplay in-game para "Hexa Sort 3D" no modo infinito.
+**Task:** Crie a tela principal de gameplay in-game para "Hexa Infinity" no modo infinito.
 
 **Context:**
 - Dispositivo: Mobile Portrait (390x844px) com adaptação para Desktop widescreen.
@@ -69,7 +69,7 @@ Seguindo o framework recomendado pelo Google Labs (**PTCF**: *Persona, Task, Con
 ```markdown
 **Persona:** Designer sênior de UI focado em monetização e retenção para jogos casuais.
 
-**Task:** Desenhe o modal de Game Over com seção de Segunda Chance (Revive) para o jogo "Hexa Sort 3D".
+**Task:** Desenhe o modal de Game Over com seção de Segunda Chance (Revive) para o jogo "Hexa Infinity".
 
 **Context:**
 - Overlay escuro semi-transparente com desfoque de fundo (backdrop-blur).
@@ -101,7 +101,7 @@ Seguindo o framework recomendado pelo Google Labs (**PTCF**: *Persona, Task, Con
 ```markdown
 **Persona:** Designer especialista em e-commerce e monetização de jogos (In-Game Store UI).
 
-**Task:** Desenhe a tela de Loja de Power-Ups para o "Hexa Sort 3D".
+**Task:** Desenhe a tela de Loja de Power-Ups para o "Hexa Infinity".
 
 **Context:**
 - Card modal flutuante em vidro fosco ou fundo limpo com botão fechar circular ("✕") no topo superior direito.
@@ -124,7 +124,7 @@ Seguindo o framework recomendado pelo Google Labs (**PTCF**: *Persona, Task, Con
 ```markdown
 **Persona:** Designer de Fintech e UI de Pagamentos instantâneos com foco no mercado brasileiro e global.
 
-**Task:** Crie o modal de checkout instantâneo Pix e Cartão de Crédito para compra de power-ups no "Hexa Sort 3D".
+**Task:** Crie o modal de checkout instantâneo Pix e Cartão de Crédito para compra de power-ups no "Hexa Infinity".
 
 **Context:**
 - Card modal elegante e seguro com visual bancário moderno.
@@ -150,7 +150,7 @@ Seguindo o framework recomendado pelo Google Labs (**PTCF**: *Persona, Task, Con
 ```markdown
 **Persona:** UX Designer para sistemas de gamificação e placares de líderes.
 
-**Task:** Crie a tela do Placar de Recordes (Leaderboard) para "Hexa Sort 3D".
+**Task:** Crie a tela do Placar de Recordes (Leaderboard) para "Hexa Infinity".
 
 **Context:**
 - Cabeçalho: Ícone de troféu ("🏆"), título "Placar de Recordes".
@@ -173,7 +173,7 @@ Seguindo o framework recomendado pelo Google Labs (**PTCF**: *Persona, Task, Con
 ```markdown
 **Persona:** Especialista em Onboarding e Autenticação Social.
 
-**Task:** Crie a tela modal de Boas-Vindas, Apelido e Login Social com Google para o "Hexa Sort 3D".
+**Task:** Crie a tela modal de Boas-Vindas, Apelido e Login Social com Google para o "Hexa Infinity".
 
 **Context:**
 - Card modal acolhedor com ícone de controle ("🎮"), título "Defina seu Apelido" e texto explicativo sobre o Ranking Global.

@@ -3,12 +3,26 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Hexa Sort 3D - Modo Infinito</title>
-    <meta name="description" content="Jogo de quebra-cabeça 3D Hexa Sort infinito com fusão em cascata, pontuação em tempo real, timer e placar online de recordes." />
+    <title>Hexa Infinity - Infinite Sort 3D</title>
+    <meta name="description" content="Jogo de quebra-cabeça 3D Hexa Infinity com fusão em cascata, pontuação em tempo real, timer e placar online de recordes." />
     <meta name="theme-color" content="#f8fafc" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Hexa Infinity" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Hexa Infinity - Infinite Sort 3D" />
+    <meta property="og:description" content="Jogo de quebra-cabeça 3D Hexa Infinity com fusão em cascata, pontuação em tempo real e placar global de recordes." />
+    <meta property="og:site_name" content="Hexa Infinity" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Hexa Infinity - Infinite Sort 3D" />
+    <meta name="twitter:description" content="Jogo de quebra-cabeça 3D Hexa Infinity com fusão em cascata, pontuação em tempo real e placar global de recordes." />
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Rubik:wght@500;600;700;800;900&display=swap" rel="stylesheet">
@@ -72,154 +86,462 @@
         </div>
       </div>
 
-      <!-- Top HUD Header -->
-      <header id="game-header">
-        <!-- Top Bar: Player Profile & Action Buttons -->
-        <div class="hud-row hud-row-utility">
-          <button id="btn-player-profile" class="stat-pill player-pill" title="Alterar seu apelido" aria-label="Perfil do Jogador">
-            <div class="player-avatar-circle">
-              <span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">face</span>
+      <!-- Main Multi-Screen System Container -->
+      <div id="screens-wrapper" class="screens-wrapper">
+
+        <!-- 1. TELA INICIAL (HOME) -->
+        <section id="screen-home" class="screen-view active">
+          <header class="screen-header">
+            <div class="header-left">
+              <img src="./hexa-infinity-logo.png" alt="Hexa Infinity Logo" class="brand-logo-mini" />
             </div>
-            <span class="player-name-text" id="header-player-name">Jogador</span>
-            <span class="material-symbols-outlined player-edit-icon">edit</span>
-          </button>
-
-          <div class="btn-group">
-            <button id="btn-shop" class="icon-btn bubble-btn btn-shop-glow" title="Loja de Power-Ups" aria-label="Loja de Power-Ups">
-              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
-              <span class="btn-badge-dot">!</span>
-            </button>
-            <button id="btn-theme" class="icon-btn bubble-btn" title="Alternar Modo Escuro / Claro" aria-label="Alternar Tema">
-              <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
-            </button>
-            <button id="btn-sound" class="icon-btn bubble-btn" title="Ativar/Desativar Som" aria-label="Som">
-              <span class="material-symbols-outlined" id="sound-icon">volume_up</span>
-            </button>
-            <button id="btn-leaderboard" class="icon-btn bubble-btn" title="Placar de Recordes" aria-label="Placar">
-              <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
-            </button>
-            <button id="btn-restart" class="icon-btn bubble-btn" title="Reiniciar Partida" aria-label="Reiniciar">
-              <span class="material-symbols-outlined">replay</span>
-            </button>
-            <button id="btn-info" class="icon-btn bubble-btn" title="Como Jogar" aria-label="Ajuda">
-              <span class="material-symbols-outlined">help</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Main Gameplay Bar: Coins/Score, Level, Timer, Highscore -->
-        <div class="hud-row hud-row-gameplay">
-          <!-- Coins / Score Pill -->
-          <div class="stat-pill coin-pill" id="score-card">
-            <span class="coin-icon">🪙</span>
-            <div class="stat-info">
-              <span class="score-value" id="score-val">0</span>
+            <div class="header-right">
+              <button id="btn-home-settings" class="icon-circle-btn" aria-label="Configurações" title="Configurações">
+                <span class="material-symbols-outlined">settings</span>
+              </button>
+              <button id="btn-home-profile" class="icon-circle-btn avatar-shortcut" aria-label="Perfil" title="Perfil">
+                <span class="material-symbols-outlined">person</span>
+              </button>
             </div>
-            <div class="pill-plus-btn">+</div>
-            <div id="score-popup-container"></div>
-          </div>
+          </header>
 
-          <!-- Center Level & Progress Capsule with Gradient Bar -->
-          <div class="level-capsule" id="level-card" title="Seu Nível Atual e Progresso">
-            <div class="level-capsule-inner">
-              <div class="level-badge-row">
-                <div class="level-mini-badge">
-                  <span class="material-symbols-outlined level-mini-icon" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+          <main class="home-main">
+            <div class="home-hero-glow"></div>
+            <div class="home-logo-container">
+              <img src="./hexa-infinity-logo.png" alt="Hexa Infinity Logo" class="home-logo-img" />
+            </div>
+            <p class="home-subtitle">O PUZZLE INFINITO</p>
+
+            <div class="home-actions">
+              <button id="btn-home-play" class="btn-hero-play" type="button">
+                <div class="btn-hero-play-shadow"></div>
+                <div class="btn-hero-play-surface">
+                  <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+                  <span>JOGAR</span>
                 </div>
-                <span class="capsule-label">NÍVEL <strong id="level-val">1</strong></span>
-              </div>
-              <div class="level-progress-track">
-                <div class="level-progress-fill" id="level-progress-bar" style="width: 25%;"></div>
-              </div>
-            </div>
-          </div>
+              </button>
 
-          <!-- Timer & Highscore Pills -->
-          <div class="hud-time-group">
-            <div class="stat-pill timer-pill" id="timer-card">
-              <span class="material-symbols-outlined stat-icon-sym">timer</span>
-              <span class="stat-value" id="timer-val">00:00</span>
-            </div>
-            <div class="stat-pill highscore-pill" id="highscore-card">
-              <span class="stat-icon-crown">👑</span>
-              <div class="stat-info">
-                <span class="stat-label">REC</span>
-                <span class="stat-value" id="highscore-val">0</span>
+              <div class="home-record-pill">
+                <span class="material-symbols-outlined icon-record" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+                <span>Seu Recorde: <strong id="home-record-val">0</strong> pts</span>
               </div>
             </div>
-          </div>
-        </div>
-      </header>
+          </main>
+        </section>
 
-      <!-- Floating Power-Ups Dock (Tactile Stitch Style) -->
-      <div id="powerups-dock" class="powerups-dock">
-        <!-- Re-roll (Atualizar Deque) Button -->
-        <button id="btn-powerup-reroll" class="powerup-btn powerup-reroll" title="Atualizar as 3 pilhas do deque" aria-label="Atualizar Deque">
-          <div class="powerup-icon-box box-reroll">
-            <span class="material-symbols-outlined powerup-icon">sync</span>
-          </div>
-          <div class="powerup-info">
-            <span class="powerup-title">Atualizar</span>
-            <span class="powerup-badge" id="badge-reroll-cost">R$ 0,25</span>
-          </div>
-        </button>
+        <!-- 2. TELA DE JOGO (GAMEPLAY 3D) -->
+        <section id="screen-game" class="screen-view">
+          <!-- Top HUD Header -->
+          <header id="game-header">
+            <!-- Top Bar: Player Profile & Action Buttons -->
+            <div class="hud-row hud-row-utility">
+              <button id="btn-player-profile" class="stat-pill player-pill" title="Alterar seu apelido" aria-label="Perfil do Jogador">
+                <div class="player-avatar-circle">
+                  <span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">face</span>
+                </div>
+                <span class="player-name-text" id="header-player-name">Jogador</span>
+                <span class="material-symbols-outlined player-edit-icon">edit</span>
+              </button>
 
-        <!-- Lightning Strike (Raio Destruidor) Button -->
-        <button id="btn-powerup-lightning" class="powerup-btn powerup-lightning" title="Eliminar 3 pilhas aleatórias do tabuleiro" aria-label="Raio Destruidor">
-          <div class="powerup-icon-box box-lightning">
-            <span class="material-symbols-outlined powerup-icon" style="font-variation-settings: 'FILL' 1;">bolt</span>
+              <div class="btn-group">
+                <button id="btn-shop" class="icon-btn bubble-btn btn-shop-glow" title="Loja de Power-Ups" aria-label="Loja de Power-Ups">
+                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+                  <span class="btn-badge-dot">!</span>
+                </button>
+                <button id="btn-theme" class="icon-btn bubble-btn" title="Alternar Modo Escuro / Claro" aria-label="Alternar Tema">
+                  <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+                </button>
+                <button id="btn-sound" class="icon-btn bubble-btn" title="Ativar/Desativar Som" aria-label="Som">
+                  <span class="material-symbols-outlined" id="sound-icon">volume_up</span>
+                </button>
+                <button id="btn-leaderboard" class="icon-btn bubble-btn" title="Placar de Recordes" aria-label="Placar">
+                  <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+                </button>
+                <button id="btn-restart" class="icon-btn bubble-btn" title="Reiniciar Partida" aria-label="Reiniciar">
+                  <span class="material-symbols-outlined">replay</span>
+                </button>
+                <button id="btn-info" class="icon-btn bubble-btn" title="Como Jogar" aria-label="Ajuda">
+                  <span class="material-symbols-outlined">help</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Main Gameplay Bar: Coins/Score, Level, Timer, Highscore -->
+            <div class="hud-row hud-row-gameplay">
+              <!-- Coins / Score Pill -->
+              <div class="stat-pill coin-pill" id="score-card">
+                <span class="coin-icon">🪙</span>
+                <div class="stat-info">
+                  <span class="score-value" id="score-val">0</span>
+                </div>
+                <div class="pill-plus-btn">+</div>
+                <div id="score-popup-container"></div>
+              </div>
+
+              <!-- Center Level & Progress Capsule with Gradient Bar -->
+              <div class="level-capsule" id="level-card" title="Seu Nível Atual e Progresso">
+                <div class="level-capsule-inner">
+                  <div class="level-badge-row">
+                    <div class="level-mini-badge">
+                      <span class="material-symbols-outlined level-mini-icon" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+                    </div>
+                    <span class="capsule-label">NÍVEL <strong id="level-val">1</strong></span>
+                  </div>
+                  <div class="level-progress-track">
+                    <div class="level-progress-fill" id="level-progress-bar" style="width: 25%;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Timer & Highscore Pills -->
+              <div class="hud-time-group">
+                <div class="stat-pill timer-pill" id="timer-card">
+                  <span class="material-symbols-outlined stat-icon-sym">timer</span>
+                  <span class="stat-value" id="timer-val">00:00</span>
+                </div>
+                <div class="stat-pill highscore-pill" id="highscore-card">
+                  <span class="stat-icon-crown">👑</span>
+                  <div class="stat-info">
+                    <span class="stat-label">REC</span>
+                    <span class="stat-value" id="highscore-val">0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <!-- Floating Power-Ups Dock (Tactile Stitch Style) -->
+          <div id="powerups-dock" class="powerups-dock">
+            <!-- Re-roll (Atualizar Deque) Button -->
+            <button id="btn-powerup-reroll" class="powerup-btn powerup-reroll" title="Atualizar as 3 pilhas do deque" aria-label="Atualizar Deque">
+              <div class="powerup-icon-box box-reroll">
+                <span class="material-symbols-outlined powerup-icon">sync</span>
+              </div>
+              <div class="powerup-info">
+                <span class="powerup-title">Atualizar</span>
+                <span class="powerup-badge" id="badge-reroll-cost">R$ 0,25</span>
+              </div>
+            </button>
+
+            <!-- Lightning Strike (Raio Destruidor) Button -->
+            <button id="btn-powerup-lightning" class="powerup-btn powerup-lightning" title="Eliminar 3 pilhas aleatórias do tabuleiro" aria-label="Raio Destruidor">
+              <div class="powerup-icon-box box-lightning">
+                <span class="material-symbols-outlined powerup-icon" style="font-variation-settings: 'FILL' 1;">bolt</span>
+              </div>
+              <div class="powerup-info">
+                <span class="powerup-title">Raio</span>
+                <span class="powerup-badge" id="badge-lightning-cost">R$ 0,25</span>
+              </div>
+            </button>
           </div>
-          <div class="powerup-info">
-            <span class="powerup-title">Raio</span>
-            <span class="powerup-badge" id="badge-lightning-cost">R$ 0,25</span>
+
+          <!-- Right Lateral Boosters Dock (Vertical Unified: Foguete 50k & Trevo 100k) -->
+          <aside id="lateral-booster-dock" class="lateral-booster-dock" aria-label="Boosters Especiais">
+            <!-- Booster Foguete (50k) -->
+            <button id="btn-booster-rocket" class="lateral-booster-btn booster-rocket locked" title="Foguete Inteligente: Elimina a pilha mais crítica e enfraquece vizinhos (Recarrega com 50.000 pts)" aria-label="Disparar Foguete">
+              <div class="booster-gauge-container">
+                <svg class="booster-gauge-svg" viewBox="0 0 44 44">
+                  <circle class="gauge-bg" cx="22" cy="22" r="18"></circle>
+                  <circle class="gauge-fill gauge-rocket-fill" id="gauge-rocket-fill" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
+                </svg>
+                <div class="booster-icon-circle rocket-icon-circle">
+                  <span class="booster-emoji">🚀</span>
+                </div>
+              </div>
+              <div class="booster-meta">
+                <span class="booster-name">Foguete</span>
+                <span class="booster-status" id="status-booster-rocket">0 / 50k</span>
+              </div>
+              <span class="booster-count-badge hidden" id="badge-booster-rocket">0</span>
+            </button>
+
+            <!-- Booster Trevo (100k) -->
+            <button id="btn-booster-clover" class="lateral-booster-btn booster-clover locked" title="Trevo da Sorte: Recarrega com 100.000 pts" aria-label="Trevo da Sorte">
+              <div class="booster-gauge-container">
+                <svg class="booster-gauge-svg" viewBox="0 0 44 44">
+                  <circle class="gauge-bg" cx="22" cy="22" r="18"></circle>
+                  <circle class="gauge-fill gauge-clover-fill" id="gauge-clover-fill" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
+                </svg>
+                <div class="booster-icon-circle clover-icon-circle">
+                  <span class="booster-emoji">🍀</span>
+                </div>
+              </div>
+              <div class="booster-meta">
+                <span class="booster-name">Trevo</span>
+                <span class="booster-status" id="status-booster-clover">0 / 100k</span>
+              </div>
+              <span class="booster-count-badge hidden" id="badge-booster-clover">0</span>
+            </button>
+          </aside>
+
+          <!-- Bottom Drag Shelf / Deck Indicator -->
+          <div id="deck-hint">
+            <span class="material-symbols-outlined text-[15px]">touch_app</span>
+            <span>Escolha uma pilha e toque no tabuleiro. Ou arraste para jogar.</span>
           </div>
-        </button>
+        </section>
+
+        <!-- 3. TELA DE RANKING (CLASSIFICAÇÃO) -->
+        <section id="screen-ranking" class="screen-view">
+          <header class="screen-header">
+            <div class="header-left">
+              <img src="./hexa-infinity-logo.png" alt="Hexa Infinity Logo" class="brand-logo-mini" />
+            </div>
+            <div class="header-title-badge">
+              <span class="material-symbols-outlined text-secondary-container" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+              <span>Classificação</span>
+            </div>
+            <div class="header-right">
+              <button id="btn-refresh-ranking" class="icon-circle-btn" aria-label="Atualizar" title="Atualizar Ranking">
+                <span class="material-symbols-outlined">refresh</span>
+              </button>
+            </div>
+          </header>
+
+          <main class="ranking-main scrollable-content">
+            <!-- Pódio Top 3 Visual (Stitch Design) -->
+            <div class="podium-card">
+              <div class="podium-glow-ambient"></div>
+              <div class="podium-grid">
+                <!-- 2º Lugar (Esquerda - Ciano) -->
+                <div class="podium-col col-rank-2">
+                  <div class="podium-avatar-wrap">
+                    <div class="avatar-ring ring-cyan">
+                      <span class="avatar-letter" id="podium-avatar-2">2</span>
+                    </div>
+                    <span class="podium-tag tag-cyan">2º</span>
+                  </div>
+                  <span class="podium-name" id="podium-name-2">---</span>
+                  <span class="podium-score" id="podium-score-2">---</span>
+                  <div class="pedestal pedestal-2">
+                    <span class="material-symbols-outlined text-cyan-icon" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+                    <span class="pedestal-tier">Mestre</span>
+                  </div>
+                </div>
+
+                <!-- 1º Lugar (Centro - Ouro Elevado) -->
+                <div class="podium-col col-rank-1">
+                  <div class="crown-icon-wrap">
+                    <span class="material-symbols-outlined icon-crown" style="font-variation-settings: 'FILL' 1;">crown</span>
+                  </div>
+                  <div class="podium-avatar-wrap">
+                    <div class="avatar-ring ring-gold">
+                      <span class="avatar-letter" id="podium-avatar-1">1</span>
+                    </div>
+                    <span class="podium-tag tag-gold">1º</span>
+                  </div>
+                  <span class="podium-name" id="podium-name-1">---</span>
+                  <span class="podium-score" id="podium-score-1">---</span>
+                  <div class="pedestal pedestal-1">
+                    <span class="material-symbols-outlined icon-trophy" style="font-variation-settings: 'FILL' 1;">trophy</span>
+                    <span class="pedestal-tier">Lendário</span>
+                  </div>
+                </div>
+
+                <!-- 3º Lugar (Direita - Bronze) -->
+                <div class="podium-col col-rank-3">
+                  <div class="podium-avatar-wrap">
+                    <div class="avatar-ring ring-bronze">
+                      <span class="avatar-letter" id="podium-avatar-3">3</span>
+                    </div>
+                    <span class="podium-tag tag-bronze">3º</span>
+                  </div>
+                  <span class="podium-name" id="podium-name-3">---</span>
+                  <span class="podium-score" id="podium-score-3">---</span>
+                  <div class="pedestal pedestal-3">
+                    <span class="material-symbols-outlined text-bronze-icon" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+                    <span class="pedestal-tier">Elite</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Destaque do Jogador ("Você") -->
+            <div class="personal-rank-card" id="personal-rank-highlight">
+              <div class="rank-badge-left">
+                <span class="rank-pos" id="personal-rank-pos">#--</span>
+              </div>
+              <div class="personal-user-avatar" id="personal-user-avatar">
+                <span id="personal-user-initial">J</span>
+              </div>
+              <div class="personal-user-meta">
+                <div class="personal-name-row">
+                  <span class="personal-name" id="personal-rank-name">Jogador</span>
+                  <span class="tag-you">Você</span>
+                </div>
+                <span class="personal-level" id="personal-rank-level">Nível 1</span>
+              </div>
+              <div class="personal-user-score">
+                <span class="material-symbols-outlined icon-bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                <div class="score-col">
+                  <span class="score-big" id="personal-rank-score">0</span>
+                  <span class="score-sub">pontos</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lista de Competidores #4 a #10+ -->
+            <div class="competitors-section">
+              <div class="section-title-row">
+                <span>Outros Competidores</span>
+              </div>
+              <div class="competitors-list" id="ranking-competitors-list">
+                <div class="ranking-empty-state">
+                  <div class="spinner-dot"></div>
+                  <span>Carregando melhores pontuações...</span>
+                </div>
+              </div>
+            </div>
+          </main>
+        </section>
+
+        <!-- 4. TELA DE PERFIL E LOGIN -->
+        <section id="screen-profile" class="screen-view">
+          <header class="screen-header">
+            <div class="header-left">
+              <img src="./hexa-infinity-logo.png" alt="Hexa Infinity Logo" class="brand-logo-mini" />
+            </div>
+            <div class="header-title-badge">
+              <span class="material-symbols-outlined">account_circle</span>
+              <span>Meu Perfil</span>
+            </div>
+            <div class="header-right">
+              <button id="btn-profile-settings" class="icon-circle-btn" aria-label="Configurações" title="Configurações">
+                <span class="material-symbols-outlined">settings</span>
+              </button>
+            </div>
+          </header>
+
+          <main class="profile-main scrollable-content">
+            <!-- Card de Identidade do Jogador -->
+            <div class="profile-card">
+              <div class="profile-avatar-row">
+                <div class="profile-avatar-box">
+                  <img id="profile-avatar-img" class="profile-avatar-img hidden" src="" alt="Avatar" />
+                  <div id="profile-avatar-fallback" class="profile-avatar-fallback">
+                    <span class="material-symbols-outlined text-[36px]">person</span>
+                  </div>
+                </div>
+                <div class="profile-name-col">
+                  <div class="profile-nickname-row" id="profile-nickname-view">
+                    <h2 class="profile-nickname" id="profile-nickname-text">Jogador</h2>
+                    <button id="btn-edit-profile-nickname" class="btn-icon-inline" title="Editar Apelido">
+                      <span class="material-symbols-outlined text-[18px]">edit</span>
+                    </button>
+                  </div>
+                  <div class="profile-nickname-edit-row hidden" id="profile-nickname-edit">
+                    <input type="text" id="input-profile-nickname" maxlength="15" placeholder="Seu apelido..." />
+                    <button id="btn-save-profile-nickname" class="btn-primary btn-sm">Salvar</button>
+                    <button id="btn-cancel-profile-nickname" class="btn-secondary btn-sm">✕</button>
+                  </div>
+                  <span class="profile-status-tag" id="profile-account-tag">Jogador Convidado</span>
+                </div>
+              </div>
+
+              <!-- Seção Nuvem / Google Auth -->
+              <div class="profile-cloud-box">
+                <!-- Estado Deslogado -->
+                <div id="profile-logged-out" class="cloud-cta-container">
+                  <div class="cloud-cta-text">
+                    <span class="material-symbols-outlined text-secondary text-[22px]">cloud_done</span>
+                    <p>Salve seu progresso na nuvem e dispute o ranking global em tempo real!</p>
+                  </div>
+                  <button id="btn-google-login-profile" class="btn-google-stitch" type="button">
+                    <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+                      <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z" fill="#4285F4"></path>
+                      <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z" fill="#34A853"></path>
+                      <path d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.14-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.97 0 12s.45 3.82 1.25 5.42l4.03-3.15z" fill="#FBBC05"></path>
+                      <path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z" fill="#EA4335"></path>
+                    </svg>
+                    <span>Continuar com o Google</span>
+                  </button>
+                </div>
+
+                <!-- Estado Logado -->
+                <div id="profile-logged-in" class="cloud-user-connected hidden">
+                  <div class="user-info-row">
+                    <span class="material-symbols-outlined text-green-500 text-[20px]">verified_user</span>
+                    <div class="user-email-col">
+                      <strong id="profile-google-name">Nome</strong>
+                      <span id="profile-google-email">email@gmail.com</span>
+                    </div>
+                  </div>
+                  <button id="btn-google-logout-profile" class="btn-logout-stitch" type="button">
+                    Trocar de Conta / Desconectar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Grade 2x2 de Estatísticas -->
+            <div class="profile-stats-section">
+              <div class="section-title-row">
+                <span>Estatísticas</span>
+              </div>
+              <div class="stats-2x2-grid">
+                <!-- 1: Partidas -->
+                <div class="stat-card">
+                  <div class="stat-card-header">
+                    <span class="material-symbols-outlined text-[18px]">sports_esports</span>
+                    <span>Partidas</span>
+                  </div>
+                  <span class="stat-card-value" id="stat-profile-games">0</span>
+                </div>
+
+                <!-- 2: Recorde -->
+                <div class="stat-card card-highlight-gold">
+                  <div class="stat-card-header text-amber">
+                    <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+                    <span>Recorde</span>
+                  </div>
+                  <span class="stat-card-value text-amber" id="stat-profile-highscore">0</span>
+                </div>
+
+                <!-- 3: Max Combos -->
+                <div class="stat-card card-highlight-cyan">
+                  <div class="stat-card-header text-cyan">
+                    <span class="material-symbols-outlined text-[18px]">bolt</span>
+                    <span>Max Combos</span>
+                  </div>
+                  <span class="stat-card-value text-cyan" id="stat-profile-combo">x1</span>
+                </div>
+
+                <!-- 4: Pilhas Eliminadas -->
+                <div class="stat-card card-highlight-mint">
+                  <div class="stat-card-header text-mint">
+                    <span class="material-symbols-outlined text-[18px]">pie_chart</span>
+                    <span>Pilhas Limpas</span>
+                  </div>
+                  <span class="stat-card-value text-mint" id="stat-profile-clears">0</span>
+                </div>
+              </div>
+            </div>
+          </main>
+        </section>
+
       </div>
 
-      <!-- Right Lateral Boosters Dock (Vertical Unified: Foguete 50k & Trevo 100k) -->
-      <aside id="lateral-booster-dock" class="lateral-booster-dock" aria-label="Boosters Especiais">
-        <!-- Booster Foguete (50k) -->
-        <button id="btn-booster-rocket" class="lateral-booster-btn booster-rocket locked" title="Foguete Inteligente: Elimina a pilha mais crítica e enfraquece vizinhos (Recarrega com 50.000 pts)" aria-label="Disparar Foguete">
-          <div class="booster-gauge-container">
-            <svg class="booster-gauge-svg" viewBox="0 0 44 44">
-              <circle class="gauge-bg" cx="22" cy="22" r="18"></circle>
-              <circle class="gauge-fill gauge-rocket-fill" id="gauge-rocket-fill" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
-            </svg>
-            <div class="booster-icon-circle rocket-icon-circle">
-              <span class="booster-emoji">🚀</span>
-            </div>
-          </div>
-          <div class="booster-meta">
-            <span class="booster-name">Foguete</span>
-            <span class="booster-status" id="status-booster-rocket">0 / 50k</span>
-          </div>
-          <span class="booster-count-badge hidden" id="badge-booster-rocket">0</span>
+      <!-- Barra de Navegação Inferior Fixa (Stitch Tab Shell) -->
+      <nav id="bottom-nav" class="bottom-nav">
+        <button class="nav-tab active" data-nav="home" type="button" aria-label="Início">
+          <span class="material-symbols-outlined nav-icon">home</span>
+          <span class="nav-label">Início</span>
         </button>
-
-        <!-- Booster Trevo (100k) -->
-        <button id="btn-booster-clover" class="lateral-booster-btn booster-clover locked" title="Trevo da Sorte: Recarrega com 100.000 pts" aria-label="Trevo da Sorte">
-          <div class="booster-gauge-container">
-            <svg class="booster-gauge-svg" viewBox="0 0 44 44">
-              <circle class="gauge-bg" cx="22" cy="22" r="18"></circle>
-              <circle class="gauge-fill gauge-clover-fill" id="gauge-clover-fill" cx="22" cy="22" r="18" stroke-dasharray="113.1" stroke-dashoffset="113.1"></circle>
-            </svg>
-            <div class="booster-icon-circle clover-icon-circle">
-              <span class="booster-emoji">🍀</span>
-            </div>
+        <button class="nav-tab nav-tab-play" data-nav="game" type="button" aria-label="Jogar">
+          <div class="nav-play-bubble">
+            <span class="material-symbols-outlined nav-play-icon" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
           </div>
-          <div class="booster-meta">
-            <span class="booster-name">Trevo</span>
-            <span class="booster-status" id="status-booster-clover">0 / 100k</span>
-          </div>
-          <span class="booster-count-badge hidden" id="badge-booster-clover">0</span>
+          <span class="nav-label">Jogar</span>
         </button>
-      </aside>
-
-      <!-- Bottom Drag Shelf / Deck Indicator -->
-      <div id="deck-hint">
-        <span class="material-symbols-outlined text-[15px]">touch_app</span>
-        <span>Escolha uma pilha e toque no tabuleiro. Ou arraste para jogar.</span>
-      </div>
+        <button class="nav-tab" data-nav="ranking" type="button" aria-label="Ranking">
+          <span class="material-symbols-outlined nav-icon">leaderboard</span>
+          <span class="nav-label">Ranking</span>
+        </button>
+        <button class="nav-tab" data-nav="profile" type="button" aria-label="Perfil">
+          <span class="material-symbols-outlined nav-icon">account_circle</span>
+          <span class="nav-label">Perfil</span>
+        </button>
+      </nav>
 
       <!-- Welcome / Nickname Setup Modal -->
       <div id="modal-nickname" class="modal-overlay hidden">
@@ -283,7 +605,7 @@
               </span>
               <span class="tut-step-counter" id="tut-step-counter">Passo 1 de 5</span>
             </div>
-            <h2 id="tut-main-title" class="tut-title">Como Jogar Hexa Sort</h2>
+            <h2 id="tut-main-title" class="tut-title">Como Jogar Hexa Infinity</h2>
 
             <!-- Visual Gamified Progress Bar -->
             <div class="tut-progress-container" aria-label="Progresso do tutorial">
@@ -1221,6 +1543,80 @@
 
           <div class="modal-footer">
             <button type="button" class="btn-secondary" data-close="modal-shop">Fechar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Modal (Configurações Gerais) -->
+      <div id="modal-settings" class="modal-overlay hidden">
+        <div class="modal-card settings-card">
+          <button class="modal-close" data-close="modal-settings">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+          <div class="modal-header text-center">
+            <div class="modal-badge-icon">
+              <span class="material-symbols-outlined text-[32px]">settings</span>
+            </div>
+            <h2>Configurações</h2>
+            <p class="modal-subtitle">Personalize sua experiência no Hexa Infinity</p>
+          </div>
+          
+          <div class="settings-options-list">
+            <!-- Som / Efeitos -->
+            <div class="setting-item-row">
+              <div class="setting-item-info">
+                <span class="material-symbols-outlined setting-icon" id="setting-sound-icon">volume_up</span>
+                <div class="setting-text-col">
+                  <strong>Efeitos Sonoros</strong>
+                  <span>Sons de encaixe, explosões e combos</span>
+                </div>
+              </div>
+              <button id="setting-toggle-sound" class="btn-toggle active" type="button" aria-label="Alternar Som">
+                <span class="toggle-slider"></span>
+              </button>
+            </div>
+
+            <!-- Tema Claro / Escuro -->
+            <div class="setting-item-row">
+              <div class="setting-item-info">
+                <span class="material-symbols-outlined setting-icon" id="setting-theme-icon">dark_mode</span>
+                <div class="setting-text-col">
+                  <strong>Tema Escuro</strong>
+                  <span>Ambiente Velvet Meadow & Cyber Neon</span>
+                </div>
+              </div>
+              <button id="setting-toggle-theme" class="btn-toggle active" type="button" aria-label="Alternar Tema">
+                <span class="toggle-slider"></span>
+              </button>
+            </div>
+
+            <!-- Como Jogar (Tutorial) -->
+            <div class="setting-item-row clickable" id="setting-btn-tutorial">
+              <div class="setting-item-info">
+                <span class="material-symbols-outlined setting-icon text-cyan">help</span>
+                <div class="setting-text-col">
+                  <strong>Como Jogar</strong>
+                  <span>Tutorial interativo com 5 passos</span>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-muted">chevron_right</span>
+            </div>
+
+            <!-- Política de Privacidade -->
+            <a href="privacy.html" target="_blank" class="setting-item-row clickable text-decoration-none">
+              <div class="setting-item-info">
+                <span class="material-symbols-outlined setting-icon text-secondary">policy</span>
+                <div class="setting-text-col">
+                  <strong>Política de Privacidade</strong>
+                  <span>Termos e proteção de dados LGPD</span>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-muted">open_in_new</span>
+            </a>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary w-full" data-close="modal-settings">Fechar</button>
           </div>
         </div>
       </div>

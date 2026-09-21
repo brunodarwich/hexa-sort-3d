@@ -55,7 +55,47 @@ serve(async (req) => {
       last_active_at: new Date().toISOString()
     }, { onConflict: 'id' });
 
-    // 1. Criar ordem pendente no Supabase
+    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+    // 0. Expirar pedidos pendentes antigos do jogador (mais de 1 hora)
+    await supabase
+      .from('payment_orders')
+      .update({ status: 'expired' })
+      .eq('player_id', validPlayerId)
+      .eq('status', 'pending')
+      .lt('created_at', oneHourAgo);
+
+    // 1. Verificar se já existe pedido pendente recente (últimos 15 min) para reaproveitar
+    const { data: existingOrder } = await supabase
+      .from('payment_orders')
+      .select('*')
+      .eq('player_id', validPlayerId)
+      .eq('item_type', itemType)
+      .eq('gateway', 'mercadopago')
+      .eq('status', 'pending')
+      .gte('created_at', fifteenMinAgo)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingOrder && existingOrder.qr_code) {
+      return new Response(
+        JSON.stringify({
+          orderId: existingOrder.id,
+          externalId: existingOrder.external_order_id,
+          amount: Number(existingOrder.amount),
+          itemName: itemConfig.name,
+          qrCode: existingOrder.qr_code,
+          qrCodeBase64: existingOrder.qr_code_base64 || null,
+          isSandbox: !mpAccessToken,
+          reused: true
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 2. Criar nova ordem pendente no Supabase se não houver recente
     const { data: order, error: orderError } = await supabase
       .from('payment_orders')
       .insert({
@@ -78,9 +118,16 @@ serve(async (req) => {
       );
     }
 
-    // 2. Se o Access Token do Mercado Pago não estiver configurado, retorna modo simulado para testes locais
+    // 3. Se o Access Token do Mercado Pago não estiver configurado, retorna modo simulado para testes locais
     if (!mpAccessToken) {
       const mockQrCode = `00020126580014br.gov.bcb.pix0136hexasort3d-demo-${order.id}520400005303986540${amount.toFixed(2)}5802BR5912HexaSort3D6009SaoPaulo62070503***6304ABCD`;
+      
+      // Salvar mockQrCode no banco para poder ser reutilizado durante os 15 min
+      await supabase
+        .from('payment_orders')
+        .update({ qr_code: mockQrCode })
+        .eq('id', order.id);
+
       return new Response(
         JSON.stringify({
           orderId: order.id,
@@ -95,7 +142,7 @@ serve(async (req) => {
       );
     }
 
-    // 3. Chamada real à API do Mercado Pago
+    // 4. Chamada real à API do Mercado Pago
     const webhookUrl = `${supabaseUrl}/functions/v1/mercadopago-webhook`;
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
@@ -106,12 +153,12 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         transaction_amount: amount,
-        description: `Hexa Sort 3D - ${itemConfig.name}`,
+        description: `Hexa Infinity - ${itemConfig.name}`,
         payment_method_id: 'pix',
         payer: {
-          email: recoveryEmail || 'jogador@hexasort3d.com',
+          email: recoveryEmail || 'jogador@hexainfinity.com',
           first_name: 'Jogador',
-          last_name: 'HexaSort'
+          last_name: 'HexaInfinity'
         },
         external_reference: order.id,
         notification_url: webhookUrl
@@ -133,7 +180,7 @@ serve(async (req) => {
     const qrCodeBase64 = pixInfo?.qr_code_base64 || '';
     const externalId = String(mpData.id);
 
-    // 4. Atualizar registro com o código Pix
+    // 5. Atualizar registro com o código Pix
     await supabase
       .from('payment_orders')
       .update({

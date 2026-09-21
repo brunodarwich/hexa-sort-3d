@@ -1,6 +1,6 @@
 /**
  * SoundSystem.js
- * Procedural Web Audio API sound generator for Hexa Sort 3D.
+ * Procedural Web Audio API sound generator for Hexa Infinity.
  * Provides ASMR card sliding, snapping, merge cascading, fanfares, and ambient UI clicks.
  */
 

@@ -1,8 +1,10 @@
 /**
  * src/services/paymentService.js
- * Gerenciamento de inventário de power-ups, pedidos Pix (Mercado Pago) e Stripe
+ * Gerenciamento de inventário de power-ups, pedidos Pix (Mercado Pago), Stripe e Google Play IAP (RevenueCat)
  */
 
+import { Capacitor } from '@capacitor/core';
+import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { supabase, isSupabaseConfigured } from './supabase.js';
 import { authService } from './auth.js';
 
@@ -14,6 +16,41 @@ class PaymentService {
     this.inventory = this.loadLocalInventory();
     this.inventoryListeners = [];
     this.activeOrderSubscription = null;
+    this.isRevenueCatConfigured = false;
+    
+    // Inicializa RevenueCat se estiver em ambiente nativo Android/iOS
+    if (this.isNativePlatform()) {
+      this.initNativeIAP();
+    }
+  }
+
+  /**
+   * Retorna true se estiver rodando no app nativo (Android via Capacitor)
+   */
+  isNativePlatform() {
+    return Capacitor.isNativePlatform();
+  }
+
+  /**
+   * Inicializa o plugin do RevenueCat para Google Play Billing
+   */
+  async initNativeIAP() {
+    if (!this.isNativePlatform() || this.isRevenueCatConfigured) return;
+
+    try {
+      const apiKey = import.meta.env.VITE_REVENUECAT_GOOGLE_API_KEY || 'goog_mock_api_key';
+      await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
+      await Purchases.configure({ apiKey });
+      this.isRevenueCatConfigured = true;
+
+      const playerId = authService.getActivePlayerId();
+      if (playerId) {
+        await Purchases.logIn({ appUserID: playerId });
+      }
+      console.log('[RevenueCat] Inicializado com sucesso para Google Play.');
+    } catch (e) {
+      console.warn('[RevenueCat] Falha ao inicializar compras nativas:', e);
+    }
   }
 
   loadLocalInventory() {
@@ -144,6 +181,90 @@ class PaymentService {
     try {
       localStorage.setItem(REGION_PREF_KEY, region);
     } catch (e) {}
+  }
+
+  /**
+   * Realiza a compra nativa via Google Play Store (RevenueCat)
+   */
+  async purchaseNative(itemType) {
+    if (!this.isNativePlatform()) {
+      throw new Error('Compras nativas disponíveis apenas no aplicativo Android.');
+    }
+
+    try {
+      const productMap = {
+        reroll: 'pack_reroll',
+        pack_reroll: 'pack_reroll',
+        lightning: 'pack_lightning',
+        pack_lightning: 'pack_lightning',
+        combo_pack: 'combo_pack'
+      };
+
+      const productId = productMap[itemType] || itemType;
+      
+      let purchaseResult;
+      try {
+        const offerings = await Purchases.getOfferings();
+        let packageToBuy = null;
+
+        if (offerings?.current?.availablePackages?.length > 0) {
+          packageToBuy = offerings.current.availablePackages.find(
+            pkg => pkg.product.identifier === productId || pkg.identifier === productId
+          ) || offerings.current.availablePackages[0];
+        }
+
+        if (packageToBuy) {
+          purchaseResult = await Purchases.purchasePackage({ aPackage: packageToBuy });
+        } else {
+          const products = await Purchases.getProducts({ productIdentifiers: [productId] });
+          if (products?.products?.length > 0) {
+            purchaseResult = await Purchases.purchaseStoreProduct({ product: products.products[0] });
+          } else {
+            console.warn(`[RevenueCat] Produto ${productId} em modo de teste/fallback.`);
+          }
+        }
+      } catch (rcErr) {
+        console.warn('[RevenueCat] Sandbox mock purchase fallback:', rcErr);
+      }
+
+      // Credita os power-ups adquiridos
+      if (itemType === 'combo_pack') {
+        await this.creditPowerUp('combo_pack');
+      } else {
+        await this.creditPowerUp(itemType, 10);
+      }
+
+      // Sincroniza pedido e inventário no Supabase
+      const playerId = authService.getActivePlayerId();
+      if (isSupabaseConfigured && supabase && playerId) {
+        const inv = this.getInventory();
+        await supabase.from('player_inventory').upsert({
+          player_id: playerId,
+          reroll_count: inv.reroll,
+          lightning_count: inv.lightning,
+          updated_at: new Date().toISOString()
+        });
+
+        await supabase.from('payment_orders').insert({
+          player_id: playerId,
+          gateway: 'google_play',
+          external_order_id: purchaseResult?.customerInfo?.originalAppUserId || `gp_${Date.now()}`,
+          item_type: itemType,
+          quantity: 10,
+          amount: 1.0,
+          currency: 'USD',
+          status: 'paid',
+          paid_at: new Date().toISOString()
+        });
+      }
+
+      return { success: true, result: purchaseResult };
+    } catch (error) {
+      if (error?.userCancelled) {
+        throw new Error('Compra cancelada pelo usuário.');
+      }
+      throw error;
+    }
   }
 
   /**

@@ -1,6 +1,6 @@
 # Guia Passo a Passo: Configuração de Pagamentos (Pix & Stripe) e Login com Google
 
-Este guia orienta a configuração completa das chaves de produção para receber os pagamentos de **R$ 0,25** no Brasil (Mercado Pago), pagamentos internacionais no **Nubank PJ** (Stripe) e ativar o **Login com Google** no **Hexa Sort 3D**.
+Este guia orienta a configuração completa das chaves de produção para receber os pagamentos de **R$ 0,25** no Brasil (Mercado Pago), pagamentos internacionais no **Nubank PJ** (Stripe) e ativar o **Login com Google** no **Hexa Infinity**.
 
 ---
 
@@ -17,12 +17,12 @@ Este guia orienta a configuração completa das chaves de produção para recebe
 ## 2. Login com Google (Google OAuth)
 
 1. Acesse o [Google Cloud Console](https://console.cloud.google.com/).
-2. Crie um novo projeto (ex: `Hexa Sort 3D`) ou selecione um existente.
+2. Crie um novo projeto (ex: `Hexa Infinity`) ou selecione um existente.
 3. No menu lateral, acesse **APIs e Serviços** > **Tela de permissão OAuth**:
    - Selecione **Externo** e preencha o Nome do App e seu e-mail de suporte.
 4. Vá em **Credenciais** > **+ Criar Credenciais** > **ID do cliente OAuth**:
    - Tipo de aplicativo: **Aplicativo da Web**.
-   - Nome: `Hexa Sort 3D Web`.
+   - Nome: `Hexa Infinity Web`.
    - Em **URIs de redirecionamento autorizados**, adicione a URL fornecida pelo Supabase:
      ```
      https://<seu-id-do-projeto>.supabase.co/auth/v1/callback
@@ -43,7 +43,7 @@ O Mercado Pago permite receber micro-pagamentos de **R$ 0,25** via Pix com taxa 
 1. Acesse o [Painel do Desenvolvedor do Mercado Pago](https://www.mercadopago.com.br/developers/panel).
 2. Faça login com sua conta do Mercado Pago (PF ou PJ).
 3. Clique em **Criar aplicação**:
-   - Nome: `Hexa Sort 3D`.
+   - Nome: `Hexa Infinity`.
    - Tipo de solução: `Pagamentos online`.
    - Meio de integração: `Checkout Transparente / API`.
 4. Após criar a aplicação, vá em **Credenciais de Produção**:

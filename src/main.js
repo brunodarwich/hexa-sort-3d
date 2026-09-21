@@ -156,12 +156,402 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // --- MULTI-SCREEN NAVIGATION SYSTEM ---
+  let activeScreen = 'home'; // 'home' | 'game' | 'ranking' | 'profile'
+  const screens = {
+    home: document.getElementById('screen-home'),
+    game: document.getElementById('screen-game'),
+    ranking: document.getElementById('screen-ranking'),
+    profile: document.getElementById('screen-profile')
+  };
+
+  const navTabs = document.querySelectorAll('#bottom-nav .nav-tab');
+
+  function switchScreen(target) {
+    if (!screens[target]) return;
+    activeScreen = target;
+
+    // Alternar visibilidade das telas
+    Object.keys(screens).forEach((key) => {
+      const el = screens[key];
+      if (el) {
+        if (key === target) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      }
+    });
+
+    // Atualizar aba ativa na barra de navegação inferior
+    navTabs.forEach((tab) => {
+      const navTarget = tab.getAttribute('data-nav');
+      if (navTarget === target) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+
+    // Ações contextuais de cada tela
+    if (target === 'home') {
+      updateHomeScreenData();
+    } else if (target === 'ranking') {
+      renderFullRankingScreen();
+    } else if (target === 'profile') {
+      renderProfileScreen();
+    }
+  }
+
+  // Eventos das abas inferiores
+  navTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      game.sound.playClick();
+      const target = tab.getAttribute('data-nav');
+      switchScreen(target);
+    });
+  });
+
+  // --- 1. TELA INICIAL (HOME) ---
+  const btnHomePlay = document.getElementById('btn-home-play');
+  const btnHomeSettings = document.getElementById('btn-home-settings');
+  const btnHomeProfile = document.getElementById('btn-home-profile');
+  const homeRecordVal = document.getElementById('home-record-val');
+
+  function updateHomeScreenData() {
+    const highscore = game.highScore || leaderboard.getHighScore() || 0;
+    if (homeRecordVal) {
+      homeRecordVal.textContent = highscore.toLocaleString('pt-BR');
+    }
+  }
+
+  if (btnHomePlay) {
+    btnHomePlay.addEventListener('click', () => {
+      game.sound.playClick();
+      switchScreen('game');
+    });
+  }
+
+  if (btnHomeSettings) {
+    btnHomeSettings.addEventListener('click', () => {
+      game.sound.playClick();
+      openSettingsModal();
+    });
+  }
+
+  if (btnHomeProfile) {
+    btnHomeProfile.addEventListener('click', () => {
+      game.sound.playClick();
+      switchScreen('profile');
+    });
+  }
+
+  // --- 3. TELA DE RANKING (CLASSIFICAÇÃO) ---
+  const btnRefreshRanking = document.getElementById('btn-refresh-ranking');
+  const rankingCompetitorsList = document.getElementById('ranking-competitors-list');
+
+  async function renderFullRankingScreen() {
+    if (!rankingCompetitorsList) return;
+
+    rankingCompetitorsList.innerHTML = `
+      <div class="ranking-empty-state">
+        <div class="spinner-dot"></div>
+        <span>Carregando melhores pontuações...</span>
+      </div>
+    `;
+
+    try {
+      const scores = await leaderboard.getGlobalScores();
+      const playerNick = (leaderboard.getSavedNickname() || 'Jogador').trim();
+      const playerHighscore = game.highScore || leaderboard.getHighScore() || 0;
+
+      // Pódio Top 3
+      const first = scores[0] || null;
+      const second = scores[1] || null;
+      const third = scores[2] || null;
+
+      // 1º Lugar
+      const p1Avatar = document.getElementById('podium-avatar-1');
+      const p1Name = document.getElementById('podium-name-1');
+      const p1Score = document.getElementById('podium-score-1');
+      if (first) {
+        if (p1Avatar) p1Avatar.textContent = (first.name || '1')[0].toUpperCase();
+        if (p1Name) p1Name.textContent = first.name || 'Campeão';
+        if (p1Score) p1Score.textContent = (first.score || 0).toLocaleString('pt-BR');
+      } else {
+        if (p1Name) p1Name.textContent = '---';
+        if (p1Score) p1Score.textContent = '0';
+      }
+
+      // 2º Lugar
+      const p2Avatar = document.getElementById('podium-avatar-2');
+      const p2Name = document.getElementById('podium-name-2');
+      const p2Score = document.getElementById('podium-score-2');
+      if (second) {
+        if (p2Avatar) p2Avatar.textContent = (second.name || '2')[0].toUpperCase();
+        if (p2Name) p2Name.textContent = second.name || 'Vice';
+        if (p2Score) p2Score.textContent = (second.score || 0).toLocaleString('pt-BR');
+      } else {
+        if (p2Name) p2Name.textContent = '---';
+        if (p2Score) p2Score.textContent = '0';
+      }
+
+      // 3º Lugar
+      const p3Avatar = document.getElementById('podium-avatar-3');
+      const p3Name = document.getElementById('podium-name-3');
+      const p3Score = document.getElementById('podium-score-3');
+      if (third) {
+        if (p3Avatar) p3Avatar.textContent = (third.name || '3')[0].toUpperCase();
+        if (p3Name) p3Name.textContent = third.name || 'Elite';
+        if (p3Score) p3Score.textContent = (third.score || 0).toLocaleString('pt-BR');
+      } else {
+        if (p3Name) p3Name.textContent = '---';
+        if (p3Score) p3Score.textContent = '0';
+      }
+
+      // Card Destaque Pessoal ("Você")
+      let playerRank = scores.findIndex(s => s.name?.toLowerCase() === playerNick.toLowerCase()) + 1;
+      if (playerRank === 0) playerRank = scores.length + 1;
+
+      const personalRankPos = document.getElementById('personal-rank-pos');
+      const personalRankName = document.getElementById('personal-rank-name');
+      const personalRankLevel = document.getElementById('personal-rank-level');
+      const personalRankScore = document.getElementById('personal-rank-score');
+      const personalUserInitial = document.getElementById('personal-user-initial');
+
+      if (personalRankPos) personalRankPos.textContent = `#${playerRank}`;
+      if (personalRankName) personalRankName.textContent = playerNick;
+      if (personalRankLevel) personalRankLevel.textContent = `Nível ${game.level || 1}`;
+      if (personalRankScore) personalRankScore.textContent = playerHighscore.toLocaleString('pt-BR');
+      if (personalUserInitial) personalUserInitial.textContent = (playerNick || 'J')[0].toUpperCase();
+
+      // Lista #4 a #10+
+      const rest = scores.slice(3, 50);
+      if (rest.length > 0) {
+        rankingCompetitorsList.innerHTML = rest.map((item, idx) => {
+          const pos = idx + 4;
+          const initial = escapeHTML((item.name || '#')[0].toUpperCase());
+          const name = escapeHTML(item.name || 'Competidor');
+          const scoreStr = (item.score || 0).toLocaleString('pt-BR');
+          const comboStr = item.combo ? ` • ${item.combo}x combo` : '';
+
+          return `
+            <div class="ranking-row">
+              <div class="row-left">
+                <span class="row-rank-num">#${pos}</span>
+                <div class="row-avatar">${initial}</div>
+                <div class="row-meta">
+                  <span class="row-name">${name}</span>
+                  <span class="row-sub"><strong>Nível ${Math.max(1, Math.floor((item.score || 0) / 10000))}</strong>${comboStr}</span>
+                </div>
+              </div>
+              <span class="row-score">${scoreStr}</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        rankingCompetitorsList.innerHTML = `
+          <div class="ranking-empty-state">
+            <span>Mais competidores aparecerão aqui conforme jogarem!</span>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.warn('Erro ao renderizar ranking:', err);
+      rankingCompetitorsList.innerHTML = `
+        <div class="ranking-empty-state">
+          <span>Não foi possível carregar o placar online no momento.</span>
+        </div>
+      `;
+    }
+  }
+
+  if (btnRefreshRanking) {
+    btnRefreshRanking.addEventListener('click', () => {
+      game.sound.playClick();
+      renderFullRankingScreen();
+      showToast('Ranking atualizado! 🏆');
+    });
+  }
+
+  // --- 4. TELA DE PERFIL E LOGIN ---
+  const btnProfileSettings = document.getElementById('btn-profile-settings');
+  const profileNicknameText = document.getElementById('profile-nickname-text');
+  const btnEditProfileNickname = document.getElementById('btn-edit-profile-nickname');
+  const profileNicknameView = document.getElementById('profile-nickname-view');
+  const profileNicknameEdit = document.getElementById('profile-nickname-edit');
+  const inputProfileNickname = document.getElementById('input-profile-nickname');
+  const btnSaveProfileNickname = document.getElementById('btn-save-profile-nickname');
+  const btnCancelProfileNickname = document.getElementById('btn-cancel-profile-nickname');
+  const profileAccountTag = document.getElementById('profile-account-tag');
+  const profileAvatarImg = document.getElementById('profile-avatar-img');
+  const profileAvatarFallback = document.getElementById('profile-avatar-fallback');
+
+  const profileLoggedOut = document.getElementById('profile-logged-out');
+  const profileLoggedIn = document.getElementById('profile-logged-in');
+  const profileGoogleName = document.getElementById('profile-google-name');
+  const profileGoogleEmail = document.getElementById('profile-google-email');
+  const btnGoogleLoginProfile = document.getElementById('btn-google-login-profile');
+  const btnGoogleLogoutProfile = document.getElementById('btn-google-logout-profile');
+
+  // Stats Counters
+  const statProfileGames = document.getElementById('stat-profile-games');
+  const statProfileHighscore = document.getElementById('stat-profile-highscore');
+  const statProfileCombo = document.getElementById('stat-profile-combo');
+  const statProfileClears = document.getElementById('stat-profile-clears');
+
+  function renderProfileScreen() {
+    const savedNick = leaderboard.getSavedNickname() || 'Jogador';
+    if (profileNicknameText) profileNicknameText.textContent = savedNick;
+
+    // Estatísticas
+    const games = Number(localStorage.getItem('hexa_sort_stats_games_played')) || 0;
+    const highscore = game.highScore || leaderboard.getHighScore() || 0;
+    const maxCombo = Number(localStorage.getItem('hexa_sort_stats_max_combo')) || 1;
+    const clears = Number(localStorage.getItem('hexa_sort_stats_total_clears')) || 0;
+
+    if (statProfileGames) statProfileGames.textContent = games.toLocaleString('pt-BR');
+    if (statProfileHighscore) statProfileHighscore.textContent = highscore.toLocaleString('pt-BR');
+    if (statProfileCombo) statProfileCombo.textContent = `${maxCombo}x`;
+    if (statProfileClears) statProfileClears.textContent = clears.toLocaleString('pt-BR');
+  }
+
+  // Listener para atualização de estatísticas pós-partida
+  window.addEventListener('hexa_stats_updated', () => {
+    if (activeScreen === 'profile') renderProfileScreen();
+    if (activeScreen === 'home') updateHomeScreenData();
+  });
+
+  if (btnProfileSettings) {
+    btnProfileSettings.addEventListener('click', () => {
+      game.sound.playClick();
+      openSettingsModal();
+    });
+  }
+
+  // Edição inline de apelido no perfil
+  if (btnEditProfileNickname) {
+    btnEditProfileNickname.addEventListener('click', () => {
+      game.sound.playClick();
+      const current = leaderboard.getSavedNickname() || '';
+      if (inputProfileNickname) inputProfileNickname.value = current;
+      if (profileNicknameView) profileNicknameView.classList.add('hidden');
+      if (profileNicknameEdit) {
+        profileNicknameEdit.classList.remove('hidden');
+        if (inputProfileNickname) {
+          inputProfileNickname.focus();
+          inputProfileNickname.select();
+        }
+      }
+    });
+  }
+
+  if (btnCancelProfileNickname) {
+    btnCancelProfileNickname.addEventListener('click', () => {
+      game.sound.playClick();
+      if (profileNicknameEdit) profileNicknameEdit.classList.add('hidden');
+      if (profileNicknameView) profileNicknameView.classList.remove('hidden');
+    });
+  }
+
+  if (btnSaveProfileNickname) {
+    btnSaveProfileNickname.addEventListener('click', () => {
+      game.sound.playClick();
+      const newNick = (inputProfileNickname?.value || '').trim();
+      if (newNick) {
+        leaderboard.setSavedNickname(newNick);
+        updatePlayerNicknameUI(newNick);
+        if (profileNicknameText) profileNicknameText.textContent = newNick;
+        if (profileNicknameEdit) profileNicknameEdit.classList.add('hidden');
+        if (profileNicknameView) profileNicknameView.classList.remove('hidden');
+        showToast(`Apelido atualizado: ${newNick} ✨`);
+      }
+    });
+  }
+
+  if (btnGoogleLoginProfile) {
+    btnGoogleLoginProfile.addEventListener('click', async () => {
+      game.sound.playClick();
+      try {
+        await authService.signInWithGoogle();
+      } catch (err) {
+        showToast('Falha ao conectar com Google. Verifique a configuração.');
+      }
+    });
+  }
+
+  if (btnGoogleLogoutProfile) {
+    btnGoogleLogoutProfile.addEventListener('click', async () => {
+      game.sound.playClick();
+      await authService.signOut();
+      showToast('Desconectado com sucesso.');
+    });
+  }
+
+  // --- 6. MODAL DE CONFIGURAÇÕES ---
+  const modalSettings = document.getElementById('modal-settings');
+  const settingToggleSound = document.getElementById('setting-toggle-sound');
+  const settingSoundIcon = document.getElementById('setting-sound-icon');
+  const settingToggleTheme = document.getElementById('setting-toggle-theme');
+  const settingThemeIcon = document.getElementById('setting-theme-icon');
+  const settingBtnTutorial = document.getElementById('setting-btn-tutorial');
+
+  function openSettingsModal() {
+    if (modalSettings) {
+      // Atualizar estados dos toggles
+      if (settingToggleSound) {
+        const isMuted = game.sound?.isMuted;
+        settingToggleSound.className = isMuted ? 'btn-toggle' : 'btn-toggle active';
+        if (settingSoundIcon) settingSoundIcon.textContent = isMuted ? 'volume_off' : 'volume_up';
+      }
+      if (settingToggleTheme) {
+        const isDark = activeTheme === 'dark';
+        settingToggleTheme.className = isDark ? 'btn-toggle active' : 'btn-toggle';
+        if (settingThemeIcon) settingThemeIcon.textContent = isDark ? 'dark_mode' : 'light_mode';
+      }
+      modalSettings.classList.remove('hidden');
+    }
+  }
+
+  if (settingToggleSound) {
+    settingToggleSound.addEventListener('click', () => {
+      if (game.sound) {
+        game.sound.toggleMute();
+        const isMuted = game.sound.isMuted;
+        settingToggleSound.className = isMuted ? 'btn-toggle' : 'btn-toggle active';
+        if (settingSoundIcon) settingSoundIcon.textContent = isMuted ? 'volume_off' : 'volume_up';
+        const soundIcon = document.getElementById('sound-icon');
+        if (soundIcon) soundIcon.textContent = isMuted ? 'volume_off' : 'volume_up';
+        showToast(isMuted ? 'Sons desativados 🔇' : 'Sons ativados 🔊');
+      }
+    });
+  }
+
+  if (settingToggleTheme) {
+    settingToggleTheme.addEventListener('click', () => {
+      game.sound.playClick();
+      const nextTheme = activeTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme, true);
+      settingToggleTheme.className = nextTheme === 'dark' ? 'btn-toggle active' : 'btn-toggle';
+      if (settingThemeIcon) settingThemeIcon.textContent = nextTheme === 'dark' ? 'dark_mode' : 'light_mode';
+    });
+  }
+
+  if (settingBtnTutorial) {
+    settingBtnTutorial.addEventListener('click', () => {
+      game.sound.playClick();
+      if (modalSettings) modalSettings.classList.add('hidden');
+      if (modalInfo) modalInfo.classList.remove('hidden');
+    });
+  }
+
   // --- GOOGLE AUTH & USER PROFILE ---
   function updatePlayerNicknameUI(name, avatarUrl = null) {
     const displayName = name || 'Jogador';
     if (headerPlayerName) headerPlayerName.textContent = displayName;
     if (goNicknameDisplay) goNicknameDisplay.textContent = displayName;
     if (playerNicknameInput) playerNicknameInput.value = displayName;
+    if (profileNicknameText) profileNicknameText.textContent = displayName;
 
     // Atualiza avatar circular no cabeçalho
     const avatarCircle = btnPlayerProfile?.querySelector('.player-avatar-circle');
@@ -170,6 +560,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         avatarCircle.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Avatar" />`;
       } else {
         avatarCircle.innerHTML = `<span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">face</span>`;
+      }
+    }
+
+    // Atualiza avatar no perfil
+    if (profileAvatarImg && profileAvatarFallback) {
+      if (avatarUrl) {
+        profileAvatarImg.src = avatarUrl;
+        profileAvatarImg.classList.remove('hidden');
+        profileAvatarFallback.classList.add('hidden');
+      } else {
+        profileAvatarImg.classList.add('hidden');
+        profileAvatarFallback.classList.remove('hidden');
       }
     }
   }
@@ -193,6 +595,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // Sincronizar na tela de perfil
+      if (profileLoggedOut) profileLoggedOut.classList.add('hidden');
+      if (profileLoggedIn) {
+        profileLoggedIn.classList.remove('hidden');
+        if (profileGoogleName) profileGoogleName.textContent = displayName;
+        if (profileGoogleEmail) profileGoogleEmail.textContent = user.email || '';
+      }
+      if (profileAccountTag) {
+        profileAccountTag.textContent = 'Conta Conectada na Nuvem ☁️';
+        profileAccountTag.style.color = '#5cff9f';
+      }
+
       showToast(`Conectado como ${displayName}! 🚀`);
       await paymentService.fetchInventory();
     } else {
@@ -201,10 +615,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (btnGoogleLogin) btnGoogleLogin.classList.remove('hidden');
       if (googleLoggedInfo) googleLoggedInfo.classList.add('hidden');
+
+      if (profileLoggedOut) profileLoggedOut.classList.remove('hidden');
+      if (profileLoggedIn) profileLoggedIn.classList.add('hidden');
+      if (profileAccountTag) {
+        profileAccountTag.textContent = 'Jogador Convidado';
+        profileAccountTag.style.color = '';
+      }
     }
   });
 
-  // Login com Google
+  // Login com Google no modal de boas-vindas
   if (btnGoogleLogin) {
     btnGoogleLogin.addEventListener('click', async () => {
       game.sound.playClick();
@@ -216,7 +637,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Logout
+  // Logout no modal de boas-vindas
   if (btnGoogleLogout) {
     btnGoogleLogout.addEventListener('click', async () => {
       game.sound.playClick();
@@ -229,29 +650,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   const savedNick = leaderboard.getSavedNickname();
   if (savedNick) {
     updatePlayerNicknameUI(savedNick);
-  } else {
-    setTimeout(() => {
-      if (modalNickname) {
-        modalNickname.classList.remove('hidden');
-        if (inputWelcomeNickname) inputWelcomeNickname.focus();
-      }
-    }, 450);
   }
+
+  // Inicializar dados da tela inicial
+  updateHomeScreenData();
 
   // Sincronizar inventário inicial
   await paymentService.fetchInventory();
 
-  // Abrir modal de perfil
+  // Abrir tela de perfil ao tocar no avatar do topo
   if (btnPlayerProfile) {
     btnPlayerProfile.addEventListener('click', () => {
       game.sound.playClick();
-      if (inputWelcomeNickname) {
-        inputWelcomeNickname.value = leaderboard.getSavedNickname();
-      }
-      if (modalNickname) {
-        modalNickname.classList.remove('hidden');
-        if (inputWelcomeNickname) inputWelcomeNickname.focus();
-      }
+      switchScreen('profile');
     });
   }
 
@@ -527,6 +938,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   function openPaymentModal(itemType, onSuccessCallback = null) {
     currentSelectedPaymentItem = itemType;
     pendingPaymentSuccessAction = onSuccessCallback;
+
+    // Se estiver rodando no app nativo Android, utiliza faturamento oficial Google Play via RevenueCat
+    if (paymentService.isNativePlatform()) {
+      showToast('Iniciando Google Play Billing...');
+      paymentService.purchaseNative(itemType)
+        .then(() => {
+          handlePaymentSuccess();
+        })
+        .catch((err) => {
+          showToast(err.message || 'Erro ao processar compra Google Play.');
+        });
+      return;
+    }
 
     const details = ITEM_DETAILS[itemType] || ITEM_DETAILS.lightning;
 

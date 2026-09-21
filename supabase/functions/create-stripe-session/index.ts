@@ -10,9 +10,9 @@ const corsHeaders = {
 };
 
 const STRIPE_PRODUCTS_USD: Record<string, { amountCents: number; name: string; qty: number }> = {
-  pack_reroll: { amountCents: 100, name: 'Hexa Sort 3D - 10x Deck Re-rolls', qty: 10 },
-  pack_lightning: { amountCents: 100, name: 'Hexa Sort 3D - 10x Lightning Strikes', qty: 10 },
-  combo_pack: { amountCents: 180, name: 'Hexa Sort 3D - Master Combo (10x Strikes + 10x Re-rolls)', qty: 10 }
+  pack_reroll: { amountCents: 100, name: 'Hexa Infinity - 10x Deck Re-rolls', qty: 10 },
+  pack_lightning: { amountCents: 100, name: 'Hexa Infinity - 10x Lightning Strikes', qty: 10 },
+  combo_pack: { amountCents: 180, name: 'Hexa Infinity - Master Combo (10x Strikes + 10x Re-rolls)', qty: 10 }
 };
 
 serve(async (req) => {

@@ -1,0 +1,17 @@
+{
+  "name": "Hexa Infinity",
+  "short_name": "HexaInfinity",
+  "description": "Jogo de quebra-cabeça 3D Hexa Infinity com fusão em cascata, pontuação em tempo real, timer e placar online de recordes.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

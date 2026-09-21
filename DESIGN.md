@@ -1,7 +1,7 @@
-# Design System: Hexa Sort 3D (Casual & Cyber-Neon Puzzle Game)
+# Design System: Hexa Infinity (Casual & Cyber-Neon Puzzle Game)
 
 ## 1. Overview & Aesthetic Vision
-- **Product Name:** Hexa Sort 3D (Modo Infinito)
+- **Product Name:** Hexa Infinity (Infinite Sort 3D)
 - **Genre:** Casual 3D Hexagonal Sorting & Cascade Merging Puzzle Game.
 - **Design Philosophy:** Tactile, juicy, high-energy arcade aesthetics combined with clean, glassmorphic modern UI. Physical button feedback (extruded bevels, bounce on press), rich ambient glows, and high accessibility in both Light and Dark themes.
 - **Target Devices:** Mobile First (PWA / Responsive Web), optimized for iOS Safari, Android Chrome, and Desktop widescreen monitors.

@@ -1,6 +1,6 @@
 /**
  * HexTile.js
- * 3D mesh creation, geometries, materials, visual badges, and color definitions for Hexa Sort 3D.
+ * 3D mesh creation, geometries, materials, visual badges, and color definitions for Hexa Infinity.
  */
 
 import * as THREE from 'three';

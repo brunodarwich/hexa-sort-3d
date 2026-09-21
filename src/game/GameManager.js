@@ -1657,6 +1657,24 @@ export class GameManager {
       }
     }
 
+    // Atualizar estatísticas cumulativas do jogador no Perfil
+    try {
+      const prevGames = Number(localStorage.getItem('hexa_sort_stats_games_played')) || 0;
+      localStorage.setItem('hexa_sort_stats_games_played', prevGames + 1);
+
+      const prevMaxCombo = Number(localStorage.getItem('hexa_sort_stats_max_combo')) || 0;
+      if (this.maxCombo > prevMaxCombo) {
+        localStorage.setItem('hexa_sort_stats_max_combo', this.maxCombo);
+      }
+
+      const prevClears = Number(localStorage.getItem('hexa_sort_stats_total_clears')) || 0;
+      localStorage.setItem('hexa_sort_stats_total_clears', prevClears + (this.totalClears || 0));
+
+      window.dispatchEvent(new CustomEvent('hexa_stats_updated'));
+    } catch (e) {
+      console.warn('Erro ao salvar estatísticas de partidas:', e);
+    }
+
     const modal = document.getElementById('modal-gameover');
     if (modal) {
       document.getElementById('go-final-score').textContent = this.score.toLocaleString('pt-BR');

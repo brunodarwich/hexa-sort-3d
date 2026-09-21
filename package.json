@@ -1,5 +1,5 @@
 {
-  "name": "hexa-sort-3d",
+  "name": "hexa-infinity",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -9,11 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@revenuecat/purchases-capacitor": "^13.6.0",
     "@supabase/supabase-js": "^2.116.0",
     "canvas-confetti": "^1.9.3",
     "three": "^0.170.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
     "vite": "^6.0.0"
   }
 }
