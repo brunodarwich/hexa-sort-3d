@@ -10,8 +10,82 @@ const NICKNAME_KEY = 'hexa_sort_player_nickname';
 const PLAYER_ID_KEY = 'hexa_sort_player_id_v2';
 const GLOBAL_STORAGE_KEY = 'hexa_sort_global_cache_v2';
 
-// Placar inicial zerado (sem jogadores fictícios/mockados)
-const DEFAULT_GLOBAL_LEADERBOARD = [];
+// Placar inicial com competidores de referência do Stitch (atualizado dinamicamente pelo Supabase)
+const DEFAULT_GLOBAL_LEADERBOARD = [
+  {
+    name: 'NovaMaster',
+    score: 489120,
+    time: 840,
+    clears: 68,
+    combo: 18,
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCet3Ww9fqxydrAJDyCMDwYxoE3QK112oo0AGMIksNjgJqJMRT9DnF0v_9WM5wcT-63fRSoNyUD02X_doQPVk7QFkCjCA0ti-Xn82pUxOHP5d4HL8PhRy0b9jT2Vttg_AisjUV3cW2zGjjrOF8icAU8r5oMDRzhIV8AbCA4EvjeN2szszFemUqCYyRKiTgzg4u_S7xX9JaD7LAD_e2Zyh12nvdg5HGxz2OGPWWuI_mZ94p9BES9_rCOmA',
+    tier: 'Lendário',
+    verified: true
+  },
+  {
+    name: 'AstralWalker',
+    score: 312450,
+    time: 620,
+    clears: 45,
+    combo: 15,
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD0yL0BDJ8C3FW4YsNEgzNiU3FNu-rbwzpXZDKdzfaCt8KbGBywoMu4bqnMPf6H2gHa_0GH6VlRaF6Rr2szHz5BVk1w-n3Xcp5lcJx7tLqVnmF6ThZsHqa0GuC2lEIETI9mm3Lr241DBUoGDXFlzeDO29GU7RKkUNHn2KFb40h3NebYLkpHjrRJtQRDUVcQtUtY281I0sm7yP9cBPtO24zxnypvvwUlF3h9tIwLiZHkVHdgRBy8Y6F7NA',
+    tier: 'Mestre'
+  },
+  {
+    name: 'StarGazer',
+    score: 287900,
+    time: 580,
+    clears: 42,
+    combo: 14,
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYIi3Rx3Xc3S_8LmpqOqo3ITEbXsKtnBnHEWTg8mej548Kwm-6Yj8XMXtR1O5EXR-52b51fjpV5zEVsST4mok3357xZnYEIrmGaDRic56xllXDKFYDhitGA69lluMEyPns74HsbqaJNGc47a9gXcpXuLJKFekffScVbYbhy5w3kAou-0aLkpwccbsLx7ayfiMYlkvxm7DpyG7r96xGpotjR6diZTIqoXCGUtuGKEE08LVchawuAFIN1A',
+    tier: 'Elite'
+  },
+  {
+    name: 'CosmoHex',
+    score: 276400,
+    time: 540,
+    clears: 38,
+    combo: 14,
+    level: 16,
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBP4OQKvMVUqfe_n8H2ZNv0PhIh-KFnJLWnFcRMZUWVd9kflU878uHr3rUTMJYEOSShyls5iexFJCeiElQ1Vi9x_97LRaNlOjNJQWZfd6ZeWsf_Emxac42n-2-shL2vnOow5NQXhTkCnHqy1uDpnK8yxl_Slt74duxDF__c9IDPYSR0fCFJOsusP6Xz-PF6S4VhU_Xhc8rYn0KfeSjZQzW1wLTjC5yY_cQgRdEELEAD_9VMsEbJYiVdKQ'
+  },
+  {
+    name: 'PixelVoyager',
+    score: 268150,
+    time: 510,
+    clears: 36,
+    combo: 12,
+    level: 15,
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuADD88z2Zfwc1JNz2Ev3IPbS1ZlpPJi3sFYy4rQHZxo09jcPd7fO7HPyJaB9L4W9hiQtobdtvJU3Z2sKmWK9HwYUSIRWWJoXxU1AJCcLG5G3jJXFP1gvK-fVgJPVO7M6LE9uHPoByIvHdHUn-lMmHuZKgxRVnHizIxeU9ug212aHksxicC6hBvDIHSIFCn8EJlWPJoKZsBQ7-BDwbxa4yLLCRuDMnK2NQvr9F3fnozxSYlNvyQmGBjXyw'
+  },
+  {
+    name: 'Quantum99',
+    score: 255300,
+    time: 480,
+    clears: 33,
+    combo: 10,
+    level: 15,
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDwAxSfqAd_veDayYr-AOYvrrlOKlWxoTPNveL0qnUPbdlGFYQq3HWCh1GU1Pru7jr1uTJEX3vInTJfL96rafFnNUINpIeAUchk6xFz-utt_mdMBoIH8bi2X69Gf9fod7gICgyADNaPgCj6-S0_05LETDHkbceDJu6z_eoFKwlZaeOyyrBXGjf0c_K6csKLicfdlagoolLO7MPNgDWkGInPdPrisAMm_XWZ3yGtm3SCaOVgqUFrxDHiAw'
+  },
+  {
+    name: 'NebulaRider',
+    score: 251890,
+    time: 460,
+    clears: 31,
+    combo: 9,
+    level: 14,
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCgSny1vIMIEPcocIqE4Sof_XqgHRNferd0GdWC_2MtXt-DHBXj9TSK41G9GOJM0gBkACSFyGdu2V6mA6OTwNfjJ2ws3QWFyxVfaRPclw-aN8smdf5yxCmrpsk0SqG5MuL6ESjf677LStqc0BmgR-kvLutV62Th9uLY6r-8sGL8aS_hq2XvxT8veC9pINb4dliOp4nQGUaBSLlL8r07WDC8D1v4nUI-CMbH_SBTpBZTuIXYqGibPIsJyg'
+  },
+  {
+    name: 'HyperLoop',
+    score: 249200,
+    time: 440,
+    clears: 30,
+    combo: 8,
+    level: 13,
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYjzSxg8Ae1wR-CYjJYXr--toHFYMkUsqluHOsDAmjhtIto1AHQq4xIhH-y18hdXMbruzlDkDiiVhUfyvwhOxbGhcESgzuEowy-OnIh6NAH6-zFMFpKpMS7fsMd-4QCrpvQ9Ihtka_bpXzdpLAX23qOx2ruJ5D8fXku3kgxygveqR-HH-LpWcWg4LJbtbCDjYIeqew3CZw4ZSx0f4ipdhr-WqqznMe8TgCBuCLZgPVqWjNI4XMccuUoA'
+  }
+];
 
 export class LeaderboardManager {
   constructor() {

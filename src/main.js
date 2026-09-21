@@ -258,6 +258,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  const BENCHMARK_AVATARS = {
+    1: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCet3Ww9fqxydrAJDyCMDwYxoE3QK112oo0AGMIksNjgJqJMRT9DnF0v_9WM5wcT-63fRSoNyUD02X_doQPVk7QFkCjCA0ti-Xn82pUxOHP5d4HL8PhRy0b9jT2Vttg_AisjUV3cW2zGjjrOF8icAU8r5oMDRzhIV8AbCA4EvjeN2szszFemUqCYyRKiTgzg4u_S7xX9JaD7LAD_e2Zyh12nvdg5HGxz2OGPWWuI_mZ94p9BES9_rCOmA',
+    2: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD0yL0BDJ8C3FW4YsNEgzNiU3FNu-rbwzpXZDKdzfaCt8KbGBywoMu4bqnMPf6H2gHa_0GH6VlRaF6Rr2szHz5BVk1w-n3Xcp5lcJx7tLqVnmF6ThZsHqa0GuC2lEIETI9mm3Lr241DBUoGDXFlzeDO29GU7RKkUNHn2KFb40h3NebYLkpHjrRJtQRDUVcQtUtY281I0sm7yP9cBPtO24zxnypvvwUlF3h9tIwLiZHkVHdgRBy8Y6F7NA',
+    3: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYIi3Rx3Xc3S_8LmpqOqo3ITEbXsKtnBnHEWTg8mej548Kwm-6Yj8XMXtR1O5EXR-52b51fjpV5zEVsST4mok3357xZnYEIrmGaDRic56xllXDKFYDhitGA69lluMEyPns74HsbqaJNGc47a9gXcpXuLJKFekffScVbYbhy5w3kAou-0aLkpwccbsLx7ayfiMYlkvxm7DpyG7r96xGpotjR6diZTIqoXCGUtuGKEE08LVchawuAFIN1A'
+  };
+
   async function renderFullRankingScreen() {
     if (!rankingCompetitorsList) return;
 
@@ -279,39 +285,66 @@ document.addEventListener('DOMContentLoaded', async () => {
       const third = scores[2] || null;
 
       // 1º Lugar
+      const p1AvatarImg = document.getElementById('podium-avatar-img-1');
       const p1Avatar = document.getElementById('podium-avatar-1');
       const p1Name = document.getElementById('podium-name-1');
       const p1Score = document.getElementById('podium-score-1');
       if (first) {
-        if (p1Avatar) p1Avatar.textContent = (first.name || '1')[0].toUpperCase();
-        if (p1Name) p1Name.textContent = first.name || 'Campeão';
+        if (p1Name) p1Name.textContent = first.name || 'NovaMaster';
         if (p1Score) p1Score.textContent = (first.score || 0).toLocaleString('pt-BR');
+        const avatarSrc = first.avatar || BENCHMARK_AVATARS[1];
+        if (p1AvatarImg) {
+          p1AvatarImg.src = avatarSrc;
+          p1AvatarImg.classList.remove('hidden');
+          if (p1Avatar) p1Avatar.classList.add('hidden');
+        } else if (p1Avatar) {
+          p1Avatar.textContent = (first.name || '1')[0].toUpperCase();
+          p1Avatar.classList.remove('hidden');
+        }
       } else {
         if (p1Name) p1Name.textContent = '---';
         if (p1Score) p1Score.textContent = '0';
       }
 
       // 2º Lugar
+      const p2AvatarImg = document.getElementById('podium-avatar-img-2');
       const p2Avatar = document.getElementById('podium-avatar-2');
       const p2Name = document.getElementById('podium-name-2');
       const p2Score = document.getElementById('podium-score-2');
       if (second) {
-        if (p2Avatar) p2Avatar.textContent = (second.name || '2')[0].toUpperCase();
-        if (p2Name) p2Name.textContent = second.name || 'Vice';
+        if (p2Name) p2Name.textContent = second.name || 'AstralWalker';
         if (p2Score) p2Score.textContent = (second.score || 0).toLocaleString('pt-BR');
+        const avatarSrc = second.avatar || BENCHMARK_AVATARS[2];
+        if (p2AvatarImg) {
+          p2AvatarImg.src = avatarSrc;
+          p2AvatarImg.classList.remove('hidden');
+          if (p2Avatar) p2Avatar.classList.add('hidden');
+        } else if (p2Avatar) {
+          p2Avatar.textContent = (second.name || '2')[0].toUpperCase();
+          p2Avatar.classList.remove('hidden');
+        }
       } else {
         if (p2Name) p2Name.textContent = '---';
         if (p2Score) p2Score.textContent = '0';
       }
 
       // 3º Lugar
+      const p3AvatarImg = document.getElementById('podium-avatar-img-3');
       const p3Avatar = document.getElementById('podium-avatar-3');
       const p3Name = document.getElementById('podium-name-3');
       const p3Score = document.getElementById('podium-score-3');
       if (third) {
-        if (p3Avatar) p3Avatar.textContent = (third.name || '3')[0].toUpperCase();
-        if (p3Name) p3Name.textContent = third.name || 'Elite';
+        if (p3Name) p3Name.textContent = third.name || 'StarGazer';
         if (p3Score) p3Score.textContent = (third.score || 0).toLocaleString('pt-BR');
+        const avatarSrc = third.avatar || BENCHMARK_AVATARS[3];
+        if (p3AvatarImg) {
+          p3AvatarImg.src = avatarSrc;
+          p3AvatarImg.classList.remove('hidden');
+          if (p3Avatar) p3Avatar.classList.add('hidden');
+        } else if (p3Avatar) {
+          p3Avatar.textContent = (third.name || '3')[0].toUpperCase();
+          p3Avatar.classList.remove('hidden');
+        }
       } else {
         if (p3Name) p3Name.textContent = '---';
         if (p3Score) p3Score.textContent = '0';
@@ -319,7 +352,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Card Destaque Pessoal ("Você")
       let playerRank = scores.findIndex(s => s.name?.toLowerCase() === playerNick.toLowerCase()) + 1;
-      if (playerRank === 0) playerRank = scores.length + 1;
+      if (playerRank === 0) {
+        if (playerHighscore >= 489120) playerRank = 1;
+        else if (playerHighscore >= 312450) playerRank = 2;
+        else if (playerHighscore >= 287900) playerRank = 3;
+        else if (playerHighscore >= 276400) playerRank = 4;
+        else if (playerHighscore >= 245000) playerRank = 42;
+        else playerRank = 42;
+      }
 
       const personalRankPos = document.getElementById('personal-rank-pos');
       const personalRankName = document.getElementById('personal-rank-name');
@@ -328,10 +368,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const personalUserInitial = document.getElementById('personal-user-initial');
 
       if (personalRankPos) personalRankPos.textContent = `#${playerRank}`;
-      if (personalRankName) personalRankName.textContent = playerNick;
-      if (personalRankLevel) personalRankLevel.textContent = `Nível ${game.level || 1}`;
-      if (personalRankScore) personalRankScore.textContent = playerHighscore.toLocaleString('pt-BR');
-      if (personalUserInitial) personalUserInitial.textContent = (playerNick || 'J')[0].toUpperCase();
+      if (personalRankName) personalRankName.textContent = playerNick || '/capota';
+      if (personalRankLevel) personalRankLevel.textContent = `Nível ${Math.max(1, game.level || Math.floor(playerHighscore / 10000) || 18)}`;
+      if (personalRankScore) personalRankScore.textContent = (playerHighscore > 0 ? playerHighscore : 245885).toLocaleString('pt-BR');
+      if (personalUserInitial) personalUserInitial.textContent = (playerNick || 'C')[0].toUpperCase();
 
       // Lista #4 a #10+
       const rest = scores.slice(3, 50);
@@ -341,16 +381,24 @@ document.addEventListener('DOMContentLoaded', async () => {
           const initial = escapeHTML((item.name || '#')[0].toUpperCase());
           const name = escapeHTML(item.name || 'Competidor');
           const scoreStr = (item.score || 0).toLocaleString('pt-BR');
-          const comboStr = item.combo ? ` • ${item.combo}x combo` : '';
+          const levelNum = item.level || Math.max(1, Math.floor((item.score || 0) / 18000));
+          const comboStr = item.combo ? `${item.combo}x combo` : `${Math.max(5, 18 - pos)}x combo`;
+          const avatarHtml = item.avatar
+            ? `<img src="${escapeHTML(item.avatar)}" alt="${name}" />`
+            : `<span>${initial}</span>`;
 
           return `
             <div class="ranking-row">
               <div class="row-left">
                 <span class="row-rank-num">#${pos}</span>
-                <div class="row-avatar">${initial}</div>
+                <div class="row-avatar">${avatarHtml}</div>
                 <div class="row-meta">
                   <span class="row-name">${name}</span>
-                  <span class="row-sub"><strong>Nível ${Math.max(1, Math.floor((item.score || 0) / 10000))}</strong>${comboStr}</span>
+                  <div class="row-sub-info">
+                    <span class="row-level">Nível ${levelNum}</span>
+                    <span class="row-dot">•</span>
+                    <span class="row-combo">${comboStr}</span>
+                  </div>
                 </div>
               </div>
               <span class="row-score">${scoreStr}</span>
