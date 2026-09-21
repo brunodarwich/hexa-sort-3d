@@ -11,7 +11,7 @@ const PLAYER_ID_KEY = 'hexa_sort_player_id_v2';
 const GLOBAL_STORAGE_KEY = 'hexa_sort_global_cache_v2';
 
 // Placar inicial com competidores de referência do Stitch (atualizado dinamicamente pelo Supabase)
-const DEFAULT_GLOBAL_LEADERBOARD = [
+export const DEFAULT_GLOBAL_LEADERBOARD = [
   {
     name: 'NovaMaster',
     score: 489120,

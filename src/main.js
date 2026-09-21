@@ -4,7 +4,7 @@
  */
 
 import { GameManager } from './game/GameManager.js';
-import { LeaderboardManager } from './game/Leaderboard.js';
+import { LeaderboardManager, DEFAULT_GLOBAL_LEADERBOARD } from './game/Leaderboard.js';
 import { authService } from './services/auth.js';
 import { paymentService } from './services/paymentService.js';
 
@@ -258,11 +258,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  const BENCHMARK_AVATARS = {
-    1: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCet3Ww9fqxydrAJDyCMDwYxoE3QK112oo0AGMIksNjgJqJMRT9DnF0v_9WM5wcT-63fRSoNyUD02X_doQPVk7QFkCjCA0ti-Xn82pUxOHP5d4HL8PhRy0b9jT2Vttg_AisjUV3cW2zGjjrOF8icAU8r5oMDRzhIV8AbCA4EvjeN2szszFemUqCYyRKiTgzg4u_S7xX9JaD7LAD_e2Zyh12nvdg5HGxz2OGPWWuI_mZ94p9BES9_rCOmA',
-    2: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD0yL0BDJ8C3FW4YsNEgzNiU3FNu-rbwzpXZDKdzfaCt8KbGBywoMu4bqnMPf6H2gHa_0GH6VlRaF6Rr2szHz5BVk1w-n3Xcp5lcJx7tLqVnmF6ThZsHqa0GuC2lEIETI9mm3Lr241DBUoGDXFlzeDO29GU7RKkUNHn2KFb40h3NebYLkpHjrRJtQRDUVcQtUtY281I0sm7yP9cBPtO24zxnypvvwUlF3h9tIwLiZHkVHdgRBy8Y6F7NA',
-    3: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBYIi3Rx3Xc3S_8LmpqOqo3ITEbXsKtnBnHEWTg8mej548Kwm-6Yj8XMXtR1O5EXR-52b51fjpV5zEVsST4mok3357xZnYEIrmGaDRic56xllXDKFYDhitGA69lluMEyPns74HsbqaJNGc47a9gXcpXuLJKFekffScVbYbhy5w3kAou-0aLkpwccbsLx7ayfiMYlkvxm7DpyG7r96xGpotjR6diZTIqoXCGUtuGKEE08LVchawuAFIN1A'
-  };
+  const BENCHMARK_AVATARS = Object.fromEntries(
+    DEFAULT_GLOBAL_LEADERBOARD.map((player, index) => [index + 1, player.avatar])
+  );
 
   async function renderFullRankingScreen() {
     if (!rankingCompetitorsList) return;
@@ -383,8 +381,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           const scoreStr = (item.score || 0).toLocaleString('pt-BR');
           const levelNum = item.level || Math.max(1, Math.floor((item.score || 0) / 18000));
           const comboStr = item.combo ? `${item.combo}x combo` : `${Math.max(5, 18 - pos)}x combo`;
-          const avatarHtml = item.avatar
-            ? `<img src="${escapeHTML(item.avatar)}" alt="${name}" />`
+          const avatar = item.avatar || BENCHMARK_AVATARS[4 + (idx % 5)];
+          const avatarHtml = avatar
+            ? `<img src="${escapeHTML(avatar)}" alt="" loading="lazy" />`
             : `<span>${initial}</span>`;
 
           return `
