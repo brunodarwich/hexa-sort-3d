@@ -1339,10 +1339,23 @@
 
 #screen-game {
   pointer-events: none; /* Allows interacting with 3D canvas behind, HUD elements inside have pointer-events: auto */
+  background: transparent;
 }
 
 #screen-game > * {
   pointer-events: auto;
+}
+
+#screen-home,
+#screen-ranking,
+#screen-profile {
+  background: radial-gradient(circle at 50% 28%, #131b31 0%, #0a0f1d 50%, #050811 100%);
+}
+
+[data-theme="light"] #screen-home,
+[data-theme="light"] #screen-ranking,
+[data-theme="light"] #screen-profile {
+  background: radial-gradient(circle at 50% 28%, #ffffff 0%, #f1f5f9 55%, #e2e8f0 100%);
 }
 
 .scrollable-content {
