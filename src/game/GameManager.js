@@ -243,17 +243,20 @@ export class GameManager {
     this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
     this.adjustCameraForScreen(width, height);
 
-    // 3. High-fidelity WebGL Renderer
+    const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (window.innerWidth <= 850 && ('ontouchstart' in window || navigator.maxTouchPoints > 0));
+
+    // 3. High-fidelity WebGL Renderer optimized for fluid 60 FPS across all devices
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: !isMobile,
       alpha: true,
       powerPreference: 'high-performance',
-      precision: 'highp'
+      precision: isMobile ? 'mediump' : 'highp'
     });
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.0));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2.0));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = isMobile ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
     this.container.appendChild(this.renderer.domElement);
@@ -266,8 +269,9 @@ export class GameManager {
     this.dirLight = new THREE.DirectionalLight(0xffffff, 1.55);
     this.dirLight.position.set(12, 28, 14);
     this.dirLight.castShadow = true;
-    this.dirLight.shadow.mapSize.width = 2048;
-    this.dirLight.shadow.mapSize.height = 2048;
+    const shadowMapSize = isMobile ? 1024 : 2048;
+    this.dirLight.shadow.mapSize.width = shadowMapSize;
+    this.dirLight.shadow.mapSize.height = shadowMapSize;
     this.dirLight.shadow.camera.near = 0.5;
     this.dirLight.shadow.camera.far = 60;
     this.dirLight.shadow.camera.left = -12;
@@ -275,7 +279,7 @@ export class GameManager {
     this.dirLight.shadow.camera.top = 12;
     this.dirLight.shadow.camera.bottom = -12;
     this.dirLight.shadow.bias = -0.0003;
-    this.dirLight.shadow.radius = 2.0;
+    this.dirLight.shadow.radius = isMobile ? 1.0 : 2.0;
     this.scene.add(this.dirLight);
 
     this.fillLight = new THREE.DirectionalLight(0xe2e8f0, 0.60);
@@ -323,6 +327,10 @@ export class GameManager {
         }
       }
     }
+    const aspect = width / height;
+    const xLimit = aspect > 1.2 ? 0.74 : 0.90;
+    const yMax = aspect < 0.65 ? 0.80 : 0.84;
+    const yMin = aspect < 0.65 ? -0.58 : -0.64;
     let distance = 10;
     for (; distance < 80; distance += 0.4) {
       this.camera.position.copy(target).addScaledVector(direction, distance);
@@ -330,7 +338,7 @@ export class GameManager {
       this.camera.updateMatrixWorld();
       if (points.every(point => {
         const p = point.clone().project(this.camera);
-        return Math.abs(p.x) < 0.90 && p.y < 0.82 && p.y > -0.62;
+        return Math.abs(p.x) < xLimit && p.y < yMax && p.y > yMin;
       })) break;
     }
   }
@@ -940,11 +948,21 @@ export class GameManager {
       this.sound.playSnap();
       this.vibrate(18);
 
+      const stackGroup = deckSlot.group;
+      const targetPos = new THREE.Vector3(targetSlot.worldX, 0, targetSlot.worldZ);
+
+      // Smooth tactile placement animation from deck / drag-drop to target pedestal
+      if (stackGroup && this.animation) {
+        await this.animation.animateStackPlacement(stackGroup, stackGroup.position, targetPos, 160);
+      }
+
       // 1. Transfer cards from deck to target slot
       const cards = [...deckSlot.cards];
       deckSlot.cards = [];
       deckSlot.badge = null;
-      this.scene.remove(deckSlot.group);
+      if (stackGroup) {
+        this.scene.remove(stackGroup);
+      }
       deckSlot.group = null;
 
       let currentY = 0;
@@ -957,6 +975,10 @@ export class GameManager {
         );
         targetSlot.stack.push(card);
         currentY += CARD_THICKNESS;
+      }
+
+      if (cards.length > 0 && this.animation) {
+        this.animation.animateSquash(cards[cards.length - 1].mesh);
       }
 
       this.updateSlotBadge(targetSlot);
@@ -1160,15 +1182,13 @@ export class GameManager {
       target.stack.push(card);
       currentTargetHeight += CARD_THICKNESS;
 
-      const jumpPromise = new Promise(resolve => {
-        setTimeout(async () => {
-          await this.animation.animateCardJump(card.mesh, startPos, endPos, 360, 1.8);
-          this.animation.animateSquash(card.mesh);
-          resolve();
-        }, i * 70);
-      });
-
-      jumpPromises.push(jumpPromise);
+      if (this.animation) {
+        jumpPromises.push(
+          this.animation.animateCardJump(card.mesh, startPos, endPos, 340, 1.8, i * 45)
+        );
+      } else {
+        card.mesh.position.copy(endPos);
+      }
     }
 
     await Promise.all(jumpPromises);
@@ -2451,19 +2471,9 @@ export class GameManager {
       }
     }
 
-    if (this.ambientMotes && this.ambientMotesSpeeds) {
-      const pos = this.ambientMotes.geometry.attributes.position.array;
-      for (let i = 0; i < this.ambientMotesSpeeds.length; i++) {
-        const sp = this.ambientMotesSpeeds[i];
-        pos[i * 3 + 1] += sp.vy * delta;
-        pos[i * 3] += Math.sin(time * 1.5 + sp.phase) * 0.006;
-        if (pos[i * 3 + 1] > 14) {
-          pos[i * 3 + 1] = 0.5;
-          pos[i * 3] = (Math.random() - 0.5) * 28;
-          pos[i * 3 + 2] = (Math.random() - 0.5) * 24 - 2;
-        }
-      }
-      this.ambientMotes.geometry.attributes.position.needsUpdate = true;
+    if (this.ambientMotes) {
+      this.ambientMotes.rotation.y = time * 0.025;
+      this.ambientMotes.position.y = Math.sin(time * 0.4) * 0.25;
     }
 
     if (this.renderer && this.scene && this.camera) {

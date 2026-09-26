@@ -25,13 +25,15 @@ export class AnimationSystem {
     // 1. Process active tween animations
     for (let i = this.activeAnimations.length - 1; i >= 0; i--) {
       const anim = this.activeAnimations[i];
+      if (now < anim.startTime) continue;
+
       const elapsed = (now - anim.startTime) / anim.duration;
 
       if (elapsed >= 1) {
         anim.onUpdate(1);
         if (anim.onComplete) anim.onComplete();
         this.activeAnimations.splice(i, 1);
-      } else if (elapsed >= 0) {
+      } else {
         const progress = anim.easing(elapsed);
         anim.onUpdate(progress);
       }
@@ -133,9 +135,9 @@ export class AnimationSystem {
   /**
    * Animate a single card jumping along a 3D parabolic trajectory from startPos to endPos
    */
-  animateCardJump(cardMesh, startPos, endPos, duration = 360, arcHeight = 1.8) {
+  animateCardJump(cardMesh, startPos, endPos, duration = 340, arcHeight = 1.8, delay = 0) {
     return new Promise((resolve) => {
-      const startTime = performance.now();
+      const startTime = performance.now() + delay;
       const midX = (startPos.x + endPos.x) / 2;
       const midZ = (startPos.z + endPos.z) / 2;
       const peakY = Math.max(startPos.y, endPos.y) + arcHeight;
@@ -167,6 +169,36 @@ export class AnimationSystem {
           cardMesh.position.copy(endPos);
           cardMesh.rotation.x = 0;
           cardMesh.rotation.z = 0;
+          this.animateSquash(cardMesh);
+          resolve();
+        }
+      });
+    });
+  }
+
+  /**
+   * Animate a stack of cards smoothly flying/dropping onto a target pedestal slot
+   * with tactile squash & landing bounce.
+   */
+  animateStackPlacement(stackGroup, startPos, targetPos, duration = 170) {
+    return new Promise((resolve) => {
+      const startTime = performance.now();
+      const start = startPos.clone();
+      const target = targetPos.clone();
+
+      this.activeAnimations.push({
+        startTime,
+        duration,
+        easing: AnimationSystem.easeOutCubic,
+        onUpdate: (t) => {
+          const u = 1 - t;
+          stackGroup.position.x = start.x + (target.x - start.x) * t;
+          stackGroup.position.z = start.z + (target.z - start.z) * t;
+          const arc = Math.sin(t * Math.PI) * 0.45;
+          stackGroup.position.y = u * start.y + t * target.y + arc;
+        },
+        onComplete: () => {
+          stackGroup.position.copy(target);
           resolve();
         }
       });
