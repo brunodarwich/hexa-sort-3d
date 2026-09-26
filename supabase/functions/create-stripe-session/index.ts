@@ -31,10 +31,25 @@ serve(async (req) => {
     const playerId = user.id;
     const prod = getProduct(itemType);
     if (!prod?.usdCents) return new Response(JSON.stringify({ error: 'Este produto não está disponível para cartão.' }), { status: 400, headers: corsHeaders });
-    const appUrl = returnUrl || Deno.env.get('APP_URL');
-    if (!stripeSecretKey || !appUrl || !Deno.env.get('STRIPE_WEBHOOK_SECRET')) return new Response(JSON.stringify({ error: 'Pagamento por cartão indisponível no momento.' }), { status: 503, headers: corsHeaders });
-    const successUrl = new URL('?payment=success', appUrl).href;
-    const cancelUrl = new URL('?payment=cancel', appUrl).href;
+    
+    // Proteção contra Open Redirect: validar origem permitida
+    const configuredAppUrl = Deno.env.get('APP_URL') || 'https://hexasort.game';
+    let safeBaseUrl = configuredAppUrl;
+    if (returnUrl) {
+      try {
+        const parsed = new URL(returnUrl);
+        const configuredOrigin = new URL(configuredAppUrl).origin;
+        if (parsed.origin === configuredOrigin || parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+          safeBaseUrl = parsed.origin;
+        }
+      } catch {
+        // Formato de URL inválido, mantém safeBaseUrl padrão
+      }
+    }
+
+    if (!stripeSecretKey || !safeBaseUrl || !Deno.env.get('STRIPE_WEBHOOK_SECRET')) return new Response(JSON.stringify({ error: 'Pagamento por cartão indisponível no momento.' }), { status: 503, headers: corsHeaders });
+    const successUrl = new URL('?payment=success', safeBaseUrl).href;
+    const cancelUrl = new URL('?payment=cancel', safeBaseUrl).href;
 
     // Criar sessão de Checkout via Stripe API (urlencoded)
     const params = new URLSearchParams();

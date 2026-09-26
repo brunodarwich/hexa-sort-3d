@@ -232,6 +232,27 @@ class AuthService {
   }
 
   /**
+   * Executa a exclusão de conta e anonimização de histórico conforme LGPD (Art. 12) e Google Play
+   */
+  async deleteAndAnonymizeAccount() {
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Serviço indisponível no momento.');
+    }
+    const session = await this.ensureSession();
+    if (!session?.user?.id) {
+      throw new Error('Nenhuma conta ativa para exclusão.');
+    }
+    const { data, error } = await supabase.rpc('delete_and_anonymize_user');
+    if (error) {
+      console.error('Erro ao anonimizar conta:', error);
+      throw error;
+    }
+    await this.signOut();
+    localStorage.clear();
+    return data;
+  }
+
+  /**
    * Sincroniza os dados do Google na tabela public.players
    */
   async syncPlayerProfile(user) {

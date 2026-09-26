@@ -211,8 +211,8 @@ class PaymentService {
     } else if (effectiveId === 'pack_reroll' || effectiveId.includes('reroll')) {
       delta.reroll = 4;
     } else if (effectiveId === 'combo_pack' || effectiveId.includes('combo')) {
-      delta.reroll = 4;
-      delta.lightning = 4;
+      delta.reroll = 8;
+      delta.lightning = 8;
     }
 
     const cur = this.getInventory();

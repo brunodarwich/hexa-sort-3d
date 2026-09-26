@@ -60,11 +60,9 @@ Página web dedicada com visual moderno em tema dark, protegida por chave de ace
    - Histórico de pedidos de pagamento com status em tempo real
 
 #### Proteção de Acesso:
-- Definida pela variável de ambiente:
-  ```env
-  VITE_ADMIN_ACCESS_KEY=sua_chave_secreta_aqui
-  ```
-- O painel exibe uma tela de desbloqueio elegante exigindo a chave antes de carregar qualquer dado do Supabase.
+- Autenticação real integrada com o Supabase Auth.
+- Requer login com e-mail e senha de uma conta com papel administrativo configurado (`app_metadata.role = 'admin'`).
+- RLS do Supabase garante que apenas contas com o claim administrativo consigam consultar dados agregados de jogadores e pedidos.
 
 ---
 

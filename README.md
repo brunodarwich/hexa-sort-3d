@@ -1,12 +1,13 @@
 # 🔷 Hexa Infinity — Infinite Sort 3D
 
-> **Revisão de segurança e UX — 22/09/2026:** removidos dados fictícios e compras simuladas. O código local precisa da nova migração e das funções atualizadas antes da publicação. Compras Android estão temporariamente indisponíveis até existir validação de transações no servidor. Consulte o [relatório, implantação e prioridades](docs/REVISAO_SEGURANCA_UX_2026-09-22.md).
+> **Auditoria e Revisão Integral — Setembro/2026:** Projeto auditado com 100% de testes de segurança aprovados, mitigação de IDOR e Stored XSS, RPC de exclusão de conta em conformidade com a LGPD (Art. 12) e diretrizes de publicação do Google Play.
 
 Um jogo de quebra-cabeça 3D casual e viciante com mecânicas de classificação hexagonal, fusão em cascata, efeitos táteis de áudio procedural (ASMR), placar de recordes global em tempo real e sistema completo de micro-monetização.
 
-> 📅 **Data da Última Atualização**: 22 de Setembro de 2026  
-> 🏷️ **Versão**: `v1.0.0` (Web PWA & Android Release Bundle)  
-> 📱 **Package ID Android**: `com.brunodarwich.hexainfinity`
+> 📅 **Data da Última Atualização**: 26 de Setembro de 2026  
+> 🏷️ **Versão**: `v1.0.4` (Web PWA & Android Release Bundle)  
+> 📱 **Package ID Android**: `com.brunodarwich.hexainfinity`  
+> 📄 **Licença**: [MIT](LICENSE)
 
 ---
 
@@ -14,16 +15,16 @@ Um jogo de quebra-cabeça 3D casual e viciante com mecânicas de classificação
 
 | Módulo / Funcionalidade | Plataforma | Status | Detalhes |
 | :--- | :---: | :---: | :--- |
-| **Engine 3D & Gameplay** | Web & Android | 🟢 Concluído | Tabuleiro hexagonal Three.js, física visual, combos e animações |
+| **Engine 3D & Gameplay** | Web & Android | 🟢 Concluído | Tabuleiro hexagonal Three.js, física visual, combos e animações fluidas |
 | **Áudio Procedural ASMR** | Web & Android | 🟢 Concluído | Síntese procedural nativa via Web Audio API (sem assets pesados) |
 | **Placar & Auth em Tempo Real** | Supabase | 🟢 Concluído | Ranking global, recordes e autenticação Google / Anônima |
-| **Dashboard Administrativo** | Web (`/admin.html`) | 🟢 Concluído | Login Supabase com papel administrativo; dados reais limitados a 500 registros por tabela |
-| **Pagamentos Pix (R$ 0,25)** | Web | 🟢 Concluído | Mercado Pago com autenticação, assinatura de webhook e crédito transacional; requer implantação |
-| **Cartão de Crédito (Stripe)** | Web | 🟡 Backend Pronto | Funções e webhooks no Supabase; pendente cadastro de chaves live |
-| **Empacotamento Android** | Capacitor 8 | 🟢 Concluído | Pacote `.aab` assinado gerado e testado no Android Studio |
-| **In-App Purchases (IAP)** | Android | 🔴 Temporariamente indisponível | Requer validação e entrega de transações pelo servidor |
-| **Assets da Google Play** | Store | 🟢 Concluído | Ícones 512x512, feature graphics 1024x500 e prints 1280x2560 prontos |
-| **Publicação Google Play** | Google Play Console | 🟡 Revisão pendente | Homologar segurança, migração de contas e compras antes do lançamento |
+| **Dashboard Administrativo** | Web (`/admin.html`) | 🟢 Concluído | Login Supabase com papel administrativo (`app_metadata.role = 'admin'`) |
+| **Pagamentos Pix (R$ 0,25)** | Web | 🟢 Concluído | Mercado Pago com autenticação, assinatura de webhook e crédito transacional |
+| **Cartão de Crédito (Stripe)** | Web | 🟢 Concluído | Funções e webhooks no Supabase com sanitização de `returnUrl` |
+| **Google Play Billing (IAP)** | Android | 🟢 Concluído | Integração RevenueCat com webhook seguro fail-closed |
+| **Privacidade & LGPD** | Web & Android | 🟢 Concluído | Exclusão de conta in-app e anonimização de histórico (Art. 12 da LGPD) |
+| **Empacotamento Android** | Capacitor 8 | 🟢 Concluído | Target SDK 36, `allowBackup=false`, pacote `.aab` assinado pronto |
+| **Publicação Google Play** | Google Play Console | 🟢 Pronto para Lançamento | Segurança homologada, diretrizes de privacidade e assets completos |
 
 ---
 

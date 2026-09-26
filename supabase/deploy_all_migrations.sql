@@ -37,7 +37,8 @@ CREATE INDEX IF NOT EXISTS idx_game_sessions_player_id
 ON public.game_sessions (player_id);
 
 -- 4. View de Ranking Global (Top Scores únicos por jogador ou melhor partida)
-CREATE OR REPLACE VIEW public.global_leaderboard AS
+DROP VIEW IF EXISTS public.global_leaderboard CASCADE;
+CREATE VIEW public.global_leaderboard AS
 SELECT 
     gs.id,
     gs.player_id,
@@ -343,4 +344,107 @@ LEFT JOIN public.players p ON p.id = gs.player_id
 ORDER BY gs.score DESC, gs.time_seconds ASC;
 
 GRANT SELECT ON public.global_leaderboard TO anon, authenticated;
+
+-- --------------------------------------------------------------------
+-- ETAPA 7: 20260925000000_fix_account_merge_and_security.sql
+-- --------------------------------------------------------------------
+
+create or replace function public.merge_player_accounts(p_guest_id uuid, p_target_id uuid)
+returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  guest_inv public.player_inventory;
+  transferred_reroll integer := 0;
+  transferred_lightning integer := 0;
+begin
+  if p_guest_id is null or p_target_id is null then
+    raise exception 'Both guest_id and target_id are required';
+  end if;
+  
+  if p_guest_id = p_target_id then
+    return jsonb_build_object('success', true, 'message', 'Same account, no merge needed');
+  end if;
+
+  if auth.uid() is not null and auth.uid() != p_guest_id and not public.is_admin() then
+    raise exception 'Unauthorized to merge these accounts: only the guest account owner can authorize inventory transfer';
+  end if;
+
+  select * into guest_inv from public.player_inventory where player_id = p_guest_id for update;
+
+  if found then
+    transferred_reroll := coalesce(guest_inv.reroll_count, 0);
+    transferred_lightning := coalesce(guest_inv.lightning_count, 0);
+
+    if transferred_reroll > 0 or transferred_lightning > 0 then
+      insert into public.player_inventory (player_id, reroll_count, lightning_count, updated_at)
+      values (p_target_id, transferred_reroll, transferred_lightning, now())
+      on conflict (player_id) do update set
+        reroll_count = public.player_inventory.reroll_count + excluded.reroll_count,
+        lightning_count = public.player_inventory.lightning_count + excluded.lightning_count,
+        updated_at = now();
+
+      update public.player_inventory
+      set reroll_count = 0, lightning_count = 0, updated_at = now()
+      where player_id = p_guest_id;
+
+      insert into public.inventory_events (player_id, reason, reroll_delta, lightning_delta)
+      values (p_target_id, 'merge_credit', transferred_reroll, transferred_lightning);
+
+      insert into public.inventory_events (player_id, reason, reroll_delta, lightning_delta)
+      values (p_guest_id, 'merge_debit', -transferred_reroll, -transferred_lightning);
+    end if;
+  end if;
+
+  update public.game_sessions set player_id = p_target_id where player_id = p_guest_id;
+  update public.payment_orders set player_id = p_target_id where player_id = p_guest_id;
+  update public.inventory_events set player_id = p_target_id where player_id = p_guest_id;
+
+  return jsonb_build_object(
+    'success', true,
+    'guest_id', p_guest_id,
+    'target_id', p_target_id,
+    'reroll_transferred', transferred_reroll,
+    'lightning_transferred', transferred_lightning
+  );
+end $$;
+
+revoke all on function public.merge_player_accounts(uuid, uuid) from public, anon;
+grant execute on function public.merge_player_accounts(uuid, uuid) to authenticated, service_role;
+
+alter table public.game_sessions drop constraint if exists check_realistic_score_rate;
+alter table public.game_sessions add constraint check_realistic_score_rate
+check (score <= (greatest(time_seconds, 10) * 1500) + 50000);
+
+-- --------------------------------------------------------------------
+-- ETAPA 8: 20260925010000_account_anonymization.sql
+-- --------------------------------------------------------------------
+
+create or replace function public.delete_and_anonymize_user()
+returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_uid uuid := auth.uid();
+  v_count integer := 0;
+begin
+  if v_uid is null then
+    raise exception 'Authentication required';
+  end if;
+
+  update public.game_sessions
+  set player_name = 'Jogador Anônimo'
+  where player_id = v_uid;
+  
+  get diagnostics v_count = row_count;
+
+  delete from public.players where id = v_uid;
+
+  return jsonb_build_object(
+    'success', true,
+    'sessions_anonymized', v_count
+  );
+end $$;
+
+revoke all on function public.delete_and_anonymize_user() from public, anon;
+grant execute on function public.delete_and_anonymize_user() to authenticated;
+
 

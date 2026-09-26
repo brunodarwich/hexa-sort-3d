@@ -1643,10 +1643,51 @@
               </div>
               <span class="material-symbols-outlined text-muted">open_in_new</span>
             </a>
+
+            <!-- Excluir Conta e Dados (LGPD) -->
+            <div class="setting-item-row clickable" id="setting-btn-delete-account">
+              <div class="setting-item-info">
+                <span class="material-symbols-outlined setting-icon" style="color: #ef4444;">delete_forever</span>
+                <div class="setting-text-col">
+                  <strong style="color: #ef4444;">Excluir Conta e Dados</strong>
+                  <span>Anonimizar histórico e apagar perfil (LGPD)</span>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-muted">chevron_right</span>
+            </div>
           </div>
 
           <div class="modal-footer">
             <button type="button" class="btn-secondary w-full" data-close="modal-settings">Fechar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Confirmação Exclusão de Conta (LGPD) -->
+      <div id="modal-delete-account" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+        <div class="modal-card modal-compact">
+          <div class="modal-header">
+            <h2 id="delete-account-title" class="modal-title flex items-center gap-2" style="color: #ef4444;">
+              <span class="material-symbols-outlined" style="color: #ef4444;">warning</span>
+              Excluir Conta e Dados
+            </h2>
+            <button class="modal-close" data-close="modal-delete-account" aria-label="Fechar">✕</button>
+          </div>
+          <div class="modal-body">
+            <p style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #cbd5e1;">
+              Tem certeza que deseja solicitar a <strong>exclusão completa de sua conta</strong>?
+            </p>
+            <div style="padding: 0.75rem; background: rgba(127, 29, 29, 0.25); border: 1px solid rgba(185, 28, 28, 0.4); border-radius: 12px; font-size: 0.8rem; color: #fca5a5; line-height: 1.5;">
+              <p style="margin-bottom: 0.4rem;">• Seu perfil, e-mail cadastrado e inventário de power-ups serão permanentemente apagados.</p>
+              <p style="margin-bottom: 0.4rem;">• Suas pontuações no placar global serão mantidas de forma <strong>100% anônima</strong> ("Jogador Anônimo"), conforme o Art. 12 da LGPD.</p>
+              <p style="margin-bottom: 0;">• Esta ação é irreversível.</p>
+            </div>
+          </div>
+          <div class="modal-footer" style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+            <button type="button" class="btn-secondary" style="flex: 1;" data-close="modal-delete-account">Cancelar</button>
+            <button type="button" id="btn-confirm-delete-account" class="btn-primary" style="flex: 1; background: linear-gradient(135deg, #ef4444, #dc2626); border-color: #b91c1c;">
+              Confirmar Exclusão
+            </button>
           </div>
         </div>
       </div>

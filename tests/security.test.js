@@ -25,7 +25,9 @@ before(async () => {
     '20260921000000_expire_pending_orders.sql',
     '20260922000000_secure_data_access.sql',
     '20260923000000_account_merge_and_revenuecat.sql',
-    '20260924000000_ranking_avatar_support.sql'
+    '20260924000000_ranking_avatar_support.sql',
+    '20260925000000_fix_account_merge_and_security.sql',
+    '20260925010000_account_anonymization.sql'
   ]) {
     await db.exec(await readFile(new URL('../supabase/migrations/' + file, import.meta.url), 'utf8'));
   }
@@ -120,3 +122,56 @@ test('store catalog matches quantities and prices advertised in the app', async 
   assert.equal(getProduct('__proto__'), null);
   assert.equal(getProduct('unknown'), null);
 });
+
+test('account merge blocks IDOR and requires guest owner authorization', async () => {
+  // Usuário B tenta roubar os itens do usuário A -> Rejeitado
+  await assert.rejects(
+    asRole('authenticated', b, `select merge_player_accounts('${a}', '${b}')`),
+    /Unauthorized to merge these accounts/
+  );
+
+  // Usuário A autoriza a fusão para a conta B -> Sucesso
+  const res = await asRole('authenticated', a, `select merge_player_accounts('${a}', '${b}') as result`);
+  assert.equal(res.rows[0].result.success, true);
+  assert.equal(res.rows[0].result.reroll_transferred, 10);
+
+  // Inventário de A foi zerado e o de B foi incrementado
+  const invA = await db.query(`select reroll_count from player_inventory where player_id='${a}'`);
+  assert.equal(invA.rows[0].reroll_count, 0);
+  const invB = await db.query(`select reroll_count from player_inventory where player_id='${b}'`);
+  assert.equal(invB.rows[0].reroll_count, 30);
+});
+
+test('anti-cheat constraint rejects physically impossible scores', async () => {
+  // 999.999 pontos em apenas 5 segundos viola a física do jogo
+  await assert.rejects(
+    asRole('authenticated', b, `insert into game_sessions(player_id, player_name, score, time_seconds) values ('${b}', 'Bob', 999999, 5)`),
+    /check_realistic_score_rate/
+  );
+
+  // Pontuação realista é aceita
+  await asRole('authenticated', b, `insert into game_sessions(player_id, player_name, score, time_seconds) values ('${b}', 'Bob', 2500, 60)`);
+  const session = await db.query(`select score from game_sessions where player_id='${b}'`);
+  assert.equal(session.rows[0].score, 2500);
+});
+
+test('account anonymization removes personal profile and anonymizes game sessions according to LGPD', async () => {
+  // Executar anonimização para o usuário B
+  const res = await asRole('authenticated', b, `select delete_and_anonymize_user() as result`);
+  assert.equal(res.rows[0].result.success, true);
+
+  // Perfil em players foi deletado
+  const profile = await db.query(`select * from players where id='${b}'`);
+  assert.equal(profile.rows.length, 0);
+
+  // Inventário em player_inventory foi deletado
+  const inv = await db.query(`select * from player_inventory where player_id='${b}'`);
+  assert.equal(inv.rows.length, 0);
+
+  // Partida histórica foi preservada no placar como 'Jogador Anônimo' e player_id NULL
+  const sessions = await db.query(`select player_name, player_id, score from game_sessions where score=2500`);
+  assert.equal(sessions.rows.length, 1);
+  assert.equal(sessions.rows[0].player_name, 'Jogador Anônimo');
+  assert.equal(sessions.rows[0].player_id, null);
+});
+

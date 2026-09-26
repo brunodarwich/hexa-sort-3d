@@ -381,9 +381,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           const scoreStr = (item.score || 0).toLocaleString('pt-BR');
           const levelNum = item.level || Math.max(1, Math.floor((item.score || 0) / 18000));
           const comboStr = item.combo ? `${item.combo}x combo` : `${Math.max(5, 18 - pos)}x combo`;
-          const avatar = item.avatar;
-          const avatarHtml = avatar
-            ? `<img src="${escapeHTML(avatar)}" alt="" loading="lazy" />`
+          const safeAvatar = sanitizeImageUrl(item.avatar);
+          const avatarHtml = safeAvatar
+            ? `<img src="${safeAvatar}" alt="" loading="lazy" />`
             : `<span>${initial}</span>`;
 
           return `
@@ -597,6 +597,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       game.sound.playClick();
       if (modalSettings) modalSettings.classList.add('hidden');
       if (modalInfo) modalInfo.classList.remove('hidden');
+    });
+  }
+
+  const settingBtnDeleteAccount = document.getElementById('setting-btn-delete-account');
+  const modalDeleteAccount = document.getElementById('modal-delete-account');
+  const btnConfirmDeleteAccount = document.getElementById('btn-confirm-delete-account');
+
+  if (settingBtnDeleteAccount) {
+    settingBtnDeleteAccount.addEventListener('click', () => {
+      game.sound.playClick();
+      if (modalSettings) modalSettings.classList.add('hidden');
+      if (modalDeleteAccount) modalDeleteAccount.classList.remove('hidden');
+    });
+  }
+
+  if (btnConfirmDeleteAccount) {
+    btnConfirmDeleteAccount.addEventListener('click', async () => {
+      game.sound.playClick();
+      btnConfirmDeleteAccount.disabled = true;
+      btnConfirmDeleteAccount.textContent = 'Excluindo…';
+      try {
+        await authService.deleteAndAnonymizeAccount();
+        if (modalDeleteAccount) modalDeleteAccount.classList.add('hidden');
+        showToast('Conta excluída e dados anonimizados com sucesso.');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } catch (err) {
+        showToast(err.message || 'Erro ao excluir conta.');
+        btnConfirmDeleteAccount.disabled = false;
+        btnConfirmDeleteAccount.textContent = 'Confirmar Exclusão';
+      }
     });
   }
 
@@ -1619,8 +1651,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function escapeHTML(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function sanitizeImageUrl(url) {
+    if (!url || typeof url !== 'string') return null;
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol === 'https:' || (parsed.protocol === 'http:' && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1'))) {
+        return escapeHTML(parsed.href);
+      }
+    } catch {}
+    return null;
   }
 });

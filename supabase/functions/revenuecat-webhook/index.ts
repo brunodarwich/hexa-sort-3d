@@ -11,13 +11,16 @@ serve(async (req) => {
   }
 
   const webhookSecret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET');
-  if (webhookSecret) {
-    const authHeader = req.headers.get('authorization') || '';
-    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-    if (token !== webhookSecret) {
-      console.warn('Tentativa de acesso não autorizada ao webhook do RevenueCat');
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-    }
+  if (!webhookSecret) {
+    console.error('REVENUECAT_WEBHOOK_SECRET não configurado.');
+    return new Response(JSON.stringify({ error: 'Webhook unavailable' }), { status: 503, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  const authHeader = req.headers.get('authorization') || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (token !== webhookSecret) {
+    console.warn('Tentativa de acesso não autorizada ao webhook do RevenueCat');
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
 
   try {
