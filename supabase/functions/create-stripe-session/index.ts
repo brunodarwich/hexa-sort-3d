@@ -4,15 +4,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+import { requireUser } from '../_shared/security.js';
+import { getProduct } from '../_shared/catalog.js';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const STRIPE_PRODUCTS_USD: Record<string, { amountCents: number; name: string; qty: number }> = {
-  pack_reroll: { amountCents: 100, name: 'Hexa Infinity - 10x Deck Re-rolls', qty: 10 },
-  pack_lightning: { amountCents: 100, name: 'Hexa Infinity - 10x Lightning Strikes', qty: 10 },
-  combo_pack: { amountCents: 180, name: 'Hexa Infinity - Master Combo (10x Strikes + 10x Re-rolls)', qty: 10 }
 };
 
 serve(async (req) => {
@@ -26,41 +23,31 @@ serve(async (req) => {
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY') || '';
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    const { playerId, itemType = 'pack_lightning', successUrl, cancelUrl } = await req.json();
-
-    if (!playerId) {
-      return new Response(JSON.stringify({ error: 'playerId é obrigatório' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    const prod = STRIPE_PRODUCTS_USD[itemType] || STRIPE_PRODUCTS_USD.pack_lightning;
-
-    // Se Stripe Secret Key ainda não foi configurada, informa modo demonstração
-    if (!stripeSecretKey) {
-      return new Response(
-        JSON.stringify({
-          isSandbox: true,
-          message: 'STRIPE_SECRET_KEY não configurada nas Secrets do Supabase.',
-          mockSuccess: true
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+    let user;
+    try { user = await requireUser(req, supabase); }
+    catch { return new Response(JSON.stringify({ error: 'Entre novamente para comprar.' }), { status: 401, headers: corsHeaders }); }
+    const { itemType, returnUrl } = await req.json();
+    const playerId = user.id;
+    const prod = getProduct(itemType);
+    if (!prod?.usdCents) return new Response(JSON.stringify({ error: 'Este produto não está disponível para cartão.' }), { status: 400, headers: corsHeaders });
+    const appUrl = returnUrl || Deno.env.get('APP_URL');
+    if (!stripeSecretKey || !appUrl || !Deno.env.get('STRIPE_WEBHOOK_SECRET')) return new Response(JSON.stringify({ error: 'Pagamento por cartão indisponível no momento.' }), { status: 503, headers: corsHeaders });
+    const successUrl = new URL('?payment=success', appUrl).href;
+    const cancelUrl = new URL('?payment=cancel', appUrl).href;
 
     // Criar sessão de Checkout via Stripe API (urlencoded)
     const params = new URLSearchParams();
     params.append('payment_method_types[]', 'card');
     params.append('line_items[0][price_data][currency]', 'usd');
     params.append('line_items[0][price_data][product_data][name]', prod.name);
-    params.append('line_items[0][price_data][unit_amount]', String(prod.amountCents));
+    params.append('line_items[0][price_data][unit_amount]', String(prod.usdCents));
     params.append('line_items[0][quantity]', '1');
     params.append('mode', 'payment');
     params.append('client_reference_id', playerId);
     params.append('metadata[playerId]', playerId);
     params.append('metadata[itemType]', itemType);
-    params.append('metadata[quantity]', String(prod.qty));
+    params.append('metadata[quantity]', String(prod.quantity));
     params.append('success_url', successUrl || 'https://hexasort.game/?payment=success');
     params.append('cancel_url', cancelUrl || 'https://hexasort.game/?payment=cancel');
 
@@ -82,26 +69,28 @@ serve(async (req) => {
       });
     }
 
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(playerId);
-    const validPlayerId = isUuid ? playerId : crypto.randomUUID();
+    const validPlayerId = user.id;
 
-    await supabase.from('players').upsert({
+    const { error: profileError } = await supabase.from('players').upsert({
       id: validPlayerId,
       username: 'Jogador Internacional',
       last_active_at: new Date().toISOString()
-    }, { onConflict: 'id' });
+    }, { onConflict: 'id', ignoreDuplicates: true });
+    if (profileError) throw profileError;
 
     // Registrar ordem no Supabase
-    await supabase.from('payment_orders').insert({
+    const { error: orderError } = await supabase.from('payment_orders').insert({
       player_id: validPlayerId,
       gateway: 'stripe',
       external_order_id: sessionData.id,
       item_type: itemType,
-      quantity: prod.qty,
-      amount: prod.amountCents / 100,
+      quantity: prod.quantity,
+      amount: prod.usdCents / 100,
       currency: 'USD',
       status: 'pending'
     });
+
+    if (orderError) throw orderError;
 
     return new Response(JSON.stringify({ url: sessionData.url, sessionId: sessionData.id }), {
       status: 200,

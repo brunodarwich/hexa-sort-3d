@@ -4,17 +4,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+import { requireUser } from '../_shared/security.js';
+import { getProduct } from '../_shared/catalog.js';
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-const PRICING_BRL: Record<string, { amount: number; qty: number; name: string }> = {
-  reroll: { amount: 0.25, qty: 1, name: 'Atualizar Deque (1x)' },
-  lightning: { amount: 0.25, qty: 1, name: 'Raio Destruidor (1x)' },
-  pack_reroll: { amount: 2.50, qty: 10, name: 'Pacote Atualizar Deque (10x)' },
-  pack_lightning: { amount: 2.50, qty: 10, name: 'Pacote Raio (10x)' },
-  combo_pack: { amount: 4.50, qty: 10, name: 'Combo Mestre (10x Raios + 10x Atualizações)' }
 };
 
 serve(async (req) => {
@@ -29,57 +24,65 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body = await req.json();
-    const { playerId, itemType = 'lightning', recoveryEmail } = body;
-
-    if (!playerId) {
-      return new Response(
-        JSON.stringify({ error: 'playerId é obrigatório' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const itemConfig = PRICING_BRL[itemType] || PRICING_BRL.lightning;
-    const amount = itemConfig.amount;
-    const quantity = itemConfig.qty;
-
-    // Validar formato UUID (ou gerar um UUID válido)
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(playerId);
-    const validPlayerId = isUuid ? playerId : crypto.randomUUID();
-
-    // Garantir que o jogador exista na tabela players para satisfazer a foreign key
-    await supabase.from('players').upsert({
-      id: validPlayerId,
-      username: recoveryEmail ? recoveryEmail.split('@')[0] : 'Jogador',
-      email: recoveryEmail || null,
-      last_active_at: new Date().toISOString()
-    }, { onConflict: 'id' });
+    if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+    let user;
+    try { user = await requireUser(req, supabase); }
+    catch { return new Response(JSON.stringify({ error: 'Entre novamente para comprar.' }), { status: 401, headers: corsHeaders }); }
+    if (!mpAccessToken || !Deno.env.get('MERCADOPAGO_WEBHOOK_SECRET')) return new Response(JSON.stringify({ error: 'Pix indisponível no momento. Nenhuma cobrança foi criada.' }), { status: 503, headers: corsHeaders });
+    const { itemType, forceNew } = await req.json();
+    const itemConfig = getProduct(itemType);
+    if (!itemConfig) return new Response(JSON.stringify({ error: 'Produto inválido.' }), { status: 400, headers: corsHeaders });
+    const amount = itemConfig.brlCents / 100;
+    const quantity = itemConfig.quantity;
+    const validPlayerId = user.id;
+    const recoveryEmail = user.email || '';
+    const { error: profileError } = await supabase.from('players').upsert({
+      id: user.id, username: user.user_metadata?.full_name || 'Jogador',
+      email: user.email || null, last_active_at: new Date().toISOString()
+    }, { onConflict: 'id', ignoreDuplicates: true });
+    if (profileError) throw profileError;
 
     const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-    // 0. Expirar pedidos pendentes antigos do jogador (mais de 1 hora)
-    await supabase
-      .from('payment_orders')
-      .update({ status: 'expired' })
-      .eq('player_id', validPlayerId)
-      .eq('status', 'pending')
-      .lt('created_at', oneHourAgo);
+    // 0. Expirar pedidos pendentes antigos do jogador (mais de 1 hora ou se solicitado forceNew)
+    if (forceNew) {
+      await supabase
+        .from('payment_orders')
+        .update({ status: 'expired' })
+        .eq('player_id', validPlayerId)
+        .eq('item_type', itemType)
+        .eq('gateway', 'mercadopago')
+        .eq('status', 'pending');
+    } else {
+      await supabase
+        .from('payment_orders')
+        .update({ status: 'expired' })
+        .eq('player_id', validPlayerId)
+        .eq('status', 'pending')
+        .lt('created_at', oneHourAgo);
+    }
 
-    // 1. Verificar se já existe pedido pendente recente (últimos 15 min) para reaproveitar
-    const { data: existingOrder } = await supabase
-      .from('payment_orders')
-      .select('*')
-      .eq('player_id', validPlayerId)
-      .eq('item_type', itemType)
-      .eq('gateway', 'mercadopago')
-      .eq('status', 'pending')
-      .gte('created_at', fifteenMinAgo)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // 1. Verificar se já existe pedido pendente recente (últimos 15 min) para reaproveitar (se não for forceNew)
+    let existingOrder = null;
+    if (!forceNew) {
+      const { data } = await supabase
+        .from('payment_orders')
+        .select('*')
+        .eq('player_id', validPlayerId)
+        .eq('item_type', itemType)
+        .eq('gateway', 'mercadopago')
+        .eq('quantity', quantity)
+        .eq('amount', amount)
+        .eq('status', 'pending')
+        .gte('created_at', fifteenMinAgo)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      existingOrder = data;
+    }
 
-    if (existingOrder && existingOrder.qr_code) {
+    if (existingOrder && existingOrder.external_order_id && existingOrder.qr_code) {
       return new Response(
         JSON.stringify({
           orderId: existingOrder.id,
@@ -88,7 +91,7 @@ serve(async (req) => {
           itemName: itemConfig.name,
           qrCode: existingOrder.qr_code,
           qrCodeBase64: existingOrder.qr_code_base64 || null,
-          isSandbox: !mpAccessToken,
+          isSandbox: false,
           reused: true
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -115,30 +118,6 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Erro ao registrar pedido', details: orderError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // 3. Se o Access Token do Mercado Pago não estiver configurado, retorna modo simulado para testes locais
-    if (!mpAccessToken) {
-      const mockQrCode = `00020126580014br.gov.bcb.pix0136hexasort3d-demo-${order.id}520400005303986540${amount.toFixed(2)}5802BR5912HexaSort3D6009SaoPaulo62070503***6304ABCD`;
-      
-      // Salvar mockQrCode no banco para poder ser reutilizado durante os 15 min
-      await supabase
-        .from('payment_orders')
-        .update({ qr_code: mockQrCode })
-        .eq('id', order.id);
-
-      return new Response(
-        JSON.stringify({
-          orderId: order.id,
-          amount: amount,
-          itemName: itemConfig.name,
-          qrCode: mockQrCode,
-          qrCodeBase64: null,
-          isSandbox: true,
-          message: 'MERCADOPAGO_ACCESS_TOKEN não configurado nas Secrets do Supabase. Modo demonstração ativado.'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

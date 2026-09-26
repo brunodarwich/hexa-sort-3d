@@ -21,7 +21,7 @@ O **Stitch with Google** (disponível em [stitch.withgoogle.com](https://stitch.
 
 1. Acesse [stitch.withgoogle.com](https://stitch.withgoogle.com) e faça login com sua conta Google.
 2. Crie um novo projeto chamado **"Hexa Infinity Mobile & Web Game"**.
-3. No painel de Design System, cole o conteúdo do arquivo [`DESIGN.md`](file:///c:/Users/Bruno/Documents/antigravity/mysterious-hawking/DESIGN.md) que acabamos de criar.
+3. No painel de Design System, cole o conteúdo do arquivo [`DESIGN.md`](./DESIGN.md) que acabamos de criar.
 4. Para cada tela abaixo, copie o bloco de prompt correspondente e envie no chat do Stitch.
 5. Utilize os botões de variante e o refinamento ("zoom-in") para ajustar espaçamentos ou detalhes finos.
 

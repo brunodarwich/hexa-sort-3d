@@ -1,10 +1,14 @@
-/* Stitch ranking: keep this screen's cosmic palette independent of the game theme. */
+/* =========================================================================
+ * STITCH RANKING SYSTEM (DARK NEON & LIGHT PORCELAIN THEMES)
+ * ========================================================================= */
+
 #screen-ranking {
   background: #0d1322;
   color: #dde2f7;
   font-family: 'Rubik', sans-serif;
   --text-muted: #bac9cc;
 }
+
 #screen-ranking .screen-header {
   min-height: calc(64px + env(safe-area-inset-top, 0px));
   flex-shrink: 0;
@@ -13,6 +17,7 @@
   border: 0;
   box-shadow: 0 1px 8px #0003;
 }
+
 #screen-ranking .brand-logo-mini { height: 32px; filter: none; }
 #screen-ranking .header-left { display: flex; align-items: center; }
 #screen-ranking .header-user-btn { width: 32px; height: 32px; background: #c3f5ff; color: #00363d; box-shadow: none; }
@@ -22,7 +27,9 @@
 #screen-ranking .title-with-icon { gap: 8px; }
 #screen-ranking .title-icon-badge { box-shadow: none; }
 #screen-ranking .page-title { color: #dde2f7; font-size: 22px; font-weight: 800; }
+#screen-ranking #ranking-data-status { color: #bac9cc; font-size: 11px; text-align: center; margin: -2px 0 6px; }
 #btn-refresh-ranking { display: none; }
+
 #screen-ranking .podium-card {
   border-radius: 48px;
   padding: 12px 12px 16px;
@@ -38,10 +45,11 @@
 #screen-ranking .podium-name-row > .material-symbols-outlined,
 #screen-ranking .podium-score-row > .material-symbols-outlined { display: none; }
 #screen-ranking .podium-avatar-wrap { margin-bottom: 10px; }
-#screen-ranking .avatar-ring { border: 0; }
+#screen-ranking .avatar-ring { border: 0; position: relative; overflow: visible; display: flex; align-items: center; justify-content: center; }
 #screen-ranking .col-rank-1 .avatar-ring { width: 80px; height: 80px; padding: 4px; }
 #screen-ranking .col-rank-2 .avatar-ring,
 #screen-ranking .col-rank-3 .avatar-ring { width: 64px; height: 64px; padding: 2px; }
+#screen-ranking .podium-avatar-img { width: 100%; height: 100%; border-radius: 9999px; object-fit: cover; display: block; }
 #screen-ranking .ring-gold { background: linear-gradient(45deg, #feb300, #ffd799, #00e5ff); }
 #screen-ranking .podium-tag { font-size: 12px; padding: 1px 6px; }
 #screen-ranking .tag-cyan { color: #c3f5ff; border-color: #c3f5ff4d; }
@@ -59,30 +67,269 @@
 #screen-ranking .pedestal-3 { height: 64px; background: linear-gradient(#ffba380d, #ffba380d), linear-gradient(#242a3a, #151b2b); }
 #screen-ranking .pedestal-tier { font-size: 10px; letter-spacing: .02em; }
 #screen-ranking .pedestal-2 .pedestal-tier { color: #c3f5ffcc; }
-#screen-ranking .personal-rank-card { min-height: 59px; border-radius: 32px; padding: 10px 12px 10px 18px; margin: 0; background: linear-gradient(90deg, #00e5ff33, #242a3a, #c3f5ff1a); border: 1px solid #00e5ff80; box-shadow: 0 0 28px #00e5ff59; }
-#screen-ranking .personal-rank-left { flex: 1; }
-#screen-ranking .rank-badge-left { border-radius: 0; padding: 2px 8px; background: #080e1de6; border-color: #00e5ff; }
-#screen-ranking .rank-pos { color: #00e5ff; }
-#screen-ranking .personal-trend { color: #5cff9f; }
-#screen-ranking .personal-trend .material-symbols-outlined { font-size: 12px; }
-#screen-ranking .personal-user-avatar { width: 32px; height: 32px; }
-#screen-ranking .personal-name { font-size: 18px; color: #c3f5ff; text-shadow: 0 0 8px #00e5ffb3; }
-#screen-ranking .personal-level { color: #ffba38; }
-#screen-ranking .score-big { color: #00e5ff; font-size: 18px; text-shadow: 0 0 10px #00e5ff99; }
-#screen-ranking .score-sub { color: #c3f5ffcc; }
+
 #screen-ranking .competitors-section { margin-top: 0; gap: 8px; }
 #screen-ranking .section-title-row { color: #bac9cc; font-size: 10px; line-height: 14px; letter-spacing: .04em; }
 #screen-ranking .ranking-row { padding: 8px; min-height: 58px; border: 0; border-radius: 32px; background: #191f2f; box-shadow: none; gap: 8px; }
 #screen-ranking .row-left { gap: 12px; }
 #screen-ranking .row-rank-num { color: #bac9cc; width: 24px; }
-#screen-ranking .row-avatar { width: 40px; height: 40px; background: #333949; color: #dde2f7; }
+#screen-ranking .row-avatar { width: 40px; height: 40px; background: #333949; color: #dde2f7; border-radius: 9999px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+#screen-ranking .row-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 #screen-ranking .row-name { color: #dde2f7; font-size: 14px; line-height: 20px; }
 #screen-ranking .row-level, #screen-ranking .row-combo { font-size: 10px; line-height: 14px; font-weight: 700; white-space: nowrap; }
 #screen-ranking .row-score { color: #dde2f7; font-size: 16px; }
+
 body:has(#screen-ranking.active) .bottom-nav { height: calc(80px + env(safe-area-inset-bottom, 0px)); background: #080f1b; border: 0; box-shadow: 0 -4px 24px #0003; }
 body:has(#screen-ranking.active) .nav-tab { color: #bac9cc; }
 body:has(#screen-ranking.active) .nav-tab-play { transform: none; }
 body:has(#screen-ranking.active) .nav-play-bubble { width: 40px; height: 40px; background: #00daf3; }
+
+/* =========================================================================
+ * LIGHT THEME ADAPTATION (PORCELAIN GARDEN)
+ * ========================================================================= */
+
+[data-theme="light"] #screen-ranking,
+body[data-theme="light"] #screen-ranking {
+  background: radial-gradient(circle at 50% 20%, #ffffff 0%, #f1f5f9 55%, #e2e8f0 100%);
+  color: #0f172a;
+  --text-muted: #64748b;
+}
+
+[data-theme="light"] #screen-ranking .screen-header,
+body[data-theme="light"] #screen-ranking .screen-header {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] #screen-ranking .header-user-btn,
+body[data-theme="light"] #screen-ranking .header-user-btn {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+[data-theme="light"] #screen-ranking .title-icon-badge.badge-yellow,
+body[data-theme="light"] #screen-ranking .title-icon-badge.badge-yellow {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  color: #d97706;
+  border: 1px solid #fde68a;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+}
+
+[data-theme="light"] #screen-ranking .page-title,
+body[data-theme="light"] #screen-ranking .page-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] #screen-ranking #ranking-data-status,
+body[data-theme="light"] #screen-ranking #ranking-data-status {
+  color: #64748b;
+}
+
+[data-theme="light"] #screen-ranking .podium-card,
+body[data-theme="light"] #screen-ranking .podium-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] #screen-ranking .podium-name,
+body[data-theme="light"] #screen-ranking .podium-name {
+  color: #0f172a;
+}
+
+[data-theme="light"] #screen-ranking .col-rank-1 .podium-name,
+body[data-theme="light"] #screen-ranking .col-rank-1 .podium-name {
+  color: #78350f;
+}
+
+[data-theme="light"] #screen-ranking .col-rank-1 .podium-score,
+body[data-theme="light"] #screen-ranking .col-rank-1 .podium-score {
+  color: #d97706;
+}
+
+[data-theme="light"] #screen-ranking .podium-score,
+body[data-theme="light"] #screen-ranking .podium-score {
+  color: #0284c7;
+}
+
+[data-theme="light"] #screen-ranking .col-rank-3 .podium-score,
+body[data-theme="light"] #screen-ranking .col-rank-3 .podium-score {
+  color: #c2410c;
+}
+
+[data-theme="light"] #screen-ranking .ring-gold,
+body[data-theme="light"] #screen-ranking .ring-gold {
+  background: linear-gradient(135deg, #fcd34d, #f59e0b, #d97706);
+}
+
+[data-theme="light"] #screen-ranking .ring-cyan,
+body[data-theme="light"] #screen-ranking .ring-cyan {
+  background: linear-gradient(135deg, #7dd3fc, #0284c7);
+}
+
+[data-theme="light"] #screen-ranking .ring-bronze,
+body[data-theme="light"] #screen-ranking .ring-bronze {
+  background: linear-gradient(135deg, #fdba74, #ea580c);
+}
+
+[data-theme="light"] #screen-ranking .tag-gold,
+body[data-theme="light"] #screen-ranking .tag-gold {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+}
+
+[data-theme="light"] #screen-ranking .tag-cyan,
+body[data-theme="light"] #screen-ranking .tag-cyan {
+  color: #0284c7;
+  border-color: #bae6fd;
+  background: #e0f2fe;
+}
+
+[data-theme="light"] #screen-ranking .tag-bronze,
+body[data-theme="light"] #screen-ranking .tag-bronze {
+  color: #c2410c;
+  border-color: #fed7aa;
+  background: #ffedd5;
+}
+
+[data-theme="light"] #screen-ranking .avatar-letter,
+body[data-theme="light"] #screen-ranking .avatar-letter {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+[data-theme="light"] #screen-ranking .pedestal-1,
+body[data-theme="light"] #screen-ranking .pedestal-1 {
+  background: linear-gradient(to bottom, #fffbeb, #fef3c7);
+  border: 1px solid #fde68a;
+  border-radius: 12px 12px 0 0;
+}
+
+[data-theme="light"] #screen-ranking .pedestal-2,
+body[data-theme="light"] #screen-ranking .pedestal-2 {
+  background: linear-gradient(to bottom, #f0f9ff, #e0f2fe);
+  border: 1px solid #bae6fd;
+  border-radius: 12px 12px 0 0;
+}
+
+[data-theme="light"] #screen-ranking .pedestal-3,
+body[data-theme="light"] #screen-ranking .pedestal-3 {
+  background: linear-gradient(to bottom, #fff7ed, #ffedd5);
+  border: 1px solid #fed7aa;
+  border-radius: 12px 12px 0 0;
+}
+
+[data-theme="light"] #screen-ranking .pedestal-1 .pedestal-tier,
+body[data-theme="light"] #screen-ranking .pedestal-1 .pedestal-tier {
+  color: #b45309;
+  font-weight: 800;
+}
+
+[data-theme="light"] #screen-ranking .pedestal-2 .pedestal-tier,
+body[data-theme="light"] #screen-ranking .pedestal-2 .pedestal-tier {
+  color: #0284c7;
+  font-weight: 800;
+}
+
+[data-theme="light"] #screen-ranking .pedestal-3 .pedestal-tier,
+body[data-theme="light"] #screen-ranking .pedestal-3 .pedestal-tier {
+  color: #c2410c;
+  font-weight: 800;
+}
+
+[data-theme="light"] #screen-ranking .section-title-row,
+body[data-theme="light"] #screen-ranking .section-title-row {
+  color: #64748b;
+  font-weight: 700;
+}
+
+[data-theme="light"] #screen-ranking .ranking-row,
+body[data-theme="light"] #screen-ranking .ranking-row {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme="light"] #screen-ranking .ranking-row:hover,
+body[data-theme="light"] #screen-ranking .ranking-row:hover {
+  background: #f8fafc;
+}
+
+[data-theme="light"] #screen-ranking .row-rank-num,
+body[data-theme="light"] #screen-ranking .row-rank-num {
+  color: #64748b;
+  font-weight: 700;
+}
+
+[data-theme="light"] #screen-ranking .row-avatar,
+body[data-theme="light"] #screen-ranking .row-avatar {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme="light"] #screen-ranking .row-name,
+body[data-theme="light"] #screen-ranking .row-name {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+[data-theme="light"] #screen-ranking .row-level,
+[data-theme="light"] #screen-ranking .row-combo,
+body[data-theme="light"] #screen-ranking .row-level,
+body[data-theme="light"] #screen-ranking .row-combo {
+  color: #64748b;
+  font-weight: 600;
+}
+
+[data-theme="light"] #screen-ranking .row-dot,
+body[data-theme="light"] #screen-ranking .row-dot {
+  color: #cbd5e1;
+}
+
+[data-theme="light"] #screen-ranking .row-score,
+body[data-theme="light"] #screen-ranking .row-score {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+[data-theme="light"] #screen-ranking .ranking-empty-state,
+body[data-theme="light"] #screen-ranking .ranking-empty-state {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+/* Bottom Nav light theme override when on ranking screen */
+body[data-theme="light"]:has(#screen-ranking.active) .bottom-nav,
+[data-theme="light"] body:has(#screen-ranking.active) .bottom-nav {
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.08);
+}
+
+body[data-theme="light"]:has(#screen-ranking.active) .nav-tab,
+[data-theme="light"] body:has(#screen-ranking.active) .nav-tab {
+  color: #64748b;
+}
+
+body[data-theme="light"]:has(#screen-ranking.active) .nav-tab.active,
+[data-theme="light"] body:has(#screen-ranking.active) .nav-tab.active {
+  color: #0284c7;
+}
+
+body[data-theme="light"]:has(#screen-ranking.active) .nav-play-bubble,
+[data-theme="light"] body:has(#screen-ranking.active) .nav-play-bubble {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+}
+
 @media (max-width: 360px) {
   #screen-ranking .ranking-main { padding-left: 12px; padding-right: 12px; }
   #screen-ranking .podium-grid { gap: 6px; }
@@ -95,3 +342,4 @@ body:has(#screen-ranking.active) .nav-play-bubble { width: 40px; height: 40px; b
   #screen-ranking .row-left { gap: 8px; }
   #screen-ranking .row-score { font-size: 14px; }
 }
+

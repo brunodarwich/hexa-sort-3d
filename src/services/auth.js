@@ -3,16 +3,55 @@
  * Gerenciamento de Autenticação Supabase com Suporte a Google OAuth
  */
 
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { supabase, isSupabaseConfigured } from './supabase.js';
 
 const GOOGLE_USER_CACHE_KEY = 'hexa_sort_google_user_v1';
 const PLAYER_ID_KEY = 'hexa_sort_player_id_v2';
 const NICKNAME_KEY = 'hexa_sort_player_nickname';
+const PENDING_MERGE_KEY = 'hexa_sort_pending_guest_merge_v1';
 
 class AuthService {
   constructor() {
     this.currentUser = null;
     this.authListeners = [];
+
+    if (Capacitor.isNativePlatform()) {
+      // Capturar retornos de Deep Link (OAuth com Google no Android)
+      App.addListener('appUrlOpen', async (event) => {
+        try {
+          const url = event?.url;
+          if (!url) return;
+          if (url.includes('access_token=') || url.includes('refresh_token=') || url.includes('code=')) {
+            await Browser.close().catch(() => {});
+
+            if (url.includes('#')) {
+              const hash = url.split('#')[1];
+              const params = new URLSearchParams(hash);
+              const accessToken = params.get('access_token');
+              const refreshToken = params.get('refresh_token');
+              if (accessToken && refreshToken && supabase) {
+                await supabase.auth.setSession({
+                  access_token: accessToken,
+                  refresh_token: refreshToken
+                });
+              }
+            } else if (url.includes('?')) {
+              const query = url.split('?')[1];
+              const params = new URLSearchParams(query);
+              const code = params.get('code');
+              if (code && supabase) {
+                await supabase.auth.exchangeCodeForSession(code);
+              }
+            }
+          }
+        } catch (deepLinkErr) {
+          console.warn('Erro ao processar Deep Link de autenticação:', deepLinkErr);
+        }
+      });
+    }
 
     if (isSupabaseConfigured && supabase) {
       // Monitorar estado da sessão em tempo real
@@ -20,7 +59,7 @@ class AuthService {
         const user = session?.user || null;
         this.currentUser = user;
 
-        if (user) {
+        if (user && !user.is_anonymous) {
           try {
             localStorage.setItem(GOOGLE_USER_CACHE_KEY, JSON.stringify({
               id: user.id,
@@ -29,8 +68,28 @@ class AuthService {
               avatar: user.user_metadata?.avatar_url || null
             }));
 
+            // Verificar se há uma conta anônima pendente para fusão
+            const pendingGuestId = localStorage.getItem(PENDING_MERGE_KEY);
+            if (pendingGuestId && pendingGuestId !== user.id) {
+              try {
+                const { data: mergeResult, error: mergeErr } = await supabase.rpc('merge_player_accounts', {
+                  p_guest_id: pendingGuestId,
+                  p_target_id: user.id
+                });
+                if (!mergeErr) {
+                  console.log('Fusão de contas concluída com sucesso:', mergeResult);
+                } else {
+                  console.warn('Aviso na fusão de contas:', mergeErr.message);
+                }
+              } catch (mergeEx) {
+                console.warn('Exceção durante fusão de contas:', mergeEx);
+              } finally {
+                localStorage.removeItem(PENDING_MERGE_KEY);
+              }
+            }
+
             // Sincronizar na tabela players
-            await this.syncPlayerProfile(user);
+            setTimeout(() => this.syncPlayerProfile(user), 0);
           } catch (e) {
             console.warn('Erro ao armazenar cache de autenticação:', e);
           }
@@ -38,9 +97,25 @@ class AuthService {
           localStorage.removeItem(GOOGLE_USER_CACHE_KEY);
         }
 
-        this.notifyListeners(user);
+        this.notifyListeners(user?.is_anonymous ? null : user);
       });
     }
+  }
+
+  async ensureSession() {
+    if (!isSupabaseConfigured || !supabase) throw new Error('Conexão online indisponível.');
+    if (!this.sessionPromise) {
+      this.sessionPromise = (async () => {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (session) { this.currentUser = session.user; return session; }
+        const { data, error: signInError } = await supabase.auth.signInAnonymously();
+        if (signInError) throw new Error('Não foi possível conectar. Tente novamente mais tarde.');
+        this.currentUser = data.user;
+        return data.session;
+      })().finally(() => { this.sessionPromise = null; });
+    }
+    return this.sessionPromise;
   }
 
   /**
@@ -61,12 +136,6 @@ class AuthService {
       }
     }
 
-    // Fallback para cache local
-    try {
-      const cached = localStorage.getItem(GOOGLE_USER_CACHE_KEY);
-      if (cached) return JSON.parse(cached);
-    } catch (e) {}
-
     return null;
   }
 
@@ -77,14 +146,6 @@ class AuthService {
     if (this.currentUser?.id) {
       return this.currentUser.id;
     }
-    try {
-      const cached = localStorage.getItem(GOOGLE_USER_CACHE_KEY);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed?.id) return parsed.id;
-      }
-    } catch (e) {}
-
     let guestId = localStorage.getItem(PLAYER_ID_KEY);
     if (!guestId) {
       guestId = (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -96,23 +157,62 @@ class AuthService {
   }
 
   /**
-   * Inicia o fluxo oficial de Login com Google
+   * Inicia o fluxo oficial de Login com Google com suporte a vinculação direta ou fusão
    */
   async signInWithGoogle() {
     if (!isSupabaseConfigured || !supabase) {
       throw new Error('Supabase não está configurado neste ambiente.');
     }
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const isNative = Capacitor.isNativePlatform();
+    const redirectTo = isNative
+      ? 'com.brunodarwich.hexainfinity://auth/callback'
+      : (typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '');
+
+    const session = await this.ensureSession();
+    const currentUserId = session?.user?.id;
+
+    if (currentUserId && session?.user?.is_anonymous) {
+      // Salvar o ID anônimo para caso seja necessário fusão com conta existente
+      localStorage.setItem(PENDING_MERGE_KEY, currentUserId);
+
+      // Tentar vincular a identidade Google diretamente ao usuário anônimo
+      try {
+        const { data: linkData, error: linkError } = await supabase.auth.linkIdentity({
+          provider: 'google',
+          options: {
+            redirectTo,
+            skipBrowserRedirect: isNative
+          }
+        });
+
+        if (!linkError && linkData) {
+          if (isNative && linkData.url) {
+            await Browser.open({ url: linkData.url, windowName: '_system' });
+          }
+          return linkData;
+        }
+      } catch (linkErr) {
+        console.warn('linkIdentity não disponível ou falhou, usando fallback OAuth padrão:', linkErr);
+      }
+    }
+
+    const options = {
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + window.location.pathname
+        redirectTo,
+        skipBrowserRedirect: isNative
       }
-    });
+    };
+    const { data, error } = await supabase.auth.signInWithOAuth(options);
 
     if (error) {
       console.error('Erro no login com Google:', error);
       throw error;
+    }
+
+    if (isNative && data?.url) {
+      await Browser.open({ url: data.url, windowName: '_system' });
     }
 
     return data;
@@ -127,6 +227,7 @@ class AuthService {
     }
     this.currentUser = null;
     localStorage.removeItem(GOOGLE_USER_CACHE_KEY);
+    localStorage.removeItem(PENDING_MERGE_KEY);
     this.notifyListeners(null);
   }
 
@@ -140,15 +241,12 @@ class AuthService {
                         localStorage.getItem(NICKNAME_KEY) || 
                         user.email?.split('@')[0] || 
                         'Jogador';
-    const avatarUrl = user.user_metadata?.avatar_url || null;
 
     localStorage.setItem(NICKNAME_KEY, displayName);
 
     const { error } = await supabase.from('players').upsert({
       id: user.id,
       username: displayName,
-      email: user.email,
-      avatar_url: avatarUrl,
       last_active_at: new Date().toISOString()
     }, { onConflict: 'id' });
 
@@ -163,7 +261,7 @@ class AuthService {
   onAuthStateChanged(callback) {
     this.authListeners.push(callback);
     // Dispara imediatamente com o estado atual se já conhecido
-    if (this.currentUser) {
+    if (this.currentUser && !this.currentUser.is_anonymous) {
       callback(this.currentUser);
     }
     return () => {

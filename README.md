@@ -1,6 +1,29 @@
 # 🔷 Hexa Infinity — Infinite Sort 3D
 
-Um jogo de quebra-cabeça 3D casual e viciante com mecânicas de classificação hexagonal, fusão em cascata, efeitos táteis de áudio procedural (ASMR), placar de recordes global em tempo real e sistema de micro-monetização.
+> **Revisão de segurança e UX — 22/09/2026:** removidos dados fictícios e compras simuladas. O código local precisa da nova migração e das funções atualizadas antes da publicação. Compras Android estão temporariamente indisponíveis até existir validação de transações no servidor. Consulte o [relatório, implantação e prioridades](docs/REVISAO_SEGURANCA_UX_2026-09-22.md).
+
+Um jogo de quebra-cabeça 3D casual e viciante com mecânicas de classificação hexagonal, fusão em cascata, efeitos táteis de áudio procedural (ASMR), placar de recordes global em tempo real e sistema completo de micro-monetização.
+
+> 📅 **Data da Última Atualização**: 22 de Setembro de 2026  
+> 🏷️ **Versão**: `v1.0.0` (Web PWA & Android Release Bundle)  
+> 📱 **Package ID Android**: `com.brunodarwich.hexainfinity`
+
+---
+
+## 📌 Status Atual do Projeto (Setembro/2026)
+
+| Módulo / Funcionalidade | Plataforma | Status | Detalhes |
+| :--- | :---: | :---: | :--- |
+| **Engine 3D & Gameplay** | Web & Android | 🟢 Concluído | Tabuleiro hexagonal Three.js, física visual, combos e animações |
+| **Áudio Procedural ASMR** | Web & Android | 🟢 Concluído | Síntese procedural nativa via Web Audio API (sem assets pesados) |
+| **Placar & Auth em Tempo Real** | Supabase | 🟢 Concluído | Ranking global, recordes e autenticação Google / Anônima |
+| **Dashboard Administrativo** | Web (`/admin.html`) | 🟢 Concluído | Login Supabase com papel administrativo; dados reais limitados a 500 registros por tabela |
+| **Pagamentos Pix (R$ 0,25)** | Web | 🟢 Concluído | Mercado Pago com autenticação, assinatura de webhook e crédito transacional; requer implantação |
+| **Cartão de Crédito (Stripe)** | Web | 🟡 Backend Pronto | Funções e webhooks no Supabase; pendente cadastro de chaves live |
+| **Empacotamento Android** | Capacitor 8 | 🟢 Concluído | Pacote `.aab` assinado gerado e testado no Android Studio |
+| **In-App Purchases (IAP)** | Android | 🔴 Temporariamente indisponível | Requer validação e entrega de transações pelo servidor |
+| **Assets da Google Play** | Store | 🟢 Concluído | Ícones 512x512, feature graphics 1024x500 e prints 1280x2560 prontos |
+| **Publicação Google Play** | Google Play Console | 🟡 Revisão pendente | Homologar segurança, migração de contas e compras antes do lançamento |
 
 ---
 
@@ -18,9 +41,10 @@ Um jogo de quebra-cabeça 3D casual e viciante com mecânicas de classificação
 - **Sistema de Pagamentos Integrado**:
   - 🇧🇷 **Pix Instantâneo (R$ 0,25)** via Mercado Pago com QR Code e Copia e Cola.
   - 🌐 **Cartão de Crédito Internacional** via Stripe Checkout.
+  - 📱 **Google Play Billing** via RevenueCat para o app Android.
 - **Multiplataforma**:
   - Suporte completo a **PWA (Progressive Web App)** para navegadores desktop e mobile.
-  - Empacotamento nativo Android via **Capacitor 6** (`com.brunodarwich.hexainfinity`).
+  - Empacotamento nativo Android via **Capacitor 8** (`com.brunodarwich.hexainfinity`).
 
 ---
 
@@ -28,8 +52,8 @@ Um jogo de quebra-cabeça 3D casual e viciante com mecânicas de classificação
 
 - **Frontend & Engine 3D**: [Vite](https://vitejs.dev/), [Three.js](https://threejs.org/), Vanilla JavaScript (ES Modules), CSS3 Glassmorphism & Custom Properties.
 - **Backend & Banco de Dados**: [Supabase](https://supabase.com/) (PostgreSQL, Supabase Auth, Supabase Edge Functions / Deno, Supabase Realtime).
-- **Gateways de Pagamento**: Mercado Pago API (Pix) e Stripe API (Cartão de Crédito).
-- **Mobile Packaging**: [Capacitor](https://capacitorjs.com/).
+- **Gateways de Pagamento**: Mercado Pago API (Pix), Stripe API (Cartão de Crédito) e RevenueCat (Google Play IAP).
+- **Mobile Packaging**: [Capacitor 8](https://capacitorjs.com/) & Android Studio.
 
 ---
 
@@ -76,44 +100,76 @@ Crie um arquivo `.env` na raiz do projeto com as credenciais do seu projeto Supa
 VITE_SUPABASE_URL=https://<seu-projeto>.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOi...
 
-# Proteção de Acesso ao Dashboard Administrativo
-VITE_ADMIN_ACCESS_KEY=sua_chave_secreta_aqui
+# O painel usa Supabase Auth com app_metadata.role=admin.
+# Nunca coloque segredos administrativos em variáveis VITE_.
 ```
 
 ---
 
-## 📂 Estrutura do Projeto
+## 📂 Estrutura do Repositório
 
 ```
-├── public/                     # Assets públicos estáticos e Web Manifest
-│   └── manifest.webmanifest    # Configuração PWA do Hexa Infinity
-├── src/
-│   ├── game/                   # Lógica 3D do jogo, grid, áudio e placar
-│   │   ├── HexGrid.js          # Tabuleiro e lógica de conexões hexagonais
-│   │   ├── HexTile.js          # Geometrias 3D, materiais e cores das peças
-│   │   ├── Leaderboard.js      # Integração com o ranking Supabase
-│   │   └── SoundSystem.js      # Efeitos de áudio com Web Audio API
-│   ├── main.js                 # Ponto de entrada, loop de jogo e HUD
-│   ├── responsive.css          # Adaptações responsivas para mobile/desktop
-│   └── style.css               # Design System, glassmorphism e temas
-├── supabase/
-│   ├── functions/              # Edge Functions para Pix e Stripe
-│   │   ├── create-pix-order/   # Geração de cobrança Pix no Mercado Pago
-│   │   ├── create-stripe-session/ # Sessão de checkout no Stripe
-│   │   ├── mercadopago-webhook/ # Webhook de confirmação Pix
-│   │   └── stripe-webhook/     # Webhook de confirmação Stripe
-│   └── migrations/             # Scripts SQL de schema do banco de dados
-├── capacitor.config.json       # Configuração do Capacitor Android
-├── index.html                  # Interface principal da aplicação web
-├── package.json                # Dependências e scripts do projeto
-└── PLANEJAMENTO_E_STATUS.md    # Quadro de acompanhamento de tarefas e status
+├── admin.html                  # Dashboard administrativo (página Vite)
+├── index.html                  # Interface principal do jogo (página Vite)
+├── privacy.html                # Política de Privacidade (página Vite)
+├── package.json                # Dependências e scripts de build
+├── capacitor.config.json       # Configurações do Capacitor Android
+├── vite.config.js              # Configurações de compilação multi-page
+│
+├── docs/                       # 📚 Central de Documentação Técnica
+│   ├── PLANEJAMENTO_E_STATUS.md           # Cronograma, checklist e status detalhado
+│   ├── GUIA_PUBLICACAO_GOOGLE_PLAY.md      # Passo a passo de publicação na Play Store
+│   ├── SETUP_PAGAMENTOS_E_AUTH.md         # Configuração Pix, Stripe, Google Auth e IAP
+│   ├── FLUXO_DE_DESENVOLVIMENTO_E_LANCAMENTO.md # Fluxo de releases e ciclo de vida
+│   ├── DESIGN.md                          # Design System, cores, HUD e tipografia
+│   └── STITCH_PROMPTS.md                  # Prompts de UI para prototipagem
+│
+├── store_assets/               # 🛍️ Recursos Visuais da Google Play Store
+│   ├── google_play_icon_512x512.png       # Ícone oficial da loja (512x512)
+│   ├── google_play_feature_graphic_1024x500.png # Gráfico de destaque (1024x500)
+│   ├── product_icons/                     # Ícones dos produtos IAP
+│   └── screenshots/                       # Capturas de tela (1280x2560 e 1024x500)
+│
+├── design_assets/              # 🎨 Protótipos e Mockups de Interface
+│   └── stitch/                            # Telas geradas via Stitch with Google
+│
+├── public/                     # 🌐 Assets Públicos Estáticos
+│   ├── brand/                             # Logos oficiais e variantes
+│   ├── favicon* & icons                   # Ícones para PWA e navegadores
+│   └── manifest.webmanifest               # Manifesto da aplicação PWA
+│
+├── src/                        # 💻 Código-Fonte da Aplicação
+│   ├── admin/                             # Lógica do painel de administração
+│   ├── game/                              # Engine 3D, grid, áudio procedural, placar
+│   │   ├── HexGrid.js                     # Tabuleiro e conexões hexagonais
+│   │   ├── HexTile.js                     # Geometrias 3D e materiais
+│   │   ├── Leaderboard.js                 # Integração com ranking Supabase
+│   │   └── SoundSystem.js                 # Síntese sonora Web Audio ASMR
+│   ├── services/                          # Camada de serviços e integração
+│   │   ├── auth.js                        # Login Google e jogador anônimo
+│   │   ├── paymentService.js              # Roteador Pix / Stripe / RevenueCat
+│   │   └── supabase.js                    # Cliente Supabase
+│   ├── styles/                            # Módulos CSS (HUD, modais, tokens, ranking)
+│   ├── main.js                            # Loop principal e inicialização do jogo
+│   └── style.css / responsive.css         # Estilização global e responsividade
+│
+├── supabase/                   # ⚡ Backend Serverless Supabase
+│   ├── functions/                         # Edge Functions Deno (Pix & Stripe Webhooks)
+│   └── migrations/                        # Schemas SQL e tabelas do banco
+│
+├── scripts/                    # 🛠️ Scripts utilitários de build e assets
+└── android/                    # 📱 Projeto Nativo Android (Android Studio / Gradle)
 ```
 
 ---
 
-## 📚 Documentação Complementar
+## 📚 Central de Documentação
 
-- [`PLANEJAMENTO_E_STATUS.md`](file:///c:/Users/Bruno/Documents/antigravity/mysterious-hawking/PLANEJAMENTO_E_STATUS.md) — Status detalhado de todas as tarefas e checklist de publicação na Google Play.
-- [`SETUP_PAGAMENTOS_E_AUTH.md`](file:///c:/Users/Bruno/Documents/antigravity/mysterious-hawking/SETUP_PAGAMENTOS_E_AUTH.md) — Guia passo a passo de configuração do Mercado Pago, Stripe e Google OAuth.
-- [`DESIGN.md`](file:///c:/Users/Bruno/Documents/antigravity/mysterious-hawking/DESIGN.md) — Tokens de design, paleta de cores, tipografia e especificações de interface.
-- [`STITCH_PROMPTS.md`](file:///c:/Users/Bruno/Documents/antigravity/mysterious-hawking/STITCH_PROMPTS.md) — Prompts de UI para prototipagem com Stitch with Google.
+Acesse a documentação completa nos guias abaixo:
+
+- 📋 [**Planejamento & Status do Projeto**](docs/PLANEJAMENTO_E_STATUS.md) — Quadro de tarefas, status das etapas e checklist de publicação.
+- 📱 [**Guia de Publicação na Google Play**](docs/GUIA_PUBLICACAO_GOOGLE_PLAY.md) — Instruções completas para configuração de ficha, keystore e envio de `.aab`.
+- 💳 [**Setup de Pagamentos & Autenticação**](docs/SETUP_PAGAMENTOS_E_AUTH.md) — Configuração do Mercado Pago (Pix), Stripe (Cartão Web), Google Auth e RevenueCat.
+- 🚀 [**Fluxo de Desenvolvimento & Lançamento**](docs/FLUXO_DE_DESENVOLVIMENTO_E_LANCAMENTO.md) — Ciclo de iterações, build local e deploy.
+- 🎨 [**Guia de Design & Identidade Visual**](docs/DESIGN.md) — Cores, temas, tipografia, glassmorphism e design system.
+- 💡 [**Prompts de UI do Stitch**](docs/STITCH_PROMPTS.md) — Catálogo de prompts utilizados para design de interface.

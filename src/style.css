@@ -1,3 +1,14 @@
 @import './styles/tokens.css';
 @import './styles/hud.css';
 @import './styles/modals.css';
+
+/* Interaction states shared by the game and store. */
+button:focus-visible, a:focus-visible, input:focus-visible {
+  outline: 3px solid #1686ce;
+  outline-offset: 4px;
+}
+#ranking-data-status { text-align: center; font-size: .85rem; padding: .75rem; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}

@@ -1840,6 +1840,127 @@
   padding: 12px 16px;
 }
 
+.payment-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+  background: var(--bg-surface);
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid var(--panel-border-subtle);
+}
+
+.payment-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.payment-tab:hover {
+  color: var(--text-main);
+}
+
+.payment-tab.active {
+  background: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.pix-actions-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.btn-force-pix {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-force-pix:hover {
+  color: var(--primary);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.card-checkout-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 12px 12px;
+  text-align: center;
+}
+
+.card-checkout-desc {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.btn-stripe {
+  background: #635bff !important;
+  color: #ffffff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(99, 91, 255, 0.3) !important;
+}
+
+.btn-stripe:hover {
+  background: #5348e2 !important;
+}
+
+.card-notice-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 24px 16px;
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px dashed rgba(245, 158, 11, 0.3);
+  border-radius: 16px;
+  margin-top: 10px;
+}
+
+.notice-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-main);
+}
+
+.notice-desc {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
 .product-info-col {
   display: flex;
   flex-direction: column;

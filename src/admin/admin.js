@@ -5,9 +5,6 @@
 
 import { supabase, isSupabaseConfigured } from '../services/supabase.js';
 
-// Chave Secreta de Acesso configurada via .env ou fallback seguro para desenvolvimento
-const ADMIN_ACCESS_KEY = import.meta.env.VITE_ADMIN_ACCESS_KEY || 'admin123';
-const AUTH_STORAGE_KEY = 'hexainfinity_admin_auth';
 const POLLING_INTERVAL_SECONDS = 30;
 
 // Estado Global da Aplicação Admin
@@ -33,47 +30,42 @@ let chartConversion = null;
 // 1. GERENCIAMENTO DE AUTENTICAÇÃO
 // ==========================================
 
-export function initAuth() {
-  const storedAuth = sessionStorage.getItem(AUTH_STORAGE_KEY);
-  if (storedAuth === 'true') {
-    isAuthorized = true;
-    showDashboard();
-  } else {
-    showLockScreen();
+export async function initAuth() {
+  setupUIEventListeners();
+  showLockScreen();
+  if (!supabase) {
+    document.getElementById('login-error').textContent = 'Serviço não configurado.';
+    document.getElementById('login-error').classList.remove('hidden');
+    return;
   }
-
-  // Event Listeners de Login
-  const loginForm = document.getElementById('login-form');
-  const loginInput = document.getElementById('admin-key-input');
-  const loginError = document.getElementById('login-error');
-
-  if (loginForm) {
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const entered = loginInput.value.trim();
-      if (entered === ADMIN_ACCESS_KEY) {
-        isAuthorized = true;
-        sessionStorage.setItem(AUTH_STORAGE_KEY, 'true');
-        loginError.classList.add('hidden');
-        showDashboard();
-      } else {
-        loginError.classList.remove('hidden');
-        loginInput.classList.add('border-red-500');
-        loginInput.value = '';
-        loginInput.focus();
-      }
-    });
-  }
-
-  const logoutBtn = document.getElementById('logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-      isAuthorized = false;
-      stopPolling();
-      showLockScreen();
-    });
-  }
+  const applyUser = (user) => {
+    isAuthorized = user?.app_metadata?.role === 'admin';
+    if (isAuthorized) showDashboard();
+    else { stopPolling(); rawPlayers = []; rawSessions = []; rawOrders = []; rawInventories = []; showLockScreen(); }
+  };
+  const { data } = await supabase.auth.getUser();
+  applyUser(data.user);
+  supabase.auth.onAuthStateChange((_event, session) => applyUser(session?.user));
+  document.getElementById('login-form')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = event.currentTarget.querySelector('button[type="submit"]');
+    const message = document.getElementById('login-error');
+    button.disabled = true;
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: document.getElementById('admin-email-input').value.trim(),
+        password: document.getElementById('admin-key-input').value
+      });
+      if (error || data.user?.app_metadata?.role !== 'admin') throw new Error('Conta sem acesso administrativo ou credenciais inválidas.');
+      message.classList.add('hidden');
+      document.getElementById('admin-key-input').value = '';
+    } catch (error) { message.textContent = error.message; message.classList.remove('hidden'); }
+    finally { button.disabled = false; }
+  });
+  document.getElementById('logout-btn')?.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    applyUser(null);
+  });
 }
 
 function showLockScreen() {
@@ -91,26 +83,11 @@ function showDashboard() {
   // Iniciar carregamento de dados e polling
   refreshData();
   startPolling();
-  setupUIEventListeners();
 }
 
-function updateConnectionBadge() {
+function updateConnectionBadge(message = 'Consultando dados…') {
   const badge = document.getElementById('supabase-status-badge');
-  if (!badge) return;
-
-  if (isSupabaseConfigured) {
-    badge.innerHTML = `
-      <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span class="text-emerald-300 text-xs font-semibold">Supabase Conectado</span>
-    `;
-    badge.className = 'flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-700/50';
-  } else {
-    badge.innerHTML = `
-      <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-      <span class="text-amber-300 text-xs font-semibold">Modo Simulação / Demo</span>
-    `;
-    badge.className = 'flex items-center gap-2 px-3 py-1 rounded-full bg-amber-950/60 border border-amber-700/50';
-  }
+  if (badge) { badge.textContent = message; badge.setAttribute('role', 'status'); }
 }
 
 // ==========================================
@@ -118,7 +95,7 @@ function updateConnectionBadge() {
 // ==========================================
 
 export async function refreshData() {
-  if (isFetching) return;
+  if (isFetching || !isAuthorized) return;
   isFetching = true;
   setRefreshLoading(true);
 
@@ -126,20 +103,17 @@ export async function refreshData() {
     if (isSupabaseConfigured && supabase) {
       await fetchRealData();
     } else {
-      loadDemoData();
+      throw new Error('Serviço não configurado.');
     }
 
+    updateConnectionBadge('Dados carregados • últimos 500 registros por tabela');
     renderKPIs();
     renderCharts();
     renderTables();
     updateLastSyncTimestamp();
   } catch (err) {
-    console.warn('[Admin] Erro ao buscar dados do Supabase. Carregando dados demo...', err);
-    loadDemoData();
-    renderKPIs();
-    renderCharts();
-    renderTables();
-    updateLastSyncTimestamp();
+    console.warn('Falha ao atualizar painel:', err);
+    updateConnectionBadge('Falha na atualização. Os dados podem estar desatualizados.');
   } finally {
     isFetching = false;
     setRefreshLoading(false);
@@ -148,85 +122,16 @@ export async function refreshData() {
 }
 
 async function fetchRealData() {
-  const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-
-  // 1. Buscar dados em paralelo
-  const [resPlayers, resSessions, resOrders, resInventories] = await Promise.all([
-    supabase.from('players').select('*').order('created_at', { ascending: false }),
-    supabase.from('game_sessions').select('*').order('created_at', { ascending: false }),
-    supabase.from('payment_orders').select('*').order('created_at', { ascending: false }),
-    supabase.from('player_inventory').select('*')
+  const results = await Promise.all([
+    supabase.from('players').select('id,username,email,avatar_emoji,created_at,last_active_at').order('created_at', { ascending: false }).limit(500),
+    supabase.from('game_sessions').select('*').order('created_at', { ascending: false }).limit(500),
+    supabase.from('payment_orders').select('id,player_id,gateway,item_type,quantity,amount,currency,status,created_at,paid_at').order('created_at', { ascending: false }).limit(500),
+    supabase.from('player_inventory').select('player_id,reroll_count,lightning_count').order('updated_at', { ascending: false }).limit(500)
   ]);
-
-  // 2. Atualizar no Supabase pedidos pendentes com mais de 1h para 'expired'
-  supabase
-    .from('payment_orders')
-    .update({ status: 'expired' })
-    .eq('status', 'pending')
-    .lt('created_at', oneHourAgoIso)
-    .then(() => {})
-    .catch(() => {});
-
-  rawPlayers = resPlayers.data || [];
-  rawSessions = resSessions.data || [];
-  
-  // Normalizar status de ordens carregadas localmente
-  const oneHourAgoTime = Date.now() - 60 * 60 * 1000;
-  rawOrders = (resOrders.data || []).map(o => {
-    if (o.status === 'pending' && new Date(o.created_at).getTime() < oneHourAgoTime) {
-      return { ...o, status: 'expired' };
-    }
-    return o;
-  });
-
-  rawInventories = resInventories.data || [];
-
-  // Se o banco estiver vazio, preenche com amostra para não ficar tudo zerado no primeiro acesso
-  if (rawPlayers.length === 0 && rawOrders.length === 0) {
-    loadDemoData();
-  }
-}
-
-function loadDemoData() {
-  const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - 24 * 3600 * 1000);
-  const twoDaysAgo = new Date(now.getTime() - 48 * 3600 * 1000);
-  const threeDaysAgo = new Date(now.getTime() - 72 * 3600 * 1000);
-
-  rawPlayers = [
-    { id: 'p-101', username: 'HexaMaster', email: 'master@hexainfinity.io', avatar_emoji: '👑', created_at: threeDaysAgo.toISOString(), last_active_at: now.toISOString() },
-    { id: 'p-102', username: 'BrunoDev', email: 'bruno@gmail.com', avatar_emoji: '🚀', created_at: twoDaysAgo.toISOString(), last_active_at: now.toISOString() },
-    { id: 'p-103', username: 'Jogador_894', email: null, avatar_emoji: '🎮', created_at: twoDaysAgo.toISOString(), last_active_at: oneDayAgo.toISOString() },
-    { id: 'p-104', username: 'ComboQueen', email: 'queen@sortgame.com', avatar_emoji: '⚡', created_at: oneDayAgo.toISOString(), last_active_at: now.toISOString() },
-    { id: 'p-105', username: 'Anon_3812', email: null, avatar_emoji: '🎲', created_at: now.toISOString(), last_active_at: now.toISOString() },
-    { id: 'p-106', username: 'PuzzleNinja', email: 'ninja@play.com', avatar_emoji: '🥷', created_at: now.toISOString(), last_active_at: now.toISOString() }
-  ];
-
-  rawSessions = [
-    { id: 's-1', player_id: 'p-101', player_name: 'HexaMaster', score: 14520, time_seconds: 480, clears: 24, combo: 8, created_at: now.toISOString() },
-    { id: 's-2', player_id: 'p-102', player_name: 'BrunoDev', score: 9800, time_seconds: 360, clears: 18, combo: 5, created_at: now.toISOString() },
-    { id: 's-3', player_id: 'p-104', player_name: 'ComboQueen', score: 12200, time_seconds: 410, clears: 21, combo: 7, created_at: oneDayAgo.toISOString() },
-    { id: 's-4', player_id: 'p-103', player_name: 'Jogador_894', score: 4350, time_seconds: 195, clears: 9, combo: 3, created_at: oneDayAgo.toISOString() },
-    { id: 's-5', player_id: 'p-106', player_name: 'PuzzleNinja', score: 7600, time_seconds: 280, clears: 14, combo: 4, created_at: twoDaysAgo.toISOString() }
-  ];
-
-  rawOrders = [
-    { id: 'ord-001', player_id: 'p-101', gateway: 'mercadopago', item_type: 'pack_reroll', quantity: 3, amount: 0.25, currency: 'BRL', status: 'paid', created_at: now.toISOString(), paid_at: now.toISOString() },
-    { id: 'ord-002', player_id: 'p-102', gateway: 'stripe', item_type: 'combo_pack', quantity: 1, amount: 1.00, currency: 'USD', status: 'paid', created_at: oneDayAgo.toISOString(), paid_at: oneDayAgo.toISOString() },
-    { id: 'ord-003', player_id: 'p-104', gateway: 'mercadopago', item_type: 'lightning', quantity: 1, amount: 0.25, currency: 'BRL', status: 'paid', created_at: oneDayAgo.toISOString(), paid_at: oneDayAgo.toISOString() },
-    { id: 'ord-004', player_id: 'p-105', gateway: 'mercadopago', item_type: 'reroll', quantity: 1, amount: 0.25, currency: 'BRL', status: 'pending', created_at: now.toISOString(), paid_at: null },
-    { id: 'ord-005', player_id: 'p-106', gateway: 'stripe', item_type: 'pack_lightning', quantity: 3, amount: 1.00, currency: 'USD', status: 'paid', created_at: twoDaysAgo.toISOString(), paid_at: twoDaysAgo.toISOString() },
-    { id: 'ord-006', player_id: 'p-103', gateway: 'mercadopago', item_type: 'combo_pack', quantity: 1, amount: 0.25, currency: 'BRL', status: 'paid', created_at: threeDaysAgo.toISOString(), paid_at: threeDaysAgo.toISOString() }
-  ];
-
-  rawInventories = [
-    { player_id: 'p-101', reroll_count: 5, lightning_count: 2 },
-    { player_id: 'p-102', reroll_count: 3, lightning_count: 4 },
-    { player_id: 'p-103', reroll_count: 1, lightning_count: 0 },
-    { player_id: 'p-104', reroll_count: 2, lightning_count: 3 },
-    { player_id: 'p-105', reroll_count: 0, lightning_count: 0 },
-    { player_id: 'p-106', reroll_count: 4, lightning_count: 5 }
-  ];
+  const failure = results.find(result => result.error);
+  if (failure) throw failure.error;
+  if (!isAuthorized) throw new Error('Sessão encerrada.');
+  [rawPlayers, rawSessions, rawOrders, rawInventories] = results.map(result => result.data || []);
 }
 
 // ==========================================
@@ -691,25 +596,33 @@ function escapeHTML(str) {
 // 6. EXPORTAÇÃO CSV
 // ==========================================
 
+function csvCell(value) {
+  let text = String(value ?? '');
+  if (/^[\s]*[=+@-]/.test(text)) text = "'" + text;
+  return '"' + text.replace(/"/g, '""') + '"';
+}
+
 export function exportPlayersCSV() {
+  if (!isAuthorized) return;
   const headers = ['ID', 'Username', 'Email', 'CriadoEm', 'UltimoAcesso', 'Rerolls', 'Raios'];
   const rows = rawPlayers.map(p => {
     const inv = rawInventories.find(i => i.player_id === p.id) || { reroll_count: 0, lightning_count: 0 };
     return [
       p.id,
-      `"${p.username || ''}"`,
-      `"${p.email || ''}"`,
+      p.username || '',
+      p.email || '',
       p.created_at,
       p.last_active_at,
       inv.reroll_count,
       inv.lightning_count
-    ].join(',');
+    ].map(csvCell).join(',');
   });
 
   downloadCSV(`hexainfinity_jogadores_${new Date().toISOString().split('T')[0]}.csv`, [headers.join(','), ...rows].join('\n'));
 }
 
 export function exportOrdersCSV() {
+  if (!isAuthorized) return;
   const headers = ['ID', 'PlayerID', 'Gateway', 'Item', 'Quantidade', 'Valor', 'Moeda', 'Status', 'CriadoEm', 'PagoEm'];
   const rows = rawOrders.map(o => [
     o.id,
@@ -722,7 +635,7 @@ export function exportOrdersCSV() {
     o.status,
     o.created_at,
     o.paid_at || ''
-  ].join(','));
+  ].map(csvCell).join(','));
 
   downloadCSV(`hexainfinity_pedidos_${new Date().toISOString().split('T')[0]}.csv`, [headers.join(','), ...rows].join('\n'));
 }

@@ -4,11 +4,15 @@
  */
 
 import { GameManager } from './game/GameManager.js';
-import { LeaderboardManager, DEFAULT_GLOBAL_LEADERBOARD } from './game/Leaderboard.js';
+import { LeaderboardManager } from './game/Leaderboard.js';
 import { authService } from './services/auth.js';
 import { paymentService } from './services/paymentService.js';
+import { setupDialogs } from './ui/accessibility.js';
+import { NativeBridge } from './ui/nativeBridge.js';
+import { getProduct, formatBRL } from '../supabase/functions/_shared/catalog.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  setupDialogs(id => { if (id === 'modal-payment') paymentService.unsubscribeOrder(); });
   const canvasContainer = document.getElementById('canvas-container');
   const game = new GameManager(canvasContainer);
   const leaderboard = game.leaderboard;
@@ -65,10 +69,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const modalShop = document.getElementById('modal-shop');
 
   // Payment Modal Elements
-  const tabRegionBr = document.getElementById('tab-region-br');
-  const tabRegionIntl = document.getElementById('tab-region-intl');
+  const tabBtnPix = document.getElementById('tab-btn-pix');
+  const tabBtnCard = document.getElementById('tab-btn-card');
   const paymentPixArea = document.getElementById('payment-pix-area');
-  const paymentIntlArea = document.getElementById('payment-intl-area');
+  const paymentCardArea = document.getElementById('payment-card-area');
+  const cardAvailableBox = document.getElementById('card-available-box');
+  const cardUnavailableBox = document.getElementById('card-unavailable-box');
+  const btnStripeText = document.getElementById('btn-stripe-text');
+  const btnForceNewPix = document.getElementById('btn-force-new-pix');
   const paymentIconBadge = document.getElementById('payment-icon-badge');
   const paymentTitle = document.getElementById('payment-title');
   const paymentSubtitle = document.getElementById('payment-subtitle');
@@ -80,7 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const pixQrcodeImg = document.getElementById('pix-qrcode-img');
   const inputPixCopiacola = document.getElementById('input-pix-copiacola');
   const btnCopyPix = document.getElementById('btn-copy-pix');
-  const btnSimulatePix = document.getElementById('btn-simulate-pix');
   const btnStripeCheckout = document.getElementById('btn-stripe-checkout');
 
   // Leaderboard Elements
@@ -92,7 +99,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Variável para armazenar a ação a ser executada logo após pagamento bem-sucedido
   let pendingPaymentSuccessAction = null;
-  let currentPaymentOrderId = null;
   let currentSelectedPaymentItem = 'lightning';
 
   // --- THEME MANAGEMENT (LIGHT / DARK NEON) ---
@@ -141,6 +147,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       game.setTheme(theme);
     }
 
+    NativeBridge.updateTheme(theme);
+
     if (showFeedback) {
       showToast(theme === 'dark' ? 'Modo Velvet Meadow (Cozy) ativado! 🌌' : 'Modo Porcelain Garden (Claro) ativado! ✨');
     }
@@ -157,6 +165,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // --- MULTI-SCREEN NAVIGATION SYSTEM ---
+  game.isPaused = true;
   let activeScreen = 'home'; // 'home' | 'game' | 'ranking' | 'profile'
   const screens = {
     home: document.getElementById('screen-home'),
@@ -170,11 +179,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   function switchScreen(target) {
     if (!screens[target]) return;
     activeScreen = target;
+    game.isPaused = target !== 'game';
 
     // Alternar visibilidade das telas
     Object.keys(screens).forEach((key) => {
       const el = screens[key];
       if (el) {
+        el.inert = key !== target;
+        el.setAttribute('aria-hidden', String(key !== target));
         if (key === target) {
           el.classList.add('active');
         } else {
@@ -188,8 +200,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const navTarget = tab.getAttribute('data-nav');
       if (navTarget === target) {
         tab.classList.add('active');
+        tab.setAttribute('aria-current', 'page');
       } else {
         tab.classList.remove('active');
+        tab.removeAttribute('aria-current');
       }
     });
 
@@ -202,6 +216,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       renderProfileScreen();
     }
   }
+
+  // Inicializar Native Bridge para Android
+  NativeBridge.init({
+    getActiveScreen: () => activeScreen,
+    switchScreen: (target) => switchScreen(target)
+  });
 
   // Eventos das abas inferiores
   navTabs.forEach((tab) => {
@@ -229,6 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnHomePlay.addEventListener('click', () => {
       game.sound.playClick();
       switchScreen('game');
+      showToast('Junte 10 peças da mesma cor para liberar espaço.');
     });
   }
 
@@ -258,10 +279,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  const BENCHMARK_AVATARS = Object.fromEntries(
-    DEFAULT_GLOBAL_LEADERBOARD.map((player, index) => [index + 1, player.avatar])
-  );
-
   async function renderFullRankingScreen() {
     if (!rankingCompetitorsList) return;
 
@@ -274,7 +291,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       const scores = await leaderboard.getGlobalScores();
+      const rankingStatus = document.getElementById('ranking-data-status');
+      if (rankingStatus) rankingStatus.textContent = leaderboard.globalStatus === 'live'
+        ? 'Pontuações registradas online' : leaderboard.globalStatus === 'cached'
+        ? 'Sem conexão. Exibindo a última atualização salva.' : 'Ranking indisponível. Você pode continuar jogando.';
 
+      document.querySelector('#screen-ranking .podium-card')?.classList.toggle('hidden', scores.length === 0);
       // Pódio Top 3
       const first = scores[0] || null;
       const second = scores[1] || null;
@@ -286,19 +308,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       const p1Name = document.getElementById('podium-name-1');
       const p1Score = document.getElementById('podium-score-1');
       if (first) {
-        if (p1Name) p1Name.textContent = first.name || 'NovaMaster';
+        if (p1Name) p1Name.textContent = first.name || 'Jogador';
         if (p1Score) p1Score.textContent = (first.score || 0).toLocaleString('pt-BR');
-        const avatarSrc = first.avatar || BENCHMARK_AVATARS[1];
-        if (p1AvatarImg) {
+        const avatarSrc = first.avatar;
+        if (p1AvatarImg && avatarSrc) {
           p1AvatarImg.src = avatarSrc;
           p1AvatarImg.classList.remove('hidden');
           if (p1Avatar) p1Avatar.classList.add('hidden');
         } else if (p1Avatar) {
+          p1AvatarImg?.classList.add('hidden');
           p1Avatar.textContent = (first.name || '1')[0].toUpperCase();
           p1Avatar.classList.remove('hidden');
         }
       } else {
-        if (p1Name) p1Name.textContent = '---';
+        if (p1Name) p1Name.textContent = 'Sem pontuação';
         if (p1Score) p1Score.textContent = '0';
       }
 
@@ -308,14 +331,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const p2Name = document.getElementById('podium-name-2');
       const p2Score = document.getElementById('podium-score-2');
       if (second) {
-        if (p2Name) p2Name.textContent = second.name || 'AstralWalker';
+        if (p2Name) p2Name.textContent = second.name || 'Jogador';
         if (p2Score) p2Score.textContent = (second.score || 0).toLocaleString('pt-BR');
-        const avatarSrc = second.avatar || BENCHMARK_AVATARS[2];
-        if (p2AvatarImg) {
+        const avatarSrc = second.avatar;
+        if (p2AvatarImg && avatarSrc) {
           p2AvatarImg.src = avatarSrc;
           p2AvatarImg.classList.remove('hidden');
           if (p2Avatar) p2Avatar.classList.add('hidden');
         } else if (p2Avatar) {
+          p2AvatarImg?.classList.add('hidden');
           p2Avatar.textContent = (second.name || '2')[0].toUpperCase();
           p2Avatar.classList.remove('hidden');
         }
@@ -330,14 +354,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       const p3Name = document.getElementById('podium-name-3');
       const p3Score = document.getElementById('podium-score-3');
       if (third) {
-        if (p3Name) p3Name.textContent = third.name || 'StarGazer';
+        if (p3Name) p3Name.textContent = third.name || 'Jogador';
         if (p3Score) p3Score.textContent = (third.score || 0).toLocaleString('pt-BR');
-        const avatarSrc = third.avatar || BENCHMARK_AVATARS[3];
-        if (p3AvatarImg) {
+        const avatarSrc = third.avatar;
+        if (p3AvatarImg && avatarSrc) {
           p3AvatarImg.src = avatarSrc;
           p3AvatarImg.classList.remove('hidden');
           if (p3Avatar) p3Avatar.classList.add('hidden');
         } else if (p3Avatar) {
+          p3AvatarImg?.classList.add('hidden');
           p3Avatar.textContent = (third.name || '3')[0].toUpperCase();
           p3Avatar.classList.remove('hidden');
         }
@@ -356,7 +381,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const scoreStr = (item.score || 0).toLocaleString('pt-BR');
           const levelNum = item.level || Math.max(1, Math.floor((item.score || 0) / 18000));
           const comboStr = item.combo ? `${item.combo}x combo` : `${Math.max(5, 18 - pos)}x combo`;
-          const avatar = item.avatar || BENCHMARK_AVATARS[4 + (idx % 5)];
+          const avatar = item.avatar;
           const avatarHtml = avatar
             ? `<img src="${escapeHTML(avatar)}" alt="" loading="lazy" />`
             : `<span>${initial}</span>`;
@@ -382,7 +407,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         rankingCompetitorsList.innerHTML = `
           <div class="ranking-empty-state">
-            <span>Mais competidores aparecerão aqui conforme jogarem!</span>
+            <span>${leaderboard.globalStatus === 'unavailable' ? 'Sem conexão com o ranking. Jogue e salve seus recordes neste dispositivo.' : 'Novas pontuações aparecerão aqui conforme forem registradas.'}</span>
           </div>
         `;
       }
@@ -587,7 +612,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const avatarCircle = btnPlayerProfile?.querySelector('.player-avatar-circle');
     if (avatarCircle) {
       if (avatarUrl) {
-        avatarCircle.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="Avatar" />`;
+        const avatar = document.createElement('img');
+        avatar.src = avatarUrl;
+        avatar.alt = 'Avatar';
+        avatar.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;';
+        avatarCircle.replaceChildren(avatar);
       } else {
         avatarCircle.innerHTML = `<span class="material-symbols-outlined text-[17px]" style="font-variation-settings: 'FILL' 1;">face</span>`;
       }
@@ -638,7 +667,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       showToast(`Conectado como ${displayName}! 🚀`);
-      await paymentService.fetchInventory();
+      void paymentService.fetchInventory();
     } else {
       const savedNick = leaderboard.getSavedNickname();
       updatePlayerNicknameUI(savedNick, null);
@@ -686,7 +715,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHomeScreenData();
 
   // Sincronizar inventário inicial
-  await paymentService.fetchInventory();
+  void paymentService.fetchInventory();
+
+  // Verificar retorno de checkout (ex: Stripe ?payment=success)
+  function checkPaymentReturnUrl() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment');
+      if (paymentStatus === 'success') {
+        void paymentService.fetchInventory();
+        showToast('Pagamento confirmado via Cartão! Seus itens foram creditados. 🎉');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      } else if (paymentStatus === 'cancel') {
+        showToast('Pagamento com cartão cancelado.');
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (e) {}
+  }
+  checkPaymentReturnUrl();
 
   // Abrir tela de perfil ao tocar no avatar do topo
   if (btnPlayerProfile) {
@@ -711,11 +757,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  window.addEventListener('focus', () => { void paymentService.fetchInventory(); });
+  window.addEventListener('online', () => { void paymentService.fetchInventory(); });
+
   // --- POWER-UPS UI & INVENTORY SYNC ---
   function updatePowerUpBadges(inv) {
-    const region = paymentService.detectPlayerRegion();
-    const isBr = region === 'BR';
-    const singlePriceText = isBr ? 'R$ 0,25' : '$0.10';
+    const singlePriceText = paymentService.isNativePlatform() ? 'Loja' : 'Comprar';
 
     // Reroll Badge
     if (badgeRerollCost) {
@@ -741,10 +788,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Game Over Revive Badges
     if (goLightningPrice) {
-      goLightningPrice.textContent = inv.lightning > 0 ? `${inv.lightning}x Grátis` : singlePriceText;
+      goLightningPrice.textContent = inv.lightning > 0 ? `${inv.lightning} disponíveis` : singlePriceText;
     }
     if (goRerollPrice) {
-      goRerollPrice.textContent = inv.reroll > 0 ? `${inv.reroll}x Grátis` : singlePriceText;
+      goRerollPrice.textContent = inv.reroll > 0 ? `${inv.reroll} disponíveis` : singlePriceText;
     }
   }
 
@@ -753,56 +800,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // --- POWER-UP: ATUALIZAR DEQUE (RE-ROLL) ---
-  if (btnPowerupReroll) {
-    btnPowerupReroll.addEventListener('click', async () => {
-      game.sound.playClick();
-      const inv = paymentService.getInventory();
-
-      if (inv.reroll > 0) {
-        await paymentService.consumePowerUp('reroll');
-        await game.rerollDeck();
-        showToast('Deque atualizado! 🔄');
-      } else {
-        // Abrir modal de pagamento para compra instantânea
-        openPaymentModal('reroll', async () => {
-          await paymentService.consumePowerUp('reroll');
-          await game.rerollDeck();
-          showToast('Power-up ativado com sucesso! 🔄');
-        });
+  async function usePowerUp(type) {
+    if (game.paidActionPending || game.isProcessingMerge || game.animation?.isBusy()) {
+      showToast('Aguarde a jogada terminar.'); return;
+    }
+    if (type === 'lightning' && !game.hexGrid.getAllSlots().some(slot => slot.stack.length)) {
+      showToast('Coloque uma pilha no tabuleiro antes de usar o raio.'); return;
+    }
+    if (type === 'reroll' && game.isGameOver && !game.hexGrid.getEmptySlots().length) {
+      showToast('O tabuleiro está cheio. Use um raio ou foguete para liberar espaço.'); return;
+    }
+    game.paidActionPending = true;
+    try {
+      if (!await paymentService.consumePowerUp(type)) {
+        showToast('Não foi possível usar o item. Confira seu saldo.'); return;
       }
-    });
+      if (type === 'reroll') { await game.rerollDeck(); showToast('Pilhas trocadas! 🔄'); }
+      else { const result = await game.lightningStrike(); if (result.success) showToast(`⚡ Raio eliminou ${result.count} pilha(s).`); }
+    } finally { game.paidActionPending = false; }
   }
 
-  // --- POWER-UP: RAIO DESTRUIDOR (LIGHTNING STRIKE) ---
-  if (btnPowerupLightning) {
-    btnPowerupLightning.addEventListener('click', async () => {
-      game.sound.playClick();
-      const occupied = game.hexGrid.getAllSlots().filter(s => s.stack.length > 0);
-      if (occupied.length === 0) {
-        showToast('Não há pilhas no tabuleiro para eliminar.');
-        return;
-      }
-
-      const inv = paymentService.getInventory();
-
-      if (inv.lightning > 0) {
-        await paymentService.consumePowerUp('lightning');
-        const res = await game.lightningStrike();
-        if (res.success) {
-          showToast(`⚡ Raio eliminou ${res.count} pilha(s)!`);
-        }
-      } else {
-        // Abrir modal de pagamento para compra instantânea
-        openPaymentModal('lightning', async () => {
-          await paymentService.consumePowerUp('lightning');
-          const res = await game.lightningStrike();
-          if (res.success) {
-            showToast(`⚡ Raio eliminou ${res.count} pilha(s)!`);
-          }
-        });
-      }
-    });
+  function requestPowerUp(type) {
+    if (paymentService.getInventory()[type] > 0) return usePowerUp(type);
+    if (paymentService.isNativePlatform()) {
+      if (modalShop) modalShop.classList.remove('hidden');
+      return;
+    }
+    openPaymentModal(type, () => usePowerUp(type));
   }
+  btnPowerupReroll?.addEventListener('click', () => requestPowerUp('reroll'));
+  btnPowerupLightning?.addEventListener('click', () => requestPowerUp('lightning'));
 
   // --- BOOSTER LATERAL: FOGUETE INTELIGENTE (50K) ---
   const btnBoosterRocket = document.getElementById('btn-booster-rocket');
@@ -891,25 +918,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- ALTERNÂNCIA DE ABAS NO GAME OVER (PODERES vs PIX) ---
   const tabBtnBoosters = document.getElementById('tab-btn-boosters');
-  const tabBtnPix = document.getElementById('tab-btn-pix');
+  const tabBtnGoPix = document.getElementById('tab-btn-go-pix');
   const tabContentBoosters = document.getElementById('go-tab-content-boosters');
   const tabContentPix = document.getElementById('go-tab-content-pix');
 
-  if (tabBtnBoosters && tabBtnPix && tabContentBoosters && tabContentPix) {
+  if (tabBtnBoosters && tabBtnGoPix && tabContentBoosters && tabContentPix) {
     tabBtnBoosters.addEventListener('click', () => {
       game.sound.playClick();
       tabBtnBoosters.classList.add('active');
       tabBtnBoosters.setAttribute('aria-selected', 'true');
-      tabBtnPix.classList.remove('active');
-      tabBtnPix.setAttribute('aria-selected', 'false');
+      tabBtnGoPix.classList.remove('active');
+      tabBtnGoPix.setAttribute('aria-selected', 'false');
       tabContentBoosters.classList.remove('hidden');
       tabContentPix.classList.add('hidden');
     });
 
-    tabBtnPix.addEventListener('click', () => {
+    tabBtnGoPix.addEventListener('click', () => {
       game.sound.playClick();
-      tabBtnPix.classList.add('active');
-      tabBtnPix.setAttribute('aria-selected', 'true');
+      tabBtnGoPix.classList.add('active');
+      tabBtnGoPix.setAttribute('aria-selected', 'true');
       tabBtnBoosters.classList.remove('active');
       tabBtnBoosters.setAttribute('aria-selected', 'false');
       tabContentPix.classList.remove('hidden');
@@ -917,55 +944,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // --- SEGUNDA CHANCE NO GAME OVER ---
-  if (btnGoReviveLightning) {
-    btnGoReviveLightning.addEventListener('click', async () => {
-      game.sound.playClick();
-      const inv = paymentService.getInventory();
+  // Usar e comprar compartilham validação de saldo e estado da partida.
+  btnGoReviveLightning?.addEventListener('click', () => requestPowerUp('lightning'));
+  btnGoReviveReroll?.addEventListener('click', () => requestPowerUp('reroll'));
 
-      if (inv.lightning > 0) {
-        await paymentService.consumePowerUp('lightning');
-        await game.lightningStrike();
-        showToast('⚡ Raio ativado! Partida retomada!');
-      } else {
-        openPaymentModal('lightning', async () => {
-          await paymentService.consumePowerUp('lightning');
-          await game.lightningStrike();
-          showToast('⚡ Raio ativado! Partida retomada!');
-        });
-      }
-    });
-  }
-
-  if (btnGoReviveReroll) {
-    btnGoReviveReroll.addEventListener('click', async () => {
-      game.sound.playClick();
-      const inv = paymentService.getInventory();
-
-      if (inv.reroll > 0) {
-        await paymentService.consumePowerUp('reroll');
-        await game.rerollDeck();
-        showToast('🔄 Deque renovado!');
-      } else {
-        openPaymentModal('reroll', async () => {
-          await paymentService.consumePowerUp('reroll');
-          await game.rerollDeck();
-          showToast('🔄 Deque renovado!');
-        });
-      }
-    });
-  }
-
-  // --- MODAL DE PAGAMENTO (PIX & STRIPE) ---
-  const ITEM_DETAILS = {
-    reroll: { name: '1x Atualizar Deque', desc: 'Troca as 3 pilhas do deque inferior', icon: '🔄', priceBr: 'R$ 0,25', priceIntl: '$0.10' },
-    lightning: { name: '1x Raio Destruidor', desc: 'Elimina 3 pilhas do tabuleiro', icon: '⚡', priceBr: 'R$ 0,25', priceIntl: '$0.10' },
-    pack_reroll: { name: '10x Atualizar Deque', desc: 'Pacote de 10 renovações de deque', icon: '🔄🔄', priceBr: 'R$ 2,50', priceIntl: '$1.00' },
-    pack_lightning: { name: '10x Raios Destruidores', desc: 'Pacote de 10 raios para emergências', icon: '⚡⚡', priceBr: 'R$ 2,50', priceIntl: '$1.00' },
-    combo_pack: { name: 'Combo Mestre Hexa', desc: '10x Raios + 10x Atualizações de Deque', icon: '⚡🔄', priceBr: 'R$ 4,50', priceIntl: '$1.80' }
-  };
 
   function openPaymentModal(itemType, onSuccessCallback = null) {
+    paymentService.unsubscribeOrder();
     currentSelectedPaymentItem = itemType;
     pendingPaymentSuccessAction = onSuccessCallback;
 
@@ -982,34 +967,80 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const details = ITEM_DETAILS[itemType] || ITEM_DETAILS.lightning;
+    const details = getProduct(itemType);
+    if (!details) { showToast('Produto indisponível.'); return; }
 
     if (paymentIconBadge) paymentIconBadge.textContent = details.icon;
-    if (paymentTitle) paymentTitle.textContent = `Ativar ${details.name}`;
+    if (paymentTitle) paymentTitle.textContent = `Comprar ${details.name}`;
     if (summaryProductName) summaryProductName.textContent = details.name;
-    if (summaryProductDesc) summaryProductDesc.textContent = details.desc;
-    if (summaryProductPrice) summaryProductPrice.textContent = details.priceBr;
+    if (summaryProductDesc) summaryProductDesc.textContent = details.description;
+    if (summaryProductPrice) summaryProductPrice.textContent = formatBRL(details.brlCents);
+
+    // Configurar estado das Abas (Pix ativo por padrão)
+    if (tabBtnPix && tabBtnCard) {
+      tabBtnPix.classList.add('active');
+      tabBtnCard.classList.remove('active');
+    }
+    if (paymentPixArea) paymentPixArea.classList.remove('hidden');
+    if (paymentCardArea) paymentCardArea.classList.add('hidden');
+
+    // Configurar disponibilidade do Cartão Stripe
+    if (details.usdCents) {
+      if (cardAvailableBox) cardAvailableBox.classList.remove('hidden');
+      if (cardUnavailableBox) cardUnavailableBox.classList.add('hidden');
+      if (btnStripeText) btnStripeText.textContent = `Pagar com Cartão ($${(details.usdCents / 100).toFixed(2)} USD)`;
+    } else {
+      if (cardAvailableBox) cardAvailableBox.classList.add('hidden');
+      if (cardUnavailableBox) cardUnavailableBox.classList.remove('hidden');
+    }
 
     if (modalPayment) modalPayment.classList.remove('hidden');
 
-    // Gera imediatamente o QR Code Pix
+    // Gera o QR Code Pix inicial
     loadPixOrder(itemType);
   }
 
-  async function loadPixOrder(itemType) {
-    if (pixLoadingState) pixLoadingState.classList.remove('hidden');
+  // Alternância de Abas no Modal de Pagamento
+  if (tabBtnPix) {
+    tabBtnPix.addEventListener('click', () => {
+      game.sound.playClick();
+      tabBtnPix.classList.add('active');
+      tabBtnCard?.classList.remove('active');
+      paymentPixArea?.classList.remove('hidden');
+      paymentCardArea?.classList.add('hidden');
+    });
+  }
+
+  if (tabBtnCard) {
+    tabBtnCard.addEventListener('click', () => {
+      game.sound.playClick();
+      tabBtnCard.classList.add('active');
+      tabBtnPix?.classList.remove('active');
+      paymentCardArea?.classList.remove('hidden');
+      paymentPixArea?.classList.add('hidden');
+    });
+  }
+
+  let pixRequestId = 0;
+  async function loadPixOrder(itemType, forceNew = false) {
+    const requestId = ++pixRequestId;
+    paymentService.unsubscribeOrder();
+    document.getElementById('btn-retry-pix')?.classList.add('hidden');
+    if (pixLoadingState) { pixLoadingState.textContent = 'Gerando código Pix…'; pixLoadingState.classList.remove('hidden'); }
     if (pixContentState) pixContentState.classList.add('hidden');
 
     try {
-      const order = await paymentService.createPixOrder(itemType);
-      currentPaymentOrderId = order.orderId;
+      const order = await paymentService.createPixOrder(itemType, forceNew);
+      if (requestId !== pixRequestId || modalPayment.classList.contains('hidden') || currentSelectedPaymentItem !== itemType) return;
 
       // Exibir imagem do QR Code
       if (pixQrcodeImg) {
         if (order.qrCodeBase64) {
           pixQrcodeImg.src = `data:image/png;base64,${order.qrCodeBase64}`;
+          pixQrcodeImg.classList.remove('hidden');
         } else {
-          pixQrcodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(order.qrCode)}`;
+          pixQrcodeImg.removeAttribute('src');
+          pixQrcodeImg.classList.add('hidden');
         }
       }
 
@@ -1017,53 +1048,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         inputPixCopiacola.value = order.qrCode;
       }
 
-      // Exibir botão de simulação para desenvolvimento se estiver em sandbox
-      if (btnSimulatePix) {
-        btnSimulatePix.classList.remove('hidden');
-      }
-
       if (pixLoadingState) pixLoadingState.classList.add('hidden');
       if (pixContentState) pixContentState.classList.remove('hidden');
 
       // Escutar confirmação do pagamento via Supabase Realtime
       paymentService.subscribeToOrder(order.orderId, async () => {
-        handlePaymentSuccess();
+        await handlePaymentSuccess();
       });
     } catch (err) {
+      if (requestId !== pixRequestId) return;
+      document.getElementById('btn-retry-pix')?.classList.remove('hidden');
       if (pixLoadingState) {
-        pixLoadingState.innerHTML = `<span>Erro ao gerar Pix: ${err.message}</span>`;
+        pixLoadingState.textContent = `${err.message}`;
       }
     }
   }
 
+  document.getElementById('btn-retry-pix')?.addEventListener('click', () => loadPixOrder(currentSelectedPaymentItem));
+  btnForceNewPix?.addEventListener('click', () => {
+    game.sound.playClick();
+    loadPixOrder(currentSelectedPaymentItem, true);
+  });
+
+  window.addEventListener('payment-status', () => {
+    pixContentState?.classList.add('hidden');
+    if (pixLoadingState) { pixLoadingState.classList.remove('hidden'); pixLoadingState.textContent = 'Este pedido não está mais disponível. Gere um novo código para continuar.'; }
+    document.getElementById('btn-retry-pix')?.classList.remove('hidden');
+  });
+
   // Copiar código Pix
   if (btnCopyPix) {
-    btnCopyPix.addEventListener('click', () => {
+    btnCopyPix.addEventListener('click', async () => {
       game.sound.playClick();
       if (inputPixCopiacola && inputPixCopiacola.value) {
-        navigator.clipboard.writeText(inputPixCopiacola.value);
-        btnCopyPix.textContent = 'Copiado! ✅';
+        try { await navigator.clipboard.writeText(inputPixCopiacola.value); }
+        catch { inputPixCopiacola.select(); showToast('Selecione e copie o código Pix.'); return; }
+        btnCopyPix.querySelector('span:first-child').textContent = 'Copiado! ✅';
         setTimeout(() => {
-          btnCopyPix.textContent = 'Copiar Código Pix 📋';
+          btnCopyPix.querySelector('span:first-child').textContent = 'Copiar Código';
         }, 2200);
-      }
-    });
-  }
-
-  // Simular Pagamento em Ambiente de Teste
-  if (btnSimulatePix) {
-    btnSimulatePix.addEventListener('click', async () => {
-      game.sound.playClick();
-      btnSimulatePix.disabled = true;
-      btnSimulatePix.textContent = 'Processando simulação...';
-      try {
-        await paymentService.simulatePayment(currentPaymentOrderId);
-        handlePaymentSuccess();
-      } catch (e) {
-        showToast('Erro ao simular pagamento.');
-      } finally {
-        btnSimulatePix.disabled = false;
-        btnSimulatePix.textContent = '🧪 Simular Pagamento Aprovado (Teste)';
       }
     });
   }
@@ -1073,26 +1096,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnStripeCheckout.addEventListener('click', async () => {
       game.sound.playClick();
       btnStripeCheckout.disabled = true;
-      btnStripeCheckout.textContent = 'Abrindo Stripe...';
+      if (btnStripeText) btnStripeText.textContent = 'Abrindo Stripe...';
       try {
         const res = await paymentService.createStripeCheckout(currentSelectedPaymentItem);
         if (res.url) {
           window.location.href = res.url;
-        } else if (res.isSandbox) {
-          // Sandbox mock confirmation
-          await paymentService.creditPowerUp(currentSelectedPaymentItem, 10);
-          handlePaymentSuccess();
-        }
+        } else { throw new Error('Não foi possível abrir o pagamento.'); }
       } catch (e) {
         showToast('Erro ao iniciar Checkout Stripe.');
       } finally {
         btnStripeCheckout.disabled = false;
-        btnStripeCheckout.innerHTML = '<span>Comprar Pacote ($1.00 USD com Cartão)</span>';
+        const details = getProduct(currentSelectedPaymentItem);
+        if (btnStripeText && details?.usdCents) {
+          btnStripeText.textContent = `Pagar com Cartão ($${(details.usdCents / 100).toFixed(2)} USD)`;
+        }
       }
     });
   }
 
-  function handlePaymentSuccess() {
+  async function handlePaymentSuccess() {
     game.sound.playPurchaseSuccess();
     showToast('Pagamento confirmado! Power-up liberado! 🎉⚡');
     if (modalPayment) modalPayment.classList.add('hidden');
@@ -1101,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof pendingPaymentSuccessAction === 'function') {
       const action = pendingPaymentSuccessAction;
       pendingPaymentSuccessAction = null;
-      action();
+      await action();
     }
   }
 
@@ -1121,7 +1143,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
+  // No Android nativo, ocultar itens de 1 unidade (R$ 0,25) exclusivos da web
+  if (paymentService.isNativePlatform()) {
+    document.querySelectorAll('.shop-item-web-only').forEach((el) => {
+      el.classList.add('hidden');
+    });
+  }
+
   document.querySelectorAll('.btn-shop-buy').forEach((btn) => {
+    const product = getProduct(btn.dataset.item);
+    if (!product) { btn.disabled = true; return; }
+    const card = btn.closest('.shop-item-card');
+    card.querySelector('h3').textContent = product.name;
+    card.querySelector('p').textContent = product.description;
+    btn.querySelector('.shop-price').textContent = paymentService.isNativePlatform() ? 'Comprar' : formatBRL(product.brlCents);
+    btn.setAttribute('aria-label', `Comprar ${product.name} por ${formatBRL(product.brlCents)}`);
     btn.addEventListener('click', (e) => {
       game.sound.playClick();
       const item = btn.getAttribute('data-item');
@@ -1332,6 +1368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const targetModal = document.getElementById(modalId);
       if (targetModal) targetModal.classList.add('hidden');
       if (modalId === 'modal-payment') {
+        pixRequestId++;
         paymentService.unsubscribeOrder();
       }
     });
@@ -1342,6 +1379,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (e.target === overlay && overlay.id !== 'modal-gameover') {
         overlay.classList.add('hidden');
         if (overlay.id === 'modal-payment') {
+          pixRequestId++;
           paymentService.unsubscribeOrder();
         }
       }
@@ -1389,7 +1427,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!scores || scores.length === 0) {
       leaderboardList.innerHTML = `
         <div class="empty-state">
-          ${isGlobal ? 'Nenhum recorde global registrado ainda.' : 'Você ainda não possui partidas registradas neste dispositivo.'}
+          ${isGlobal ? (leaderboard.globalStatus === 'unavailable' ? 'Ranking indisponível. Tente novamente quando estiver online.' : 'Nenhum recorde global registrado ainda.') : 'Você ainda não possui partidas registradas neste dispositivo.'}
         </div>
       `;
       return;
@@ -1479,6 +1517,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     leaderboardList.innerHTML = html;
+    if (isGlobal && leaderboard.globalStatus === 'cached') {
+      const status = document.createElement('p'); status.textContent = 'Sem conexão. Exibindo a última atualização salva.';
+      status.setAttribute('role', 'status'); leaderboardList.prepend(status);
+    }
   }
 
   // Submissão manual de apelido na tela de Game Over
@@ -1545,7 +1587,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
         }
 
-        submitStatus.textContent = 'Pontuação sincronizada no Ranking Global!';
+        submitStatus.textContent = leaderboard.lastSubmitSynced ? 'Pontuação sincronizada no Ranking Global!' : 'Pontuação salva neste dispositivo. Envio online não confirmado.';
         submitStatus.className = 'submit-status success';
         if (manualNicknameRow) manualNicknameRow.classList.add('hidden');
         if (autoSubmitBadge) autoSubmitBadge.classList.remove('hidden');

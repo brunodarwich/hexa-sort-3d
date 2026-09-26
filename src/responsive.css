@@ -581,3 +581,21 @@
     top: 56px;
   }
 }
+
+/* Keep purchase controls above the persistent navigation, including safe areas. */
+@media (min-width: 768px), (max-height: 520px) and (orientation: landscape) {
+  .powerups-dock { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .lateral-booster-dock {
+    top: 100px;
+    right: 12px;
+    transform: none;
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 767px) and (orientation: portrait) {
+  .toast { top: 180px; bottom: auto; max-width: calc(100% - 32px); text-align: center; }
+}

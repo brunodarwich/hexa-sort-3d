@@ -1,406 +1,294 @@
-/**
- * src/services/paymentService.js
- * Gerenciamento de inventário de power-ups, pedidos Pix (Mercado Pago), Stripe e Google Play IAP (RevenueCat)
- */
-
 import { Capacitor } from '@capacitor/core';
 import { Purchases, LOG_LEVEL } from '@revenuecat/purchases-capacitor';
 import { supabase, isSupabaseConfigured } from './supabase.js';
 import { authService } from './auth.js';
 
-const INVENTORY_CACHE_KEY = 'hexa_sort_inventory_v2';
-const REGION_PREF_KEY = 'hexa_sort_user_region';
+const LOCAL_INVENTORY_KEY = 'hexa_sort_player_inventory_v2';
+
+function getLocalStoredInventory() {
+  try {
+    const raw = localStorage.getItem(LOCAL_INVENTORY_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        reroll: Math.max(0, Number(parsed.reroll) || 0),
+        lightning: Math.max(0, Number(parsed.lightning) || 0)
+      };
+    }
+  } catch (e) {}
+  return { reroll: 0, lightning: 0 };
+}
+
+function saveLocalStoredInventory(inv) {
+  try {
+    localStorage.setItem(LOCAL_INVENTORY_KEY, JSON.stringify({
+      reroll: Math.max(0, Number(inv.reroll) || 0),
+      lightning: Math.max(0, Number(inv.lightning) || 0)
+    }));
+  } catch (e) {}
+}
 
 class PaymentService {
   constructor() {
-    this.inventory = this.loadLocalInventory();
+    this.inventory = getLocalStoredInventory();
     this.inventoryListeners = [];
-    this.activeOrderSubscription = null;
-    this.isRevenueCatConfigured = false;
-    
-    // Inicializa RevenueCat se estiver em ambiente nativo Android/iOS
-    if (this.isNativePlatform()) {
-      this.initNativeIAP();
-    }
-  }
+    this.inventoryOwner = null;
+    this.orderGeneration = 0;
+    this.debitPending = false;
+    this.revenueCatConfigured = false;
 
-  /**
-   * Retorna true se estiver rodando no app nativo (Android via Capacitor)
-   */
-  isNativePlatform() {
-    return Capacitor.isNativePlatform();
-  }
-
-  /**
-   * Inicializa o plugin do RevenueCat para Google Play Billing
-   */
-  async initNativeIAP() {
-    if (!this.isNativePlatform() || this.isRevenueCatConfigured) return;
-
-    try {
-      const apiKey = import.meta.env.VITE_REVENUECAT_GOOGLE_API_KEY || 'goog_mock_api_key';
-      await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
-      await Purchases.configure({ apiKey });
-      this.isRevenueCatConfigured = true;
-
-      const playerId = authService.getActivePlayerId();
-      if (playerId) {
-        await Purchases.logIn({ appUserID: playerId });
+    // Inicialização assíncrona da sessão e RevenueCat
+    authService.onAuthStateChanged((user) => {
+      if (user?.id === this.inventoryOwner) return;
+      this.inventoryOwner = user?.id || null;
+      this.fetchInventory().catch(() => {});
+      this.unsubscribeOrder();
+      if (user?.id && this.isNativePlatform()) {
+        this.ensureRevenueCatConfigured(user.id).catch(err => console.warn('Falha ao configurar RevenueCat:', err));
       }
-      console.log('[RevenueCat] Inicializado com sucesso para Google Play.');
+    });
+
+    // Buscar inventário inicial
+    setTimeout(() => {
+      this.fetchInventory().catch(() => {});
+    }, 100);
+  }
+
+  isNativePlatform() { return Capacitor.isNativePlatform(); }
+  getInventory() { return { ...this.inventory }; }
+  
+  setInventory(inv) {
+    const nextReroll = Math.max(0, Number(inv?.reroll ?? inv?.reroll_count) || 0);
+    const nextLightning = Math.max(0, Number(inv?.lightning ?? inv?.lightning_count) || 0);
+    this.inventory = { reroll: nextReroll, lightning: nextLightning };
+    saveLocalStoredInventory(this.inventory);
+    this.inventoryListeners.forEach(listener => listener(this.getInventory()));
+  }
+
+  async ensureRevenueCatConfigured(userId) {
+    if (!this.isNativePlatform()) return;
+    try {
+      const apiKey = import.meta.env.VITE_REVENUECAT_GOOGLE_API_KEY || import.meta.env.VITE_REVENUECAT_PUBLIC_KEY;
+      if (!apiKey) {
+        console.warn('Chave pública do RevenueCat não configurada.');
+        return;
+      }
+      if (!this.revenueCatConfigured) {
+        await Purchases.setLogLevel({ level: LOG_LEVEL.DEBUG });
+        await Purchases.configure({ apiKey, appUserID: userId });
+        this.revenueCatConfigured = true;
+      } else if (userId) {
+        await Purchases.logIn({ appUserID: userId });
+      }
     } catch (e) {
-      console.warn('[RevenueCat] Falha ao inicializar compras nativas:', e);
+      console.warn('Erro ao configurar RevenueCat:', e);
     }
   }
 
-  loadLocalInventory() {
-    try {
-      const saved = localStorage.getItem(INVENTORY_CACHE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {}
-    return { reroll: 0, lightning: 0 };
-  }
-
-  saveLocalInventory(inv) {
-    this.inventory = { ...this.inventory, ...inv };
-    try {
-      localStorage.setItem(INVENTORY_CACHE_KEY, JSON.stringify(this.inventory));
-    } catch (e) {}
-    this.notifyInventoryListeners();
-  }
-
-  getInventory() {
-    return { ...this.inventory };
-  }
-
-  /**
-   * Sincroniza inventário com o banco Supabase
-   */
   async fetchInventory() {
-    const playerId = authService.getActivePlayerId();
-    if (!isSupabaseConfigured || !supabase || !playerId) {
-      return this.inventory;
-    }
-
+    if (!isSupabaseConfigured || !supabase) return this.getInventory();
     try {
-      const { data, error } = await supabase
-        .from('player_inventory')
-        .select('*')
-        .eq('player_id', playerId)
-        .maybeSingle();
-
-      if (error) {
-        console.warn('Aviso ao buscar inventário online:', error.message);
-        return this.inventory;
-      }
-
-      if (data) {
-        this.saveLocalInventory({
-          reroll: data.reroll_count || 0,
-          lightning: data.lightning_count || 0
-        });
-      } else {
-        // Inicializar com 0 se ainda não existir registro
-        await supabase.from('player_inventory').insert({
-          player_id: playerId,
-          reroll_count: this.inventory.reroll || 0,
-          lightning_count: this.inventory.lightning || 0
+      const session = await authService.ensureSession();
+      const owner = session?.user?.id;
+      if (!owner) return this.getInventory();
+      this.inventoryOwner = owner;
+      const { data, error } = await supabase.from('player_inventory')
+        .select('reroll_count, lightning_count').eq('player_id', owner).maybeSingle();
+      if (error) throw error;
+      if (data && this.inventoryOwner === owner) {
+        // Se o backend tem valores registrados maiores, sincroniza
+        const serverReroll = Number(data.reroll_count) || 0;
+        const serverLightning = Number(data.lightning_count) || 0;
+        const current = this.getInventory();
+        this.setInventory({
+          reroll: Math.max(current.reroll, serverReroll),
+          lightning: Math.max(current.lightning, serverLightning)
         });
       }
-    } catch (e) {
-      console.warn('Erro ao sincronizar inventário:', e);
-    }
-
-    return this.inventory;
-  }
-
-  /**
-   * Consome 1 uso do power-up (retorna true se tinha saldo e consumiu)
-   */
-  async consumePowerUp(type) {
-    const countKey = type === 'reroll' ? 'reroll' : 'lightning';
-    if ((this.inventory[countKey] || 0) <= 0) {
-      return false;
-    }
-
-    const newCount = this.inventory[countKey] - 1;
-    this.saveLocalInventory({ [countKey]: newCount });
-
-    // Atualizar no Supabase em background
-    const playerId = authService.getActivePlayerId();
-    if (isSupabaseConfigured && supabase && playerId) {
-      const dbColumn = type === 'reroll' ? 'reroll_count' : 'lightning_count';
-      supabase
-        .from('player_inventory')
-        .update({ [dbColumn]: newCount, updated_at: new Date().toISOString() })
-        .eq('player_id', playerId)
-        .then(({ error }) => {
-          if (error) console.warn('Erro ao decrementar inventário no Supabase:', error);
-        });
-    }
-
-    return true;
-  }
-
-  /**
-   * Credita usos de power-up localmente e no banco
-   */
-  async creditPowerUp(type, amount = 1) {
-    if (type === 'combo_pack') {
-      this.saveLocalInventory({
-        reroll: (this.inventory.reroll || 0) + 10,
-        lightning: (this.inventory.lightning || 0) + 10
-      });
-    } else {
-      const countKey = type === 'reroll' || type === 'pack_reroll' ? 'reroll' : 'lightning';
-      this.saveLocalInventory({
-        [countKey]: (this.inventory[countKey] || 0) + amount
-      });
-    }
-  }
-
-  /**
-   * Detecta se o usuário está no Brasil ou Exterior
-   */
-  detectPlayerRegion() {
-    const saved = localStorage.getItem(REGION_PREF_KEY);
-    if (saved === 'BR' || saved === 'INTL') return saved;
-
-    const lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-
-    if (lang.startsWith('pt') || timeZone.includes('Sao_Paulo') || timeZone.includes('Brazil')) {
-      return 'BR';
-    }
-    return 'INTL';
-  }
-
-  setPlayerRegion(region) {
-    try {
-      localStorage.setItem(REGION_PREF_KEY, region);
-    } catch (e) {}
-  }
-
-  /**
-   * Realiza a compra nativa via Google Play Store (RevenueCat)
-   */
-  async purchaseNative(itemType) {
-    if (!this.isNativePlatform()) {
-      throw new Error('Compras nativas disponíveis apenas no aplicativo Android.');
-    }
-
-    try {
-      const productMap = {
-        reroll: 'pack_reroll',
-        pack_reroll: 'pack_reroll',
-        lightning: 'pack_lightning',
-        pack_lightning: 'pack_lightning',
-        combo_pack: 'combo_pack'
-      };
-
-      const productId = productMap[itemType] || itemType;
-      
-      let purchaseResult;
-      try {
-        const offerings = await Purchases.getOfferings();
-        let packageToBuy = null;
-
-        if (offerings?.current?.availablePackages?.length > 0) {
-          packageToBuy = offerings.current.availablePackages.find(
-            pkg => pkg.product.identifier === productId || pkg.identifier === productId
-          ) || offerings.current.availablePackages[0];
-        }
-
-        if (packageToBuy) {
-          purchaseResult = await Purchases.purchasePackage({ aPackage: packageToBuy });
-        } else {
-          const products = await Purchases.getProducts({ productIdentifiers: [productId] });
-          if (products?.products?.length > 0) {
-            purchaseResult = await Purchases.purchaseStoreProduct({ product: products.products[0] });
-          } else {
-            console.warn(`[RevenueCat] Produto ${productId} em modo de teste/fallback.`);
-          }
-        }
-      } catch (rcErr) {
-        console.warn('[RevenueCat] Sandbox mock purchase fallback:', rcErr);
-      }
-
-      // Credita os power-ups adquiridos
-      if (itemType === 'combo_pack') {
-        await this.creditPowerUp('combo_pack');
-      } else {
-        await this.creditPowerUp(itemType, 10);
-      }
-
-      // Sincroniza pedido e inventário no Supabase
-      const playerId = authService.getActivePlayerId();
-      if (isSupabaseConfigured && supabase && playerId) {
-        const inv = this.getInventory();
-        await supabase.from('player_inventory').upsert({
-          player_id: playerId,
-          reroll_count: inv.reroll,
-          lightning_count: inv.lightning,
-          updated_at: new Date().toISOString()
-        });
-
-        await supabase.from('payment_orders').insert({
-          player_id: playerId,
-          gateway: 'google_play',
-          external_order_id: purchaseResult?.customerInfo?.originalAppUserId || `gp_${Date.now()}`,
-          item_type: itemType,
-          quantity: 10,
-          amount: 1.0,
-          currency: 'USD',
-          status: 'paid',
-          paid_at: new Date().toISOString()
-        });
-      }
-
-      return { success: true, result: purchaseResult };
     } catch (error) {
-      if (error?.userCancelled) {
-        throw new Error('Compra cancelada pelo usuário.');
+      console.warn('Inventário online indisponível:', error.message);
+    }
+    return this.getInventory();
+  }
+
+  async consumePowerUp(type) {
+    if (this.debitPending || !['reroll', 'lightning'].includes(type)) return false;
+    const current = this.getInventory();
+    if (current[type] <= 0) return false;
+
+    this.debitPending = true;
+    try {
+      // 1. Tentar débito atômico no Supabase se houver conexão
+      if (isSupabaseConfigured && supabase) {
+        try {
+          await authService.ensureSession();
+          const { data, error } = await supabase.rpc('consume_powerup', { p_type: type });
+          if (!error && data) {
+            this.setInventory(data);
+            return true;
+          }
+        } catch (rpcErr) {
+          console.warn('RPC consume_powerup falhou, consumindo localmente:', rpcErr?.message || rpcErr);
+        }
       }
-      throw error;
+
+      // 2. Fallback gracioso imediato para saldo local garantido
+      if (current[type] > 0) {
+        const next = { ...current, [type]: current[type] - 1 };
+        this.setInventory(next);
+        return true;
+      }
+      return false;
+    } finally {
+      this.debitPending = false;
     }
   }
 
-  /**
-   * Cria uma ordem de Pix chamando a Supabase Edge Function
-   */
-  async createPixOrder(itemType, recoveryEmail = '') {
-    const playerId = authService.getActivePlayerId();
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  async purchaseNative(productId) {
+    if (!this.isNativePlatform()) {
+      throw new Error('Compras nativas estão disponíveis apenas no aplicativo Android.');
+    }
+    const session = await authService.ensureSession();
+    const userId = session?.user?.id;
+    await this.ensureRevenueCatConfigured(userId);
 
-    if (!supabaseUrl) {
-      throw new Error('Supabase URL não configurada.');
+    // Mapeamento de identificadores de itens para pacotes oficiais
+    let effectiveId = productId;
+    if (productId === 'lightning') effectiveId = 'pack_lightning';
+    if (productId === 'reroll') effectiveId = 'pack_reroll';
+
+    let purchaseResult = null;
+
+    // 1. Tentar localizar o pacote pela Offering configurada no RevenueCat
+    try {
+      const offerings = await Purchases.getOfferings();
+      const currentOffering = offerings?.current;
+      let targetPackage = null;
+
+      if (currentOffering && currentOffering.availablePackages) {
+        targetPackage = currentOffering.availablePackages.find(p => 
+          p.product?.identifier === effectiveId ||
+          p.identifier === effectiveId ||
+          (effectiveId === 'pack_lightning' && (p.product?.identifier?.includes('lightning') || p.identifier?.includes('lightning'))) ||
+          (effectiveId === 'pack_reroll' && (p.product?.identifier?.includes('reroll') || p.identifier?.includes('reroll'))) ||
+          (effectiveId === 'combo_pack' && (p.product?.identifier?.includes('combo') || p.identifier?.includes('combo')))
+        );
+      }
+
+      if (targetPackage) {
+        purchaseResult = await Purchases.purchasePackage({ aPackage: targetPackage });
+      } else {
+        // 2. Fallback direto buscando os produtos não-assinatura
+        const productsRes = await Purchases.getProducts({
+          productIdentifiers: [effectiveId, 'pack_lightning', 'pack_reroll', 'combo_pack'],
+          type: 'NON_SUBSCRIPTION'
+        });
+
+        const matchedProduct = productsRes?.products?.find(p => 
+          p.identifier === effectiveId ||
+          (effectiveId === 'pack_lightning' && p.identifier.includes('lightning')) ||
+          (effectiveId === 'pack_reroll' && p.identifier.includes('reroll')) ||
+          (effectiveId === 'combo_pack' && p.identifier.includes('combo'))
+        ) || productsRes?.products?.[0];
+
+        if (matchedProduct) {
+          purchaseResult = await Purchases.purchaseStoreProduct({ product: matchedProduct });
+        }
+      }
+    } catch (purchaseError) {
+      console.error('Erro na compra RevenueCat:', purchaseError);
+      throw purchaseError;
     }
 
-    const res = await fetch(`${supabaseUrl}/functions/v1/create-pix-order`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': anonKey,
-        'Authorization': `Bearer ${anonKey}`
-      },
-      body: JSON.stringify({
-        playerId: playerId,
-        itemType: itemType,
-        recoveryEmail: recoveryEmail
-      })
-    });
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || 'Falha ao gerar cobrança Pix.');
+    if (!purchaseResult) {
+      throw new Error(`Produto "${productId}" não disponível na loja.`);
     }
 
-    return await res.json();
-  }
+    // 3. Crédito Otimista Imediato no Inventário Local
+    const delta = { reroll: 0, lightning: 0 };
+    if (effectiveId === 'pack_lightning' || effectiveId.includes('lightning')) {
+      delta.lightning = 4;
+    } else if (effectiveId === 'pack_reroll' || effectiveId.includes('reroll')) {
+      delta.reroll = 4;
+    } else if (effectiveId === 'combo_pack' || effectiveId.includes('combo')) {
+      delta.reroll = 4;
+      delta.lightning = 4;
+    }
 
-  /**
-   * Simula a confirmação do pagamento (para testes e sandbox)
-   */
-  async simulatePayment(orderId) {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-    const res = await fetch(`${supabaseUrl}/functions/v1/mercadopago-webhook`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': anonKey,
-        'Authorization': `Bearer ${anonKey}`
-      },
-      body: JSON.stringify({
-        action: 'simulate_test_payment',
-        orderId: orderId
-      })
+    const cur = this.getInventory();
+    this.setInventory({
+      reroll: cur.reroll + delta.reroll,
+      lightning: cur.lightning + delta.lightning
     });
 
-    return await res.json();
-  }
-
-  /**
-   * Cria sessão de pagamento internacional no Stripe
-   */
-  async createStripeCheckout(itemType) {
-    const playerId = authService.getActivePlayerId();
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-    const res = await fetch(`${supabaseUrl}/functions/v1/create-stripe-session`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': anonKey,
-        'Authorization': `Bearer ${anonKey}`
-      },
-      body: JSON.stringify({
-        playerId: playerId,
-        itemType: itemType,
-        successUrl: window.location.href,
-        cancelUrl: window.location.href
-      })
+    // 4. Polling assíncrono para sincronizar saldo quando o webhook do RevenueCat processar
+    [1500, 3500, 6000].forEach((delay) => {
+      setTimeout(() => { void this.fetchInventory(); }, delay);
     });
 
-    return await res.json();
+    return purchaseResult;
   }
 
-  /**
-   * Escuta em tempo real a confirmação do pedido no Supabase
-   */
+  async request(functionName, body) {
+    const session = await authService.ensureSession();
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${functionName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: import.meta.env.VITE_SUPABASE_ANON_KEY, Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify(body)
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Serviço indisponível. Tente novamente.');
+    return data;
+  }
+
+  createPixOrder(itemType, forceNew = false) { return this.request('create-pix-order', { itemType, forceNew }); }
+  createStripeCheckout(itemType) {
+    const returnUrl = typeof window !== 'undefined' ? window.location.origin : null;
+    return this.request('create-stripe-session', { itemType, returnUrl });
+  }
+
   subscribeToOrder(orderId, onPaidCallback) {
     this.unsubscribeOrder();
-
-    if (!isSupabaseConfigured || !supabase) return;
-
-    const channelName = `order_${orderId}_${Date.now()}`;
-    this.activeOrderSubscription = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'payment_orders',
-          filter: `id=eq.${orderId}`
-        },
-        async (payload) => {
-          if (payload.new && payload.new.status === 'paid') {
-            await this.fetchInventory();
-            onPaidCallback(payload.new);
-          }
+    if (!supabase) return;
+    const generation = this.orderGeneration;
+    let checking = false;
+    const check = async () => {
+      if (checking || generation !== this.orderGeneration) return;
+      checking = true;
+      try {
+        const { data, error } = await supabase.from('payment_orders').select('status').eq('id', orderId).single();
+        if (error) throw error;
+        if (generation !== this.orderGeneration) return;
+        if (data.status === 'paid') {
+          this.unsubscribeOrder();
+          const deliveryGeneration = this.orderGeneration;
+          await this.fetchInventory();
+          if (deliveryGeneration === this.orderGeneration) await onPaidCallback(data);
+        } else if (['expired', 'refunded'].includes(data.status)) {
+          this.unsubscribeOrder();
+          window.dispatchEvent(new CustomEvent('payment-status', { detail: data.status }));
         }
-      )
-      .subscribe();
+      } catch (error) { console.warn('Aguardando conexão para consultar pagamento:', error.message); }
+      finally { checking = false; }
+    };
+    this.activeOrderSubscription = supabase.channel(`order_${orderId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'payment_orders', filter: `id=eq.${orderId}` }, check).subscribe();
+    this.orderTimer = setInterval(check, 5000);
+    check();
   }
 
   unsubscribeOrder() {
-    if (this.activeOrderSubscription && isSupabaseConfigured && supabase) {
-      supabase.removeChannel(this.activeOrderSubscription);
-      this.activeOrderSubscription = null;
-    }
+    this.orderGeneration++;
+    clearInterval(this.orderTimer);
+    if (this.activeOrderSubscription && supabase) supabase.removeChannel(this.activeOrderSubscription);
+    this.activeOrderSubscription = null;
   }
 
   onInventoryChange(callback) {
     this.inventoryListeners.push(callback);
-    callback(this.inventory);
-    return () => {
-      this.inventoryListeners = this.inventoryListeners.filter(cb => cb !== callback);
-    };
-  }
-
-  notifyInventoryListeners() {
-    for (const listener of this.inventoryListeners) {
-      try {
-        listener(this.inventory);
-      } catch (e) {}
-    }
+    callback(this.getInventory());
+    return () => { this.inventoryListeners = this.inventoryListeners.filter(cb => cb !== callback); };
   }
 }
-
 export const paymentService = new PaymentService();
+

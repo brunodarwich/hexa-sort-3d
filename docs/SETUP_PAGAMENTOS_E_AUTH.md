@@ -1,5 +1,7 @@
 # Guia Passo a Passo: Configuração de Pagamentos (Pix & Stripe) e Login com Google
 
+> **Atualização:** este guia contém instruções históricas. Para a versão atual, siga primeiro [Implantação da revisão de segurança](REVISAO_SEGURANCA_UX_2026-09-22.md). As políticas abertas e os modos de simulação não devem ser usados em produção.
+
 Este guia orienta a configuração completa das chaves de produção para receber os pagamentos de **R$ 0,25** no Brasil (Mercado Pago), pagamentos internacionais no **Nubank PJ** (Stripe) e ativar o **Login com Google** no **Hexa Infinity**.
 
 ---
@@ -8,7 +10,7 @@ Este guia orienta a configuração completa das chaves de produção para recebe
 
 1. Acesse o painel do seu projeto no [Supabase](https://supabase.com/dashboard).
 2. Vá em **SQL Editor** no menu lateral esquerdo.
-3. Abra o arquivo [`supabase/migrations/20260916000000_create_powerups_and_payments.sql`](./supabase/migrations/20260916000000_create_powerups_and_payments.sql), copie todo o conteúdo e cole no SQL Editor do Supabase.
+3. Abra o arquivo [`supabase/migrations/20260916000000_create_powerups_and_payments.sql`](../supabase/migrations/20260916000000_create_powerups_and_payments.sql), copie todo o conteúdo e cole no SQL Editor do Supabase.
 4. Clique em **Run** (Executar).
    - Isso criará as tabelas `player_inventory`, `payment_orders`, adicionará as colunas de Google Auth e habilitará o **Supabase Realtime** para atualização instantânea dos pagamentos no jogo.
 

@@ -209,13 +209,13 @@
 
           <!-- Floating Power-Ups Dock (Tactile Stitch Style) -->
           <div id="powerups-dock" class="powerups-dock">
-            <!-- Re-roll (Atualizar Deque) Button -->
-            <button id="btn-powerup-reroll" class="powerup-btn powerup-reroll" title="Atualizar as 3 pilhas do deque" aria-label="Atualizar Deque">
+            <!-- Re-roll (Trocar pilhas) Button -->
+            <button id="btn-powerup-reroll" class="powerup-btn powerup-reroll" title="Trocar as 3 pilhas disponíveis" aria-label="Trocar pilhas">
               <div class="powerup-icon-box box-reroll">
                 <span class="material-symbols-outlined powerup-icon">sync</span>
               </div>
               <div class="powerup-info">
-                <span class="powerup-title">Atualizar</span>
+                <span class="powerup-title">Trocar pilhas</span>
                 <span class="powerup-badge" id="badge-reroll-cost">R$ 0,25</span>
               </div>
             </button>
@@ -307,7 +307,8 @@
             </div>
 
             <!-- Pódio Top 3 Visual (Stitch Design) -->
-            <div class="podium-card">
+            <p id="ranking-data-status" role="status">Carregando ranking…</p>
+            <div class="podium-card hidden">
               <div class="podium-glow-ambient"></div>
               <div class="podium-glow-ambient-2"></div>
               <div class="podium-grid">
@@ -315,13 +316,13 @@
                 <div class="podium-col col-rank-2">
                   <div class="podium-avatar-wrap">
                     <div class="avatar-ring ring-cyan">
-                      <img id="podium-avatar-img-2" class="podium-avatar-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0yL0BDJ8C3FW4YsNEgzNiU3FNu-rbwzpXZDKdzfaCt8KbGBywoMu4bqnMPf6H2gHa_0GH6VlRaF6Rr2szHz5BVk1w-n3Xcp5lcJx7tLqVnmF6ThZsHqa0GuC2lEIETI9mm3Lr241DBUoGDXFlzeDO29GU7RKkUNHn2KFb40h3NebYLkpHjrRJtQRDUVcQtUtY281I0sm7yP9cBPtO24zxnypvvwUlF3h9tIwLiZHkVHdgRBy8Y6F7NA" alt="2º Lugar" />
+                      <img id="podium-avatar-img-2" class="podium-avatar-img hidden" alt="" src="" />
                       <span class="avatar-letter hidden" id="podium-avatar-2">2</span>
                       <div class="podium-tag tag-cyan">2º</div>
                     </div>
                   </div>
-                  <span class="podium-name font-bold" id="podium-name-2">AstralWalker</span>
-                  <span class="podium-score text-cyan font-extrabold" id="podium-score-2">312.450</span>
+                  <span class="podium-name font-bold" id="podium-name-2">—</span>
+                  <span class="podium-score text-cyan font-extrabold" id="podium-score-2">—</span>
                   <div class="pedestal pedestal-2">
                     <span class="material-symbols-outlined text-cyan-icon" style="font-variation-settings: 'FILL' 1;">military_tech</span>
                     <span class="pedestal-tier">Mestre</span>
@@ -335,18 +336,18 @@
                   </div>
                   <div class="podium-avatar-wrap">
                     <div class="avatar-ring ring-gold">
-                      <img id="podium-avatar-img-1" class="podium-avatar-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCet3Ww9fqxydrAJDyCMDwYxoE3QK112oo0AGMIksNjgJqJMRT9DnF0v_9WM5wcT-63fRSoNyUD02X_doQPVk7QFkCjCA0ti-Xn82pUxOHP5d4HL8PhRy0b9jT2Vttg_AisjUV3cW2zGjjrOF8icAU8r5oMDRzhIV8AbCA4EvjeN2szszFemUqCYyRKiTgzg4u_S7xX9JaD7LAD_e2Zyh12nvdg5HGxz2OGPWWuI_mZ94p9BES9_rCOmA" alt="1º Lugar" />
+                      <img id="podium-avatar-img-1" class="podium-avatar-img hidden" alt="" src="" />
                       <span class="avatar-letter hidden" id="podium-avatar-1">1</span>
                       <div class="podium-tag tag-gold">1º</div>
                     </div>
                   </div>
                   <div class="podium-name-row">
-                    <span class="podium-name font-black" id="podium-name-1">NovaMaster</span>
-                    <span class="material-symbols-outlined text-[16px] text-secondary-container" style="font-variation-settings: 'FILL' 1;">verified</span>
+                    <span class="podium-name font-black" id="podium-name-1">—</span>
+                    <span class="material-symbols-outlined text-[16px] text-secondary-container" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
                   </div>
                   <div class="podium-score-row">
                     <span class="material-symbols-outlined text-[14px] text-secondary animate-pulse" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
-                    <span class="podium-score text-secondary-fixed font-black" id="podium-score-1">489.120</span>
+                    <span class="podium-score text-secondary-fixed font-black" id="podium-score-1">—</span>
                   </div>
                   <div class="pedestal pedestal-1">
                     <span class="material-symbols-outlined icon-trophy" style="font-variation-settings: 'FILL' 1;">trophy</span>
@@ -358,13 +359,13 @@
                 <div class="podium-col col-rank-3">
                   <div class="podium-avatar-wrap">
                     <div class="avatar-ring ring-bronze">
-                      <img id="podium-avatar-img-3" class="podium-avatar-img" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYIi3Rx3Xc3S_8LmpqOqo3ITEbXsKtnBnHEWTg8mej548Kwm-6Yj8XMXtR1O5EXR-52b51fjpV5zEVsST4mok3357xZnYEIrmGaDRic56xllXDKFYDhitGA69lluMEyPns74HsbqaJNGc47a9gXcpXuLJKFekffScVbYbhy5w3kAou-0aLkpwccbsLx7ayfiMYlkvxm7DpyG7r96xGpotjR6diZTIqoXCGUtuGKEE08LVchawuAFIN1A" alt="3º Lugar" />
+                      <img id="podium-avatar-img-3" class="podium-avatar-img hidden" alt="" src="" />
                       <span class="avatar-letter hidden" id="podium-avatar-3">3</span>
                       <div class="podium-tag tag-bronze">3º</div>
                     </div>
                   </div>
-                  <span class="podium-name font-bold" id="podium-name-3">StarGazer</span>
-                  <span class="podium-score text-bronze font-extrabold" id="podium-score-3">287.900</span>
+                  <span class="podium-name font-bold" id="podium-name-3">—</span>
+                  <span class="podium-score text-bronze font-extrabold" id="podium-score-3">—</span>
                   <div class="pedestal pedestal-3">
                     <span class="material-symbols-outlined text-bronze-icon" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
                     <span class="pedestal-tier">Elite</span>
@@ -378,7 +379,7 @@
               <div class="section-title-row">
                 <span>OUTROS COMPETIDORES</span>
               </div>
-              <div class="competitors-list" id="ranking-competitors-list">
+              <div class="competitors-list" id="ranking-competitors-list" aria-live="polite">
                 <div class="ranking-empty-state">
                   <div class="spinner-dot"></div>
                   <span>Carregando melhores pontuações...</span>
@@ -442,7 +443,7 @@
                 <div id="profile-logged-out" class="cloud-cta-container">
                   <div class="cloud-cta-text">
                     <span class="material-symbols-outlined text-secondary text-[22px] flex-shrink-0">cloud_done</span>
-                    <p>Salve seu progresso na nuvem e dispute o ranking global em tempo real!</p>
+                    <p>Conecte sua conta para identificar suas compras e enviar pontuações ao ranking.</p>
                   </div>
                   <button id="btn-google-login-profile" class="btn-google-stitch" type="button">
                     <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" width="18" height="18">
@@ -552,7 +553,7 @@
               <span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">sports_esports</span>
             </div>
             <h2>Defina seu Apelido</h2>
-            <p class="modal-subtitle">Escolha seu nome para o Ranking Global. Todas as suas partidas neste navegador serão computadas automaticamente para você!</p>
+            <p class="modal-subtitle">Escolha seu nome para o Ranking Global. Suas pontuações ficam neste dispositivo e são enviadas ao ranking quando há conexão.</p>
           </div>
           <form id="form-nickname" class="nickname-form">
             <div class="nickname-input-group">
@@ -757,7 +758,7 @@
                         <ellipse cx="0" cy="22" rx="46" ry="18" fill="rgba(15,23,42,0.16)" />
                         <polygon points="-40,10 0,27 40,10 40,18 0,35 -40,18" fill="#94a3b8" />
                         <polygon points="0,-23 40,-6 40,10 0,27 -40,10 -40,-6" fill="var(--panel-bg, #ffffff)" stroke="#cbd5e1" stroke-width="1.5" />
-                        
+
                         <!-- 4 Cartas Vermelhas Empilhadas -->
                         <!-- Base 1 -->
                         <polygon points="-32,2 0,14 32,2 32,8 0,20 -32,8" fill="#991b1b" />
@@ -1216,7 +1217,7 @@
       <!-- Game Over Modal (Hero Score, Percentil da Comunidade, Stats & Abas de Salvamento) -->
       <div id="modal-gameover" class="modal-overlay hidden">
         <div class="modal-card gameover-card">
-          
+
           <!-- Header Minimalista -->
           <div class="go-header-row">
             <div class="gameover-badge">GAME OVER</div>
@@ -1242,11 +1243,11 @@
             <!-- Barra Comparativa da Comunidade (Supabase) -->
             <div class="go-percentile-box">
               <div class="go-percentile-bar-bg">
-                <div class="go-percentile-bar-fill" id="go-percentile-fill" style="width: 50%;"></div>
+                <div class="go-percentile-bar-fill" id="go-percentile-fill" style="width: 0;"></div>
               </div>
               <div class="go-percentile-info">
-                <span class="go-percentile-text" id="go-percentile-text">Superou 50% dos jogadores</span>
-                <span class="go-percentile-badge" id="go-percentile-badge">Top 50%</span>
+                <span class="go-percentile-text" id="go-percentile-text">Consultando estatísticas…</span>
+                <span class="go-percentile-badge" id="go-percentile-badge">—</span>
               </div>
             </div>
           </div>
@@ -1309,7 +1310,7 @@
                 <span>✨ Poderes da Partida</span>
                 <span id="go-boosters-ready-indicator" class="tab-indicator-badge hidden">PRONTO</span>
               </button>
-              <button id="tab-btn-pix" class="go-tab-btn" role="tab" aria-selected="false" type="button">
+              <button id="tab-btn-go-pix" class="go-tab-btn" role="tab" aria-selected="false" type="button">
                 <span>⚡ Segunda Chance Pix</span>
               </button>
             </div>
@@ -1377,17 +1378,17 @@
         </div>
       </div>
 
-      <!-- Pure Pix Payment Modal (Direct, No International Stripe) -->
+      <!-- Payment Modal (Pix Instantâneo e Cartão Stripe) -->
       <div id="modal-payment" class="modal-overlay hidden">
         <div class="modal-card payment-card">
           <button class="modal-close" data-close="modal-payment">
             <span class="material-symbols-outlined">close</span>
           </button>
-          
+
           <div class="modal-header text-center">
             <div class="payment-icon-badge" id="payment-icon-badge">⚡</div>
             <h2 id="payment-title">Ativar Raio Destruidor</h2>
-            <p class="modal-subtitle" id="payment-subtitle">Pague no app do banco via Pix e o poder será ativado na partida imediatamente!</p>
+            <p class="modal-subtitle" id="payment-subtitle">Escolha sua forma de pagamento para liberar o item imediatamente.</p>
           </div>
 
           <!-- Product & Price summary -->
@@ -1401,13 +1402,26 @@
             </div>
           </div>
 
+          <!-- Payment Method Selector Tabs -->
+          <div class="payment-tabs" id="payment-method-tabs">
+            <button type="button" class="payment-tab active" id="tab-btn-pix" data-tab="pix">
+              <span class="material-symbols-outlined text-[18px]">qr_code_2</span>
+              <span>Pix</span>
+            </button>
+            <button type="button" class="payment-tab" id="tab-btn-card" data-tab="card">
+              <span class="material-symbols-outlined text-[18px]">credit_card</span>
+              <span>Cartão de Crédito</span>
+            </button>
+          </div>
+
           <!-- Pix Payment Area -->
           <div id="payment-pix-area" class="payment-section">
-            <div id="pix-loading-state" class="pix-loading-box">
+            <div id="pix-loading-state" role="status" aria-live="polite" class="pix-loading-box">
               <div class="spinner-dot"></div>
               <span>Gerando QR Code Pix instantâneo...</span>
             </div>
 
+            <button type="button" id="btn-retry-pix" class="btn-secondary hidden">Tentar novamente</button>
             <div id="pix-content-state" class="hidden">
               <div class="pix-qrcode-box">
                 <img id="pix-qrcode-img" class="pix-qrcode-img" src="" alt="QR Code Pix" />
@@ -1415,23 +1429,41 @@
               <div class="pix-copia-cola-group">
                 <input type="text" id="input-pix-copiacola" readonly />
                 <button type="button" id="btn-copy-pix" class="btn-secondary">
-                  <span>Copiar Código Pix</span>
+                  <span>Copiar Código</span>
                   <span class="material-symbols-outlined text-[16px]">content_copy</span>
+                </button>
+              </div>
+              <div class="pix-actions-row">
+                <button type="button" id="btn-force-new-pix" class="btn-force-pix">
+                  <span class="material-symbols-outlined text-[16px]">refresh</span>
+                  <span>Gerar novo código Pix</span>
                 </button>
               </div>
               <p class="pix-waiting-notice">
                 <span class="pulsing-radar"></span>
-                <span>Aguardando pagamento no app do banco... Ativação instantânea!</span>
+                <span>Pague no app do banco. A confirmação é instantânea.</span>
               </p>
-              <!-- Sandbox simulation button for test environment -->
-              <button type="button" id="btn-simulate-pix" class="btn-dev-simulate">
-                🧪 Simular Pagamento Aprovado (Teste)
+            </div>
+          </div>
+
+          <!-- Card / Stripe Payment Area -->
+          <div id="payment-card-area" class="payment-section hidden">
+            <div id="card-available-box" class="card-checkout-box">
+              <p class="card-checkout-desc">Checkout seguro internacional via Stripe. Aceita cartões de crédito Visa, Mastercard, Elo e American Express.</p>
+              <button type="button" id="btn-stripe-checkout" class="btn-primary btn-large btn-stripe">
+                <span class="material-symbols-outlined">lock</span>
+                <span id="btn-stripe-text">Pagar com Cartão ($1.00 USD)</span>
               </button>
+            </div>
+            <div id="card-unavailable-box" class="card-notice-box hidden">
+              <span class="material-symbols-outlined text-amber-500 text-[28px]">info</span>
+              <p class="notice-title">Disponível apenas via Pix</p>
+              <p class="notice-desc">A unidade avulsa de <strong>R$ 0,25</strong> é exclusiva para pagamento via Pix.<br>Para pagar com cartão de crédito, selecione um pacote de <strong>4 unidades (R$ 1,00)</strong> ou o <strong>Combo Mestre</strong> na Loja.</p>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn-secondary" data-close="modal-payment">Cancelar</button>
+            <button type="button" class="btn-secondary" data-close="modal-payment">Fechar</button>
           </div>
         </div>
       </div>
@@ -1457,12 +1489,12 @@
               </div>
               <h2>Loja de Power-Ups</h2>
             </div>
-            <p class="modal-subtitle">Adquira créditos e use seus poderes a qualquer momento sem pausar o jogo!</p>
+            <p class="modal-subtitle">Compre usos extras. O tempo da partida fica pausado enquanto você escolhe.</p>
           </div>
 
           <div class="shop-grid">
-            <!-- 1x Raio -->
-            <div class="shop-item-card">
+            <!-- 1x Raio (Web Only) -->
+            <div class="shop-item-card shop-item-web-only">
               <div class="shop-item-icon-box box-amber">
                 <span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
               </div>
@@ -1473,8 +1505,8 @@
               </button>
             </div>
 
-            <!-- 1x Atualizar Deque -->
-            <div class="shop-item-card">
+            <!-- 1x Trocar pilhas (Web Only) -->
+            <div class="shop-item-card shop-item-web-only">
               <div class="shop-item-icon-box box-sky">
                 <span class="material-symbols-outlined text-[24px]">sync</span>
               </div>
@@ -1485,11 +1517,11 @@
               </button>
             </div>
 
-            <!-- Pacote 10x Raios (POPULAR) -->
+            <!-- Pacote 4x Raios (POPULAR) -->
             <div class="shop-item-card featured">
               <div class="shop-badge-promo">
                 <span>✨</span>
-                <span>POPULAR</span>
+                <span>PACOTE</span>
               </div>
               <div class="shop-item-icon-box box-amber">
                 <div class="flex-icons">
@@ -1497,14 +1529,14 @@
                   <span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
                 </div>
               </div>
-              <h3>10x Raios</h3>
+              <h3>4x Raios</h3>
               <p>Pacote de sobrevivência</p>
-              <button class="btn-shop-buy" data-item="pack_lightning" data-price-br="R$ 2,50">
-                <span class="shop-price">R$ 2,50</span>
+              <button class="btn-shop-buy" data-item="pack_lightning" data-price-br="R$ 1,00">
+                <span class="shop-price">R$ 1,00</span>
               </button>
             </div>
 
-            <!-- Pacote 10x Atualizar -->
+            <!-- Pacote 4x Atualizar -->
             <div class="shop-item-card">
               <div class="shop-item-icon-box box-sky">
                 <div class="flex-icons">
@@ -1512,10 +1544,10 @@
                   <span class="material-symbols-outlined text-[16px]">sync</span>
                 </div>
               </div>
-              <h3>10x Atualizar</h3>
+              <h3>4x Atualizar</h3>
               <p>Pacote de renovação</p>
-              <button class="btn-shop-buy" data-item="pack_reroll" data-price-br="R$ 2,50">
-                <span class="shop-price">R$ 2,50</span>
+              <button class="btn-shop-buy" data-item="pack_reroll" data-price-br="R$ 1,00">
+                <span class="shop-price">R$ 1,00</span>
               </button>
             </div>
 
@@ -1523,7 +1555,7 @@
             <div class="shop-item-card combo-card">
               <div class="shop-badge-promo promo-gold">
                 <span>✨</span>
-                <span>SUPER DESCONTO</span>
+                <span>COMBO</span>
               </div>
               <div class="shop-item-icon-box box-purple">
                 <div class="flex-icons">
@@ -1532,9 +1564,9 @@
                 </div>
               </div>
               <h3>Combo Mestre</h3>
-              <p>10x Raios + 10x Atualizar</p>
-              <button class="btn-shop-buy" data-item="combo_pack" data-price-br="R$ 4,50">
-                <span class="shop-price">R$ 4,50</span>
+              <p>8x Raios + 8x Atualizar</p>
+              <button class="btn-shop-buy" data-item="combo_pack" data-price-br="R$ 2,99">
+                <span class="shop-price">R$ 2,99</span>
               </button>
             </div>
           </div>
@@ -1558,7 +1590,7 @@
             <h2>Configurações</h2>
             <p class="modal-subtitle">Personalize sua experiência no Hexa Infinity</p>
           </div>
-          
+
           <div class="settings-options-list">
             <!-- Som / Efeitos -->
             <div class="setting-item-row">

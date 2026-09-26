@@ -501,12 +501,18 @@ export class GameManager {
     this.cloverCount = 0;
     this.updateLateralBoostersHUD();
 
+    try {
+      const prevGames = Number(localStorage.getItem('hexa_sort_stats_games_played')) || 0;
+      localStorage.setItem('hexa_sort_stats_games_played', prevGames + 1);
+      window.dispatchEvent(new CustomEvent('hexa_stats_updated'));
+    } catch (e) {}
+
     if (this.animation) this.animation.clear();
     this.updateLevelBackground(1, false);
 
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => {
-      if (!this.isGameOver) {
+      if (!this.isGameOver && !this.isPaused && !document.hidden && !document.querySelector('.modal-overlay:not(.hidden)')) {
         this.gameTimeSeconds++;
         this.updateHUD();
       }
@@ -798,7 +804,7 @@ export class GameManager {
   }
 
   onPointerDown(e) {
-    if (this.isGameOver || this.isProcessingMerge) return;
+    if (this.isGameOver || this.isProcessingMerge || this.paidActionPending || this.isPaused) return;
 
     this.sound.resume();
     const hitPoint = this.getPointerIntersection(e);
@@ -930,44 +936,48 @@ export class GameManager {
 
   async placeStackOnSlot(deckSlot, targetSlot) {
     this.isProcessingMerge = true;
-    this.sound.playSnap();
-    this.vibrate(18);
+    try {
+      this.sound.playSnap();
+      this.vibrate(18);
 
-    // 1. Transfer cards from deck to target slot
-    const cards = [...deckSlot.cards];
-    deckSlot.cards = [];
-    deckSlot.badge = null;
-    this.scene.remove(deckSlot.group);
-    deckSlot.group = null;
+      // 1. Transfer cards from deck to target slot
+      const cards = [...deckSlot.cards];
+      deckSlot.cards = [];
+      deckSlot.badge = null;
+      this.scene.remove(deckSlot.group);
+      deckSlot.group = null;
 
-    let currentY = 0;
-    for (const card of cards) {
-      this.scene.add(card.mesh);
-      card.mesh.position.set(
-        targetSlot.worldX,
-        currentY + CARD_THICKNESS / 2,
-        targetSlot.worldZ
-      );
-      targetSlot.stack.push(card);
-      currentY += CARD_THICKNESS;
+      let currentY = 0;
+      for (const card of cards) {
+        this.scene.add(card.mesh);
+        card.mesh.position.set(
+          targetSlot.worldX,
+          currentY + CARD_THICKNESS / 2,
+          targetSlot.worldZ
+        );
+        targetSlot.stack.push(card);
+        currentY += CARD_THICKNESS;
+      }
+
+      this.updateSlotBadge(targetSlot);
+
+      // 2. Run recursive cascade merge with targetSlot as the primary magnet!
+      await this.processCascadingMerges(targetSlot);
+
+      // 3. Replenish deck if all slots empty with arrival animation
+      const remainingDeck = this.deckSlots.filter(s => s.cards.length > 0);
+      if (remainingDeck.length === 0) {
+        await new Promise(r => setTimeout(r, 120));
+        await this.spawnDeckStacks({ animate: true });
+      }
+
+      // 4. Check for Game Over condition
+      this.checkGameOverCondition();
+    } catch (err) {
+      console.error('Erro durante jogada ou verificação de fim de jogo:', err);
+    } finally {
+      this.isProcessingMerge = false;
     }
-
-    this.updateSlotBadge(targetSlot);
-
-    // 2. Run recursive cascade merge with targetSlot as the primary magnet!
-    await this.processCascadingMerges(targetSlot);
-
-    // 3. Replenish deck if all slots empty with arrival animation
-    const remainingDeck = this.deckSlots.filter(s => s.cards.length > 0);
-    if (remainingDeck.length === 0) {
-      await new Promise(r => setTimeout(r, 120));
-      await this.spawnDeckStacks({ animate: true });
-    }
-
-    // 4. Check for Game Over condition
-    this.checkGameOverCondition();
-
-    this.isProcessingMerge = false;
   }
 
   /**
@@ -1218,6 +1228,10 @@ export class GameManager {
         this.vibrate([25, 40, 60]);
       }
       this.totalClears++;
+      try {
+        const prevClears = Number(localStorage.getItem('hexa_sort_stats_total_clears')) || 0;
+        localStorage.setItem('hexa_sort_stats_total_clears', prevClears + 1);
+      } catch (e) {}
 
       // Award points: Base clear points + cumulative escalating bonus for every extra card above 10!
       const extraCards = Math.max(0, clearedCards.length - STACK_CLEAR_THRESHOLD);
@@ -1239,8 +1253,18 @@ export class GameManager {
       if (this.currentCombo > 1 || clearedCards.length >= 15) {
         this.showComboBanner(this.currentCombo, clearedCards.length);
         this.maxCombo = Math.max(this.maxCombo, this.currentCombo);
+        try {
+          const prevMax = Number(localStorage.getItem('hexa_sort_stats_max_combo')) || 1;
+          if (this.maxCombo > prevMax) {
+            localStorage.setItem('hexa_sort_stats_max_combo', this.maxCombo);
+          }
+        } catch (e) {}
       }
       this.currentCombo++;
+
+      try {
+        window.dispatchEvent(new CustomEvent('hexa_stats_updated'));
+      } catch (e) {}
 
       this.triggerDynamicClearFlash(centerPos, colorDef);
       await this.animation.animateStackClear(
@@ -1633,43 +1657,21 @@ export class GameManager {
     }
   }
 
-  async triggerGameOver() {
+  triggerGameOver() {
     this.isGameOver = true;
     if (this.timerInterval) clearInterval(this.timerInterval);
-    this.sound.playGameOver();
+    if (this.sound) this.sound.playGameOver();
 
     const isNewRecord = this.score >= this.highScore && this.score > 0;
-    const savedNickname = (this.leaderboard.getSavedNickname() || '').trim();
+    const savedNickname = (this.leaderboard.getSavedNickname() || 'Jogador').trim();
     const hasNickname = Boolean(savedNickname);
-
-    // Salvar pontuação automaticamente APENAS se o jogador já tiver um apelido salvo
-    if (hasNickname && this.score > 0) {
-      try {
-        await this.leaderboard.submitScore({
-          name: savedNickname,
-          score: this.score,
-          time: this.gameTimeSeconds,
-          clears: this.totalClears,
-          combo: this.maxCombo
-        });
-      } catch (e) {
-        console.error('Erro ao auto-submeter pontuação:', e);
-      }
-    }
 
     // Atualizar estatísticas cumulativas do jogador no Perfil
     try {
-      const prevGames = Number(localStorage.getItem('hexa_sort_stats_games_played')) || 0;
-      localStorage.setItem('hexa_sort_stats_games_played', prevGames + 1);
-
       const prevMaxCombo = Number(localStorage.getItem('hexa_sort_stats_max_combo')) || 0;
       if (this.maxCombo > prevMaxCombo) {
         localStorage.setItem('hexa_sort_stats_max_combo', this.maxCombo);
       }
-
-      const prevClears = Number(localStorage.getItem('hexa_sort_stats_total_clears')) || 0;
-      localStorage.setItem('hexa_sort_stats_total_clears', prevClears + (this.totalClears || 0));
-
       window.dispatchEvent(new CustomEvent('hexa_stats_updated'));
     } catch (e) {
       console.warn('Erro ao salvar estatísticas de partidas:', e);
@@ -1677,10 +1679,17 @@ export class GameManager {
 
     const modal = document.getElementById('modal-gameover');
     if (modal) {
-      document.getElementById('go-final-score').textContent = this.score.toLocaleString('pt-BR');
-      document.getElementById('go-final-time').textContent = LeaderboardManager.formatTime(this.gameTimeSeconds);
-      document.getElementById('go-final-clears').textContent = this.totalClears;
-      document.getElementById('go-final-combo').textContent = `x${this.maxCombo}`;
+      const scoreEl = document.getElementById('go-final-score');
+      if (scoreEl) scoreEl.textContent = this.score.toLocaleString('pt-BR');
+
+      const timeEl = document.getElementById('go-final-time');
+      if (timeEl) timeEl.textContent = LeaderboardManager.formatTime(this.gameTimeSeconds);
+
+      const clearsEl = document.getElementById('go-final-clears');
+      if (clearsEl) clearsEl.textContent = this.totalClears;
+
+      const comboEl = document.getElementById('go-final-combo');
+      if (comboEl) comboEl.textContent = `x${this.maxCombo}`;
 
       // Calcular e renderizar estatísticas de percentil / comunidade
       this.leaderboard.getScoreStats(this.score).then(stats => {
@@ -1737,8 +1746,8 @@ export class GameManager {
         if (manualRow) manualRow.classList.add('hidden');
         if (cancelBtn) cancelBtn.classList.remove('hidden');
         if (statusEl) {
-          statusEl.textContent = this.score > 0 ? 'Pontuação sincronizada no Ranking Global!' : '';
-          statusEl.className = 'submit-status success';
+          statusEl.textContent = this.score > 0 ? 'Sincronizando pontuação no Ranking...' : '';
+          statusEl.className = 'submit-status';
         }
       } else {
         // NÃO possui apelido: oculta o selo e exibe o campo para digitar e salvar
@@ -1751,8 +1760,40 @@ export class GameManager {
         }
       }
 
-      this.updateGameOverBoostersUI();
+      try {
+        this.updateGameOverBoostersUI();
+      } catch (err) {
+        console.warn('Aviso ao atualizar boosters do game over:', err);
+      }
+
+      // Exibir modal de Game Over imediatamente
       modal.classList.remove('hidden');
+    }
+
+    // Salvar pontuação automaticamente e em segundo plano para qualquer partida com pontuação > 0
+    if (this.score > 0) {
+      this.leaderboard.submitScore({
+        name: savedNickname,
+        score: this.score,
+        time: this.gameTimeSeconds,
+        clears: this.totalClears,
+        combo: this.maxCombo
+      }).then(() => {
+        const statusEl = document.getElementById('submit-status');
+        if (statusEl && hasNickname) {
+          statusEl.textContent = this.leaderboard.lastSubmitSynced
+            ? 'Pontuação sincronizada no Ranking Global!'
+            : 'Pontuação salva neste dispositivo.';
+          statusEl.className = 'submit-status success';
+        }
+      }).catch(e => {
+        console.error('Erro ao auto-submeter pontuação:', e);
+        const statusEl = document.getElementById('submit-status');
+        if (statusEl && hasNickname) {
+          statusEl.textContent = 'Pontuação salva neste dispositivo.';
+          statusEl.className = 'submit-status';
+        }
+      });
     }
   }
 
@@ -1857,7 +1898,7 @@ export class GameManager {
    * Realiza o voo balístico 3D, vaporiza a pilha alvo e aplica dano splash nos vizinhos.
    */
   async triggerRocketBooster() {
-    if (this.isProcessingMerge || (this.animation && this.animation.isBusy())) {
+    if (this.paidActionPending || this.isProcessingMerge || (this.animation && this.animation.isBusy())) {
       return { success: false, reason: 'Aguarde as ações em andamento terminarem.' };
     }
 
@@ -2066,7 +2107,7 @@ export class GameManager {
    * 3 pilhas puras com exatamente 8 cartas de cores estratégicas para clears instantâneos.
    */
   async triggerCloverBooster() {
-    if (this.isProcessingMerge || (this.animation && this.animation.isBusy())) {
+    if (this.paidActionPending || this.isProcessingMerge || (this.animation && this.animation.isBusy())) {
       return { success: false, reason: 'Aguarde as ações em andamento terminarem.' };
     }
 
@@ -2379,7 +2420,7 @@ export class GameManager {
 
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => {
-      if (!this.isGameOver) {
+      if (!this.isGameOver && !this.isPaused && !document.hidden && !document.querySelector('.modal-overlay:not(.hidden)')) {
         this.gameTimeSeconds++;
         this.updateHUD();
       }
@@ -2397,6 +2438,7 @@ export class GameManager {
     requestAnimationFrame(this.animate);
 
     const delta = Math.min(this.clock.getDelta(), 0.1);
+    if (document.hidden || (this.isPaused && !this.isProcessingMerge && !this.animation?.isBusy())) return;
 
     if (this.animation) {
       this.animation.update(delta);
