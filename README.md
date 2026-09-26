@@ -5,7 +5,7 @@
 Um jogo de quebra-cabeça 3D casual e viciante com mecânicas de classificação hexagonal, fusão em cascata, efeitos táteis de áudio procedural (ASMR), placar de recordes global em tempo real e sistema completo de micro-monetização.
 
 > 📅 **Data da Última Atualização**: 26 de Setembro de 2026  
-> 🏷️ **Versão**: `v1.0.4` (Web PWA & Android Release Bundle)  
+> 🏷️ **Versão**: `v1.0.5` (Web PWA & Android Release Bundle)  
 > 📱 **Package ID Android**: `com.brunodarwich.hexainfinity`  
 > 📄 **Licença**: [MIT](LICENSE)
 
